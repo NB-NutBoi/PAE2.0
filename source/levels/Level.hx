@@ -46,7 +46,7 @@ typedef LevelFile = {
 }
 
 typedef LayerStructure = {
-    public var objects:Array<Dynamic>; //TODO
+    public var objects:Array<Dynamic>;
     public var rails:Array<RailStructure>;
 }
 
@@ -129,7 +129,7 @@ class Level {
             script = null;
 
             if(saveables != null && !load){
-                SaveManager.curSaveData.mapSaveables.set(this.path,saveables); //TODO
+                SaveManager.curSaveData.mapSaveables.set(this.path,saveables);
             }            
 
             //--------------------------------------------------------------------------------------------------------------------------------

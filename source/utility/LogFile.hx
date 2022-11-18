@@ -46,7 +46,7 @@ class LogFile {
 			initContext += "DEVELEOPER MODE ACTIVE.\n\n";
 		}
 
-		if(true)//TODO
+		if(Main.SetupConfig.getConfig("logSystemInfo","bool",false))
 		{
 			initContext += "Device info\n----------------------\n\nPLATFORM: "+Utils.getPlatform()+"\nGPU: "+Utils.getSystemGpu()+"\nCPU: "+Utils.getSystemCpu()+"\n  - Threads: "+Utils.getThreads()+"\n\n----------------------\n\n";
 		}

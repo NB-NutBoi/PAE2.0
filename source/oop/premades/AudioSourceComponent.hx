@@ -36,6 +36,8 @@ class AudioSourceComponent extends Component {
     public var offsetX:Float = 0;
     public var offsetY:Float = 0;
 
+    private var panning:Float = 0;
+
     //debug
     public var drawDebug(null,set):Bool;
     private var drawDebugRuler:Bool = false;
@@ -213,7 +215,17 @@ class AudioSourceComponent extends Component {
     override public function clone(newParent:Object):Component {
 
         var clone:AudioSourceComponent = new AudioSourceComponent("", newParent);
-        //TODO
+        
+        if(clip != null) {
+            clone.playClip(clip.curAsset.key);
+            if(!clip.playing) clone.pause();
+        }
+
+        if(usingProximity) {
+            clone.setProximity(radius, usingProximityPanning);
+        }
+        else
+            clone.setPanning(panning);
 
         return clone;
     }
@@ -310,7 +322,7 @@ class AudioSourceComponent extends Component {
         if(paused) clip.pause();
     }
 
-    public function playOneShot(path:String, ?pan:Float = 0) {
+    public function playOneShot(path:String) {
         if(clips == null) clips = [];
 
         var previousRadius = radius;
@@ -329,7 +341,7 @@ class AudioSourceComponent extends Component {
         if(usingProximity)
             setProximity(previousRadius, usingProximityPanning, osClip);
         else
-            osClip.pan = pan;
+            osClip.pan = panning;
 
         osClip.play();
     }
@@ -340,13 +352,27 @@ class AudioSourceComponent extends Component {
     }
 
     public function getPanning():Float {
+        if(clip == null) return panning;
         return clip.pan;
     }
 
     public function setPanning(to:Float) {
         if(usingProximityPanning) return;
 
-        clip.pan = to;
+        panning = to;
+
+        if(clip != null)
+            clip.pan = to;
+    }
+
+    public function pause() {
+        if(clip != null)
+            clip.pause();
+    }
+
+    public function unpause() {
+        if(clip != null)
+            clip.unpause();
     }
 
     //------------------------------------------------------------------------------------------------------------------------------------------------------------------

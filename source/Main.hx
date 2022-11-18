@@ -132,7 +132,7 @@ class Main extends Sprite
 		
 		game = new FlxGamePlus(
 			SetupConfig.getConfig("GameWidth", "int", 1920),
-			SetupConfig.getConfig("GameHeight", "int", 1080),DebugState,
+			SetupConfig.getConfig("GameHeight", "int", 1080),MainState,
 			SetupConfig.getConfig("Zoom", "float", -1),
 			SetupConfig.getConfig("Framerate", "int", 61),
 			SetupConfig.getConfig("Framerate", "int", 61),

@@ -81,13 +81,14 @@ class ConsoleCommands {
         if(!filename.endsWith(".save")) filename += ".save";
 
         Console.log(("Loading save file: "+filename+" ...").toFunctionReply(), Console.FUNCTION_REPLY);
-        var meta = SaveManager.getSaveMetadata(filename); //TODO
+        var meta = SaveManager.getSaveMetadata(filename);
 
         Utils.saveBitmapToImage(Utils.getBitmapFromB64String(meta.image),"ReadOutput.png");
         Console.log(("Save date - "+meta.date).toFunctionReply(), Console.FUNCTION_REPLY);
         Console.log(("Saved metadata image test read as ReadOutput.png").toFunctionReply(), Console.FUNCTION_REPLY);
 
         SaveManager.Load(filename);
+        Console.log(("Loaded save file "+filename).toFunctionReply(), Console.FUNCTION_REPLY);
     }
 
 

@@ -89,7 +89,6 @@ class FlxGamePlus extends FlxGame {
                 //draw with opengl (more optimized that context3d since this reuses an image buffer, instead of creating an entirely new image.)
                 glScreen();
             default:
-                //TODO
                 nonGlScreen(); //no fucking clue what it does, and i can only pray it works if i ever dare use it.
         }
 
@@ -457,7 +456,7 @@ class UIPlugin extends FlxBasic {
 
     public static function removeContainer(x:Container) {
         if(x == null) return;
-        //add check later TODO
+        if(!containers.members.contains(x)) return;
 
         UIPlugin.addingCams = true;
 

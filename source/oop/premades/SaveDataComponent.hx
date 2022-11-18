@@ -121,7 +121,7 @@ class SaveDataComponent extends Component {
         return null;
     }
 
-    //TODO
+    //is there any reason to use these? all data gets saved and read live
     override function load() {}
     override function save() {}
 
