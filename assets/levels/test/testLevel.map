@@ -1,0 +1,39 @@
+{
+  "layers": [
+    {
+		"objects": [
+			{
+				"_TYPE": "FULL",
+				"name": "test",
+				"x": 20,
+				"y": 30,
+				"z": 0,
+				"angle": 0,
+				"components": [
+					{
+						"component": "Sprite",
+						"startingData": {
+							"texture": "assets/images/JennTest.asset"
+						}
+					}
+				],
+				"children": [],
+				"drawOrder": 1,
+				"Static": false
+			}
+		],
+		"rails": []
+	}
+  ],
+  "bitmaps": [],
+  "curLayer": 0,
+  "gridSize": 20,
+  "skybox": "",
+  "script": "",
+  "backgroundColor": {
+	  "R": 255,
+      "G": 255,
+      "B": 255,
+      "A": 255
+  }
+}

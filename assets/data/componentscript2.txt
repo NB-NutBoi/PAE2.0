@@ -1,0 +1,27 @@
+function OnAwake()
+{
+	
+}
+
+function OnUpdate(elapsed:Float)
+{
+
+}
+
+function OnDraw()
+{
+
+}
+
+function OnDestroy()
+{
+
+}
+
+
+//---------------------------------------------------------------------
+//test 2
+
+function Funny(){
+	trace("interface works!!   WOOOOOO!");
+}

@@ -1,0 +1,7 @@
+{
+ "name": "DebugMover",
+ "key": "DebugMover",
+ "icon": null,
+ "editableVars": null,
+ "script": "assets/components/DebugSimpleMover.hx"
+}

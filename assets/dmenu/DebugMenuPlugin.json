@@ -1,0 +1,5 @@
+{
+ "TYPE": "PLUGIN",
+ "script": "assets/dmenu/scripts/DebugMenuPlugin.hx",
+ "pluginTo": "debugmenu"
+}

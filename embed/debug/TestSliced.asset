@@ -1,0 +1,6 @@
+{
+ "flags": ["9SLICE"],
+ "defaultWidth": 27,
+ "defaultHeight": 27,
+ "texture": "embed/debug/testSliced.png"
+}

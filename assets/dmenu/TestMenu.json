@@ -1,0 +1,11 @@
+{
+ "TYPE": "MENU",
+ "script": "assets/dmenu/scripts/TestMenu.hx",
+ "registerName": "testmenu",
+ "altNames": [
+	"test"
+ ],
+ "width": 300,
+ "height": 400,
+ "canOverride": true
+}
