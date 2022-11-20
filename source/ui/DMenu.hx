@@ -1,5 +1,6 @@
 package ui;
 
+import ui.premades.ItemEditor;
 import assets.AssetPaths;
 import flixel.util.FlxArrayUtil;
 import haxe.Json;
@@ -114,6 +115,10 @@ class DMenu extends Container {
         registered.set("debugmenu", new DebugMenu(0,0));
         menuKeys.set("debugmenu", "debugmenu");
         menuKeys.set("debug", "debugmenu");
+
+        registered.set("itemeditor", new ItemEditor(0,0));
+        menuKeys.set("itemeditor", "itemeditor");
+        menuKeys.set("item", "itemeditor");
 
         //register custom.
 

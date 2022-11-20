@@ -99,6 +99,10 @@ class Ruler extends FlxBasic {
             texts.remove(texts[i]);
         }
 
+        if(curText <= 0) return; 
+        // ruler causes lag on lower end targets, stop clearing bitmap if there were no operations this frame.
+        //(minor fix)
+
         bitmap.fillRect(bitmap.rect, 0x00000000);
         curText = 0;
     }
