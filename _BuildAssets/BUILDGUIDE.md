@@ -40,6 +40,6 @@ TODO MAKE MAC BUILD AND DOCUMENT.
 ## Building
 Once everything is installed and set up, we can build.
 
-- Run `lime build <target>`, replacing `<target>` with the platform you want to build to (`windows`, `mac`, `linux`, `html5`) (i.e. `lime build windows`)
-- The build will be in `Kade-Engine/export/release/<target>/bin`, with `<target>` being the target you built to in the previous step. (i.e. `PAE2.0/export/windows/bin`)
+- Run `lime build <target>`, replacing `<target>` with the platform you want to build to (`windows`, `mac`, `linux`) (i.e. `lime build windows`)
+- The build will be in `PAE2.0/export/release/<target>/bin`, with `<target>` being the target you built to in the previous step. (i.e. `PAE2.0/export/windows/bin`)
 - Only the `bin` folder is necessary to run the game. The other ones in `export/release/<target>` are not.
