@@ -37,7 +37,7 @@ class TextField extends FlxObject implements ContainerObject {
     public var box:FlxSprite;
 
     public var _caret:FlxSprite;
-    private var caret:Int = 0;
+    public var caret:Int = 0;
     private var drawCaret:Bool = false;
     private var caretTimer:Float = 0;
 
@@ -127,7 +127,7 @@ class TextField extends FlxObject implements ContainerObject {
     }
 
     @:access(flixel.text.FlxText, openfl.text.TextField, openfl.text._internal.TextEngine)
-    function onUpdateText() {
+    public function onUpdateText() {
         if(caret > textField.text.length) caret = textField.text.length;
         if(caret < 0) caret = 0;
         textField.textField.__caretIndex = caret;

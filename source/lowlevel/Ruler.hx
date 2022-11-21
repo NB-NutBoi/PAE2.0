@@ -22,6 +22,14 @@ class Ruler extends FlxBasic {
         FlxG.plugins.add(new Ruler());
     }
 
+    /**
+     * USE IN DRAW CALLS
+     * 
+     * Function to visually measure anything by drawing a line from and to, acts as a draw call.
+     * @param from point to measure from.
+     * @param to point to measure to.
+     * @param color color the line will be drawn in.
+     */
     public static function measure(from:FlxPoint, to:FlxPoint, color:FlxColor) {
         if(theRuler == null) init();
         

@@ -14,7 +14,8 @@ class Mouse {
         
         if(current != ARROW){
             if(oneFrame){
-                openfl.ui.Mouse.cursor = current = ARROW; //only reset if one frame has elapsed with this set to true.
+                current = ARROW;
+                openfl.ui.Mouse.cursor = "arrow"; //only reset if one frame has elapsed with this set to true.
                 oneFrame = false; //reset it once set to default just in case.
             }
             else{
@@ -27,7 +28,8 @@ class Mouse {
         if(!FlxG.mouse.useSystemCursor) return;
         
         if(current != type){
-            openfl.ui.Mouse.cursor = current = type;
+            current = type;
+            openfl.ui.Mouse.cursor = type;
         }
         oneFrame = false;
     }

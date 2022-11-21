@@ -23,7 +23,7 @@ class SelectableList extends FlxObject implements ContainerObject {
     var selectorBox:FlxSprite;
     var selectedBox:FlxSprite;
 
-    var choices:FlxTypedGroup<FlxText> = new FlxTypedGroup();
+    public var choices:FlxTypedGroup<FlxText> = new FlxTypedGroup();
 
     public var selected:Int = 0;
     public var over:Bool = false;
@@ -93,13 +93,14 @@ class SelectableList extends FlxObject implements ContainerObject {
         choices.draw();
     }
 
-    public function addChoice(s:String) {
+    public function addChoice(s:String):Int {
         var t = new FlxText(box.x+1, box.y + (21*choices.length),box.width-4,s,15);
         t.font = "vcr";
         t.alignment = CENTER;
         choices.add(t);
         box.setGraphicSize(Std.int(box.width),21*choices.length);
         box.updateHitbox();
+        return choices.length-1;
     }
 
     public function removeChoice(s:String) {
