@@ -55,6 +55,12 @@ class ItemEditor extends DMenu{
         var texturePath:TextField;
         var nick:TextField;
 
+        var texW:TextField;
+        var texH:TextField;
+
+        var texX:TextField;
+        var texY:TextField;
+
     override public function new(x:Float, y:Float) {
         super(x, y, 600, 600);
 
@@ -121,7 +127,12 @@ class ItemEditor extends DMenu{
 
         //texturedef rect----------------------------------------------------------------------
 
-        texturePath = new TextField(175,120,150);
+        var label:FlxText = new FlxText(175,120,0,"Texture",12);
+        add(label);
+
+        sepparator = Utils.makeRamFriendlyRect(132,140,180,2); add(sepparator); 
+
+        texturePath = new TextField(175,150,150);
         add(texturePath);
 
         texturePath.onPressEnter.add(applyTexture_field);
@@ -131,11 +142,41 @@ class ItemEditor extends DMenu{
 
         nick.onPressEnter.add(applyNick);
 
-        var selectButton = new Button(132,120,20,20,"...",browseTexture);
+        var selectButton = new Button(132,150,20,20,"...",browseTexture);
         add(selectButton);
 
-        var setButton = new Button(132,145,20,20,"set",applyTexture);
+        var setButton = new Button(132,175,20,20,"set",applyTexture);
         add(setButton);
+
+        label = new FlxText(135,220,0,"Texture Properties",12);
+        add(label);
+
+        sepparator = Utils.makeRamFriendlyRect(132,240,180,2); add(sepparator); 
+        
+
+        label = new FlxText(135,245,0,"W",12);
+        add(label);
+
+        texW = new TextField(155,245,60);
+        add(texW);
+
+        label = new FlxText(230,245,0,"H",12);
+        add(label);
+
+        texH = new TextField(250,245,60);
+        add(texH);
+
+        label = new FlxText(135,280,0,"X",12);
+        add(label);
+
+        texX = new TextField(155,280,60);
+        add(texX);
+
+        label = new FlxText(230,280,0,"Y",12);
+        add(label);
+
+        texY = new TextField(250,280,60);
+        add(texY);
 
         setupNewItem();
     }
@@ -260,6 +301,22 @@ class ItemEditor extends DMenu{
         nick.textField.text = tex.nick;
         nick.caret = tex.nick.length;
         nick.onUpdateText();
+
+        texW.textField.text = Std.string(tex.width);
+        texW.caret = Std.string(tex.width).length;
+        texW.onUpdateText();
+
+        texH.textField.text = Std.string(tex.height);
+        texH.caret = Std.string(tex.height).length;
+        texH.onUpdateText();
+
+        texX.textField.text = Std.string(tex.xOffset);
+        texX.caret = Std.string(tex.xOffset).length;
+        texX.onUpdateText();
+
+        texY.textField.text = Std.string(tex.yOffset);
+        texY.caret = Std.string(tex.yOffset).length;
+        texY.onUpdateText();
 
         applyTexture();
     }
