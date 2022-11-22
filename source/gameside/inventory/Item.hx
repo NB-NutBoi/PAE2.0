@@ -1,12 +1,13 @@
 package gameside.inventory;
 
+import ui.premades.ItemEditor.ItemTexture;
+
 typedef ItemJson = {
     public var maxQuantity:Int;
     public var defaultAmmount:Float;
     public var langId:String;
-    public var sprites:Array<String>;
-    public var spriteWidth:Int;
-    public var spriteHeight:Int;
+    public var textures:Array<ItemTexture>;
+    public var curTexture:Int;
     public var iWidth:Int;
     public var iHeight:Int;
 }

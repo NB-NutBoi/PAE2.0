@@ -1,5 +1,9 @@
 package ui.premades;
 
+import haxe.Json;
+import gameside.inventory.Item.ItemJson;
+import openfl.net.FileFilter;
+import lowlevel.FileBrowser;
 import utility.Language;
 import flixel.util.FlxColor;
 import ui.elements.Button;
@@ -67,14 +71,22 @@ class ItemEditor extends DMenu{
     var lang:TextField;
 
     var maxQuant:TextField;
+    var quantSafeIndicator:FlxSprite;
     var defAmmount:TextField;
+    var ammountSafeIndicator:FlxSprite;
 
     var itemW:TextField;
     var itemH:TextField;
     var itemSizeSafeIndicator:FlxSprite;
 
+    //--------------------------------------------------------
+
+    var saveButton:Button;
+    var loadButton:Button;
+    var newButton:Button;
+
     override public function new(x:Float, y:Float) {
-        super(x, y, 1000, 600);
+        super(x, y, 1000, 650);
 
         canOverride = false;
         doCompile = false;
@@ -92,7 +104,7 @@ class ItemEditor extends DMenu{
 
 
         //-----------------------------------------------------
-        itemName = new FlxText(320,10,0,"Unnamed Item",20);
+        itemName = new FlxText(300,10,280,"Unnamed Item",20);
         itemName.setFormat("vcr",20,FlxColor.WHITE,CENTER);
         itemName.antialiasing = true;
         add(itemName);
@@ -100,7 +112,7 @@ class ItemEditor extends DMenu{
         var sepparator = Utils.makeRamFriendlyRect(300,33,280,2);
         add(sepparator);
 
-        itemDescription = new FlxText(320,40,0,"Description",20);
+        itemDescription = new FlxText(300,40,280,"Description",20);
         itemDescription.setFormat("vcr",20,FlxColor.WHITE,CENTER);
         itemDescription.antialiasing = true;
         add(itemDescription);
@@ -112,7 +124,6 @@ class ItemEditor extends DMenu{
         grid.camera = cam;
 
         itemTexture = new Sprite(340,120,null);
-        add(itemTexture);
 
         var label:FlxText = new FlxText(430,95,0,"Grid visualizer",17); label.font = "vcr"; add(label);
 
@@ -225,15 +236,46 @@ class ItemEditor extends DMenu{
         itemW.onPressEnter.add(enterItemSizeValues);
         itemH.onPressEnter.add(enterItemSizeValues);
 
-        label = new FlxText(130,520,0,"Max Quantity",17); label.font = "vcr"; add(label);
+        sepparator = Utils.makeRamFriendlyRect(128,510,180,2); add(sepparator);
+
+        label = new FlxText(130,516,0,"Max\nQuantity",17); label.font = "vcr"; add(label);
 
         maxQuant = new TextField(260,520,50);
         add(maxQuant);
+
+        quantSafeIndicator = new FlxSprite(220,520,"embed/ui/checkbox.png");
+        quantSafeIndicator.color = FlxColor.GREEN;
+        add(quantSafeIndicator);
+
+        maxQuant.onType.add(onType_indicator2);
+        maxQuant.onPressEnter.add(enterMaxQuant);
+
+        sepparator = Utils.makeRamFriendlyRect(128,550,180,2); add(sepparator);
 
         label = new FlxText(130,556,0,"Default\nAmmount",17); label.font = "vcr"; add(label);
 
         defAmmount = new TextField(260,560,50);
         add(defAmmount);
+
+        ammountSafeIndicator = new FlxSprite(220,560,"embed/ui/checkbox.png");
+        ammountSafeIndicator.color = FlxColor.GREEN;
+        add(ammountSafeIndicator);
+
+        defAmmount.onType.add(onType_indicator3);
+        defAmmount.onPressEnter.add(enterItemAmmount);
+
+        //---------------------------------------------------------------------------------------------------------
+
+        saveButton = new Button(600,20,100,40,"Save",save);
+        add(saveButton);
+
+        loadButton = new Button(710,20,100,40,"Load",load);
+        add(loadButton);
+
+        newButton = new Button(820,20,100,40,"New",setupNewItem);
+        add(newButton);
+
+        add(itemTexture);
 
         setupNewItem();
     }
@@ -257,14 +299,11 @@ class ItemEditor extends DMenu{
     }
 
     public function setupNewItem() {
+
+        textureList.setChoices(["default"]);
         
         itemTextures = [];
         curItemTexture = 0;
-        itemWidth = 1;
-        itemHeight = 1;
-
-        maxQuantity = 1;
-        defaultAmmount = 0;
 
         itemTextures.push({
             nick: "default",
@@ -296,12 +335,14 @@ class ItemEditor extends DMenu{
         maxQuant.textField.text = "1";
         maxQuant.caret = 1;
         maxQuant.onUpdateText();
+        lastValidQuant = "1";
 
         defaultAmmount = 1;
 
         defAmmount.textField.text = "1";
         defAmmount.caret = 1;
         defAmmount.onUpdateText();
+        lastValidAmmount = "1";
 
         onSelectTextureFromList(curItemTexture);
     }
@@ -341,7 +382,20 @@ class ItemEditor extends DMenu{
     }
 
     public function browseTexture() {
-        
+        FileBrowser.callback = _fileBrowsed;
+        FileBrowser.browse([new FileFilter("Asset files", "*.asset")], false);
+    }
+
+    function _fileBrowsed() {
+        switch (FileBrowser.latestResult){
+            case SAVE, CANCEL, ERROR: return;
+            case SELECT:
+                texturePath.textField.text = FileBrowser.filePath;
+                texturePath.caret = FileBrowser.filePath.length;
+                texturePath.onUpdateText();
+
+                applyTexture();
+        }
     }
 
     public function applyTexture() {
@@ -580,6 +634,128 @@ class ItemEditor extends DMenu{
         }
 
         itemSizeSafeIndicator.color = FlxColor.GREEN;
+    }
+
+    public function onType_indicator2() {
+        quantSafeIndicator.color = FlxColor.RED;
+    }
+
+    public function onType_indicator3() {
+        ammountSafeIndicator.color = FlxColor.RED;
+    }
+
+    var lastValidAmmount:String;
+    public function enterItemAmmount(_) {
+        var texIdx = getTextureIdxFromSelected(textureList.selected);
+        var tex = itemTextures[texIdx];
+
+        //check x
+        if(!Math.isNaN(Std.parseFloat(defAmmount.textField.text))){
+            var value = Std.parseFloat(defAmmount.textField.text);
+
+            lastValidAmmount = Std.string(value);
+            defaultAmmount = value;
+        }
+        else{
+            defAmmount.textField.text = lastValidAmmount;
+        }
+
+        ammountSafeIndicator.color = FlxColor.GREEN;
+    }
+
+    var lastValidQuant:String;
+    public function enterMaxQuant(_) {
+        //check w
+        if(Std.parseInt(maxQuant.textField.text) != null){
+            var value = Std.parseInt(maxQuant.textField.text);
+            if(value < 1){
+                maxQuant.textField.text = lastValidQuant;
+            }
+            else{
+                lastValidQuant = Std.string(value);
+                maxQuantity = value;
+            }
+        }
+        else{
+            maxQuant.textField.text = lastValidQuant;
+        }
+
+        quantSafeIndicator.color = FlxColor.GREEN;
+    }
+
+    //-------------------------------------------------------------------------------------------------------------------
+    //-------------------------------------------------------------------------------------------------------------------
+    //-------------------------------------------------------------------------------------------------------------------
+
+    public function save() {
+        var json:ItemJson = {
+            maxQuantity: maxQuantity,
+            defaultAmmount: defaultAmmount,
+            langId: itemLang,
+            textures: itemTextures,
+            curTexture: curItemTexture,
+            iWidth: itemWidth,
+            iHeight: itemHeight
+        }
+
+        var c = Json.stringify(json,null," ");
+        FileBrowser.save(c, "item.item");
+    }
+
+    public function load() {
+        FileBrowser.callback = loadSelect;
+        FileBrowser.browse([new FileFilter("ItemFiles", "*.item")], true);
+    }
+
+    function loadSelect() {
+        switch (FileBrowser.latestResult){
+            case SAVE, CANCEL, ERROR: return;
+            case SELECT:
+                var jsonSelect:ItemJson = cast Json.parse(FileBrowser.fileData);
+
+                
+                itemTextures = jsonSelect.textures;
+                textureList.setChoices([itemTextures[0].nick]);
+
+                for (i in 1...itemTextures.length) {
+                    textureList.addChoice(itemTextures[i].nick);
+                }
+
+                curItemTexture = jsonSelect.curTexture;
+
+                itemLang = jsonSelect.langId;
+                applyLang(itemLang);
+
+                itemWidth = jsonSelect.iWidth;
+
+                itemW.textField.text = Std.string(itemWidth);
+                itemW.caret = itemW.textField.text.length;
+                itemW.onUpdateText();
+                lastValidItemW = itemW.textField.text;
+
+                itemHeight = jsonSelect.iHeight;
+
+                itemH.textField.text = Std.string(itemHeight);
+                itemH.caret = itemH.textField.text.length;
+                itemH.onUpdateText();
+                lastValidItemH = itemH.textField.text;
+
+                maxQuantity = jsonSelect.maxQuantity;
+
+                maxQuant.textField.text = Std.string(maxQuantity);
+                maxQuant.caret = maxQuant.textField.text.length;
+                maxQuant.onUpdateText();
+                lastValidQuant = maxQuant.textField.text;
+
+                defaultAmmount = jsonSelect.defaultAmmount;
+
+                defAmmount.textField.text = Std.string(defaultAmmount);
+                defAmmount.caret = defAmmount.textField.text.length;
+                defAmmount.onUpdateText();
+                lastValidAmmount = defAmmount.textField.text;
+
+                onSelectTextureFromList(curItemTexture);
+        }
     }
 
 }

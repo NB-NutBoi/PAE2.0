@@ -31,10 +31,6 @@ class MainState extends CoreState {
     override function update(elapsed:Float) {
         super.update(elapsed);
         level.update(elapsed);
-
-        if(FlxG.keys.justPressed.L){
-            testDebug();
-        }
     }
 
     override function draw() {

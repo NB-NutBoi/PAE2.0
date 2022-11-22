@@ -34,6 +34,8 @@ class SelectableList extends FlxObject implements ContainerObject {
     override public function new(x:Float, y:Float, defaultChoices:Array<String>, width:Int) {
         super(x,y);
 
+        if(defaultChoices.length < 1) defaultChoices = ["default"];
+
         box = Utils.makeRamFriendlyRect(x,y,width,1,IDLE);
 
         for (s in defaultChoices) {
@@ -93,6 +95,8 @@ class SelectableList extends FlxObject implements ContainerObject {
         choices.draw();
     }
 
+    //-------------------------------------------------------------------------------------------------------
+
     public function addChoice(s:String):Int {
         var t = new FlxText(box.x+1, box.y + (21*choices.length),box.width-4,s,15);
         t.font = "vcr";
@@ -116,6 +120,21 @@ class SelectableList extends FlxObject implements ContainerObject {
                     if(onSelect != null) onSelect(selected);
                 }  
             }
+        }
+    }
+
+    public function setChoices(choices:Array<String>) {
+        if(choices.length < 1) choices = ["default"];
+
+        if(this.choices.length > 1){
+            for (i in 1...this.choices.length) {
+                removeChoice(this.choices.members[i].text);
+            }
+        }
+
+        this.choices.members[0].text = choices[0];
+        for (i in 1...choices.length) {
+            addChoice(choices[i]);
         }
     }
 
