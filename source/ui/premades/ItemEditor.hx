@@ -112,8 +112,8 @@ class ItemEditor extends DMenu{
         var sepparator = Utils.makeRamFriendlyRect(300,33,280,2);
         add(sepparator);
 
-        itemDescription = new FlxText(300,40,280,"Description",20);
-        itemDescription.setFormat("vcr",20,FlxColor.WHITE,CENTER);
+        itemDescription = new FlxText(300,42,280,"Description",16);
+        itemDescription.setFormat("vcr",16,FlxColor.WHITE,CENTER);
         itemDescription.antialiasing = true;
         add(itemDescription);
 
@@ -476,7 +476,7 @@ class ItemEditor extends DMenu{
         //check w
         if(Std.parseInt(gridWField.textField.text) != null){
             var value = Std.parseInt(gridWField.textField.text);
-            if(value < 1){
+            if(value < 1){ //cannot be less than 1
                 gridWField.textField.text = lastValidX;
             }
             else{
@@ -491,7 +491,7 @@ class ItemEditor extends DMenu{
         //check h
         if(Std.parseInt(gridHField.textField.text) != null){
             var value = Std.parseInt(gridHField.textField.text);
-            if(value < 1){
+            if(value < 1){ //cannot be less than 1
                 gridHField.textField.text = lastValidY;
             }
             else{
@@ -513,7 +513,7 @@ class ItemEditor extends DMenu{
         //check w
         if(Std.parseInt(texW.textField.text) != null){
             var value = Std.parseInt(texW.textField.text);
-            if(value < 1){
+            if(value < 1){ //cannot be less than 1
                 texW.textField.text = lastValidW;
             }
             else{
@@ -528,7 +528,7 @@ class ItemEditor extends DMenu{
         //check h
         if(Std.parseInt(texH.textField.text) != null){
             var value = Std.parseInt(texH.textField.text);
-            if(value < 1){
+            if(value < 1){ //cannot be less than 1
                 texH.textField.text = lastValidH;
             }
             else{
@@ -606,7 +606,7 @@ class ItemEditor extends DMenu{
         //check w
         if(Std.parseInt(itemW.textField.text) != null){
             var value = Std.parseInt(itemW.textField.text);
-            if(value < 1){
+            if(value < 1){ //cannot be less than 1 (item has to take at least 1 slot for technical (and logical) reasons.)
                 itemW.textField.text = lastValidItemW;
             }
             else{
@@ -621,7 +621,7 @@ class ItemEditor extends DMenu{
         //check h
         if(Std.parseInt(itemH.textField.text) != null){
             var value = Std.parseInt(itemH.textField.text);
-            if(value < 1){
+            if(value < 1){ //cannot be less than 1 (item has to take at least 1 slot for technical (and logical) reasons.)
                 itemH.textField.text = lastValidItemH;
             }
             else{
@@ -649,7 +649,7 @@ class ItemEditor extends DMenu{
         var texIdx = getTextureIdxFromSelected(textureList.selected);
         var tex = itemTextures[texIdx];
 
-        //check x
+        //check ammount
         if(!Math.isNaN(Std.parseFloat(defAmmount.textField.text))){
             var value = Std.parseFloat(defAmmount.textField.text);
 
@@ -665,10 +665,10 @@ class ItemEditor extends DMenu{
 
     var lastValidQuant:String;
     public function enterMaxQuant(_) {
-        //check w
+        //check quantity
         if(Std.parseInt(maxQuant.textField.text) != null){
             var value = Std.parseInt(maxQuant.textField.text);
-            if(value < 1){
+            if(value < 1){ //cannot be less than 1 (you cant hold 0 of this item while having it in your inventory bruhbruhbruh)
                 maxQuant.textField.text = lastValidQuant;
             }
             else{
@@ -722,6 +722,7 @@ class ItemEditor extends DMenu{
                 }
 
                 curItemTexture = jsonSelect.curTexture;
+                textureList.selected = curItemTexture;
 
                 itemLang = jsonSelect.langId;
                 applyLang(itemLang);
