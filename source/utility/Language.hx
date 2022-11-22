@@ -43,7 +43,7 @@ class LanguageManager {
     }
 
     //adds lang on top and replaces existing ones.
-    public function appendLang(langFolder:String) {
+    public static function appendLang(langFolder:String) {
         var langs = AssetPaths.getPathList(langFolder,null,["lang"]);
         
         for (path in langs) {
@@ -70,7 +70,7 @@ class LanguageManager {
         }
     }
 
-    public function setCurLanguage(prefix:String) {
+    public static function setCurLanguage(prefix:String) {
         prefix = prefix.toLowerCase();
         if(languages[prefix] == null || prefix == curLanguage) return;
         curLanguage = prefix;
@@ -80,7 +80,7 @@ class LanguageManager {
         listeners.dispatch();
     }
 
-    public function getLanguageList():Array<String> {
+    public static function getLanguageList():Array<String> {
         var l:Array<String> = [];
         for (s in languages.keys()) {
             l.push(s);
@@ -88,7 +88,8 @@ class LanguageManager {
         return l;
     }
 
-    public function getText(key:String) {
+    public static function getText(key:String) {
+        if(languages[curLanguage] == null) return "LANG_MISSING";
         return languages[curLanguage].getText(key);
     }
 

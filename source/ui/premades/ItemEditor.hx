@@ -1,5 +1,6 @@
 package ui.premades;
 
+import utility.Language;
 import flixel.util.FlxColor;
 import ui.elements.Button;
 import utility.Utils;
@@ -27,8 +28,8 @@ class ItemEditor extends DMenu{
     
     var itemName:FlxText;
     var itemDescription:FlxText;
-    var itemNameLang:String;
-    var itemDescLang:String;
+    var itemLang:String;
+    //description uses "itemLang_Description" and name uses "itemLang_Name", that way only one lang needs to be saved, and it can be changed easily.
 
     var grid:FlxSprite;
     var gridW:Int = 1;
@@ -60,9 +61,20 @@ class ItemEditor extends DMenu{
 
         var texX:TextField;
         var texY:TextField;
+        //--------------------------------------------------------
+
+
+    var lang:TextField;
+
+    var maxQuant:TextField;
+    var defAmmount:TextField;
+
+    var itemW:TextField;
+    var itemH:TextField;
+    var itemSizeSafeIndicator:FlxSprite;
 
     override public function new(x:Float, y:Float) {
-        super(x, y, 600, 600);
+        super(x, y, 1000, 600);
 
         canOverride = false;
         doCompile = false;
@@ -102,6 +114,8 @@ class ItemEditor extends DMenu{
         itemTexture = new Sprite(340,120,null);
         add(itemTexture);
 
+        var label:FlxText = new FlxText(430,95,0,"Grid visualizer",17); label.font = "vcr"; add(label);
+
         gridWField = new TextField(340,90,30);
         gridHField = new TextField(385,90,30);
         add(gridWField);
@@ -127,8 +141,7 @@ class ItemEditor extends DMenu{
 
         //texturedef rect----------------------------------------------------------------------
 
-        var label:FlxText = new FlxText(175,120,0,"Texture",12);
-        add(label);
+        label = new FlxText(175,120,0,"Texture",17); label.font = "vcr"; add(label);
 
         sepparator = Utils.makeRamFriendlyRect(132,140,180,2); add(sepparator); 
 
@@ -148,35 +161,79 @@ class ItemEditor extends DMenu{
         var setButton = new Button(132,175,20,20,"set",applyTexture);
         add(setButton);
 
-        label = new FlxText(135,220,0,"Texture Properties",12);
-        add(label);
+        label = new FlxText(135,220,0,"Texture Properties",17); label.font = "vcr"; add(label);
 
         sepparator = Utils.makeRamFriendlyRect(132,240,180,2); add(sepparator); 
         
 
-        label = new FlxText(135,245,0,"W",12);
-        add(label);
+        label = new FlxText(135,245,0,"W",17); label.font = "vcr"; add(label);
 
         texW = new TextField(155,245,60);
         add(texW);
 
-        label = new FlxText(230,245,0,"H",12);
-        add(label);
+        texW.onPressEnter.add(enterWHValues);
+
+        label = new FlxText(230,245,0,"H",17); label.font = "vcr"; add(label);
 
         texH = new TextField(250,245,60);
         add(texH);
 
-        label = new FlxText(135,280,0,"X",12);
-        add(label);
+        texH.onPressEnter.add(enterWHValues);
+
+        label = new FlxText(135,280,0,"X",17); label.font = "vcr"; add(label);
 
         texX = new TextField(155,280,60);
         add(texX);
+        texX.onPressEnter.add(enterXYValuesTex);
 
-        label = new FlxText(230,280,0,"Y",12);
-        add(label);
+        label = new FlxText(230,280,0,"Y",17); label.font = "vcr"; add(label);
 
         texY = new TextField(250,280,60);
         add(texY);
+
+        texY.onPressEnter.add(enterXYValuesTex);
+
+        //item properties----------------------------------------------------------------------
+
+        sepparator = Utils.makeRamFriendlyRect(132,405,180,2); add(sepparator);
+
+        label = new FlxText(135,385,0,"Item properties",17); label.font = "vcr"; add(label);
+        label = new FlxText(132,420,0,"Lang",17); label.font = "vcr"; add(label);
+
+        lang = new TextField(180,420,120);
+        add(lang);
+
+        lang.onPressEnter.add(applyLang);
+
+        label = new FlxText(135,455,0,"Item Size",17); label.font = "vcr"; add(label);
+        label = new FlxText(135,480,0,"W",17); label.font = "vcr"; add(label);
+
+        itemW = new TextField(155,480,60);
+        add(itemW);
+
+        label = new FlxText(230,480,0,"H",17); label.font = "vcr"; add(label);
+
+        itemH = new TextField(250,480,60);
+        add(itemH);
+
+        itemSizeSafeIndicator = new FlxSprite(270,452,"embed/ui/checkbox.png");
+        itemSizeSafeIndicator.color = FlxColor.GREEN;
+        add(itemSizeSafeIndicator);
+
+        itemW.onType.add(onType_indicator1);
+        itemH.onType.add(onType_indicator1);
+        itemW.onPressEnter.add(enterItemSizeValues);
+        itemH.onPressEnter.add(enterItemSizeValues);
+
+        label = new FlxText(130,520,0,"Max Quantity",17); label.font = "vcr"; add(label);
+
+        maxQuant = new TextField(260,520,50);
+        add(maxQuant);
+
+        label = new FlxText(130,556,0,"Default\nAmmount",17); label.font = "vcr"; add(label);
+
+        defAmmount = new TextField(260,560,50);
+        add(defAmmount);
 
         setupNewItem();
     }
@@ -219,6 +276,33 @@ class ItemEditor extends DMenu{
             yOffset: 0
         });
 
+        itemLang = "";
+        itemWidth = 1;
+
+        itemW.textField.text = "1";
+        itemW.caret = 1;
+        itemW.onUpdateText();
+        lastValidItemW = "1";
+
+        itemHeight = 1;
+
+        itemH.textField.text = "1";
+        itemH.caret = 1;
+        itemH.onUpdateText();
+        lastValidItemH = "1";
+
+        maxQuantity = 1;
+
+        maxQuant.textField.text = "1";
+        maxQuant.caret = 1;
+        maxQuant.onUpdateText();
+
+        defaultAmmount = 1;
+
+        defAmmount.textField.text = "1";
+        defAmmount.caret = 1;
+        defAmmount.onUpdateText();
+
         onSelectTextureFromList(curItemTexture);
     }
 
@@ -228,7 +312,7 @@ class ItemEditor extends DMenu{
         itemTexture.setAsset(ImageAsset.get(texture.path));
         itemTexture.setGraphicSize(texture.width, texture.height);
         itemTexture.updateHitbox();
-        itemTexture.offset.add(texture.xOffset, texture.yOffset);
+        itemTexture.offset.subtract(texture.xOffset, texture.yOffset);
     }
 
     public function addTexture() {
@@ -291,6 +375,7 @@ class ItemEditor extends DMenu{
     }
 
     public function onSelectTextureFromList(i:Int) {
+        curItemTexture = i;
         var texIdx = getTextureIdxFromSelected(i);
         var tex = itemTextures[texIdx];
 
@@ -310,6 +395,9 @@ class ItemEditor extends DMenu{
         texH.caret = Std.string(tex.height).length;
         texH.onUpdateText();
 
+        lastValidW = Std.string(tex.width);
+        lastValidH = Std.string(tex.height);
+
         texX.textField.text = Std.string(tex.xOffset);
         texX.caret = Std.string(tex.xOffset).length;
         texX.onUpdateText();
@@ -317,6 +405,9 @@ class ItemEditor extends DMenu{
         texY.textField.text = Std.string(tex.yOffset);
         texY.caret = Std.string(tex.yOffset).length;
         texY.onUpdateText();
+
+        lastValidTexX = Std.string(tex.xOffset);
+        lastValidTexY = Std.string(tex.yOffset);
 
         applyTexture();
     }
@@ -339,6 +430,9 @@ class ItemEditor extends DMenu{
                 gridW = value;
             }
         }
+        else{
+            gridWField.textField.text = lastValidX;
+        }
 
         //check h
         if(Std.parseInt(gridHField.textField.text) != null){
@@ -351,6 +445,141 @@ class ItemEditor extends DMenu{
                 gridH = value;
             }
         }
+        else{
+            gridHField.textField.text = lastValidY;
+        }
+    }
+
+    var lastValidW:String;
+    var lastValidH:String;
+    public function enterWHValues(_) {
+        var texIdx = getTextureIdxFromSelected(textureList.selected);
+        var tex = itemTextures[texIdx];
+
+        //check w
+        if(Std.parseInt(texW.textField.text) != null){
+            var value = Std.parseInt(texW.textField.text);
+            if(value < 1){
+                texW.textField.text = lastValidW;
+            }
+            else{
+                lastValidW = Std.string(value);
+                tex.width = value;
+            }
+        }
+        else{
+            texW.textField.text = lastValidW;
+        }
+
+        //check h
+        if(Std.parseInt(texH.textField.text) != null){
+            var value = Std.parseInt(texH.textField.text);
+            if(value < 1){
+                texH.textField.text = lastValidH;
+            }
+            else{
+                lastValidH = Std.string(value);
+                tex.height = value;
+            }
+        }
+        else{
+            texH.textField.text = lastValidH;
+        }
+
+        itemTexture.setGraphicSize(tex.width,tex.height);
+        itemTexture.updateHitbox();
+        itemTexture.offset.subtract(tex.xOffset, tex.yOffset);
+    }
+
+    var lastValidTexX:String;
+    var lastValidTexY:String;
+    public function enterXYValuesTex(_) {
+        var texIdx = getTextureIdxFromSelected(textureList.selected);
+        var tex = itemTextures[texIdx];
+
+        //check x
+        if(!Math.isNaN(Std.parseFloat(texX.textField.text))){
+            var value = Std.parseFloat(texX.textField.text);
+
+            lastValidTexX = Std.string(value);
+            tex.xOffset = value;
+        }
+        else{
+            texX.textField.text = lastValidX;
+        }
+
+        //check y
+        if(!Math.isNaN(Std.parseFloat(texY.textField.text))){
+            var value = Std.parseFloat(texY.textField.text);
+
+            lastValidTexY = Std.string(value);
+            tex.yOffset = value;
+        }
+        else{
+            texY.textField.text = lastValidY;
+        }
+
+        itemTexture.updateHitbox();
+        itemTexture.offset.subtract(tex.xOffset, tex.yOffset);
+    }
+
+    //-------------------------------------------------------------------------------------------------------------------
+    //-------------------------------------------------------------------------------------------------------------------
+    //-------------------------------------------------------------------------------------------------------------------
+
+    public function applyLang(_:String) {
+        if(_ == ""){
+            itemName.text = "Unnamed Item";
+            itemDescription.text = "Description";
+
+            itemLang = "";
+            return;
+        }
+
+        itemLang = _;
+
+        itemName.text = LanguageManager.getText(_+"_Name");
+        itemDescription.text = LanguageManager.getText(_+"_Description");
+    }
+
+    public function onType_indicator1() {
+        itemSizeSafeIndicator.color = FlxColor.RED;
+    }
+
+    var lastValidItemW:String;
+    var lastValidItemH:String;
+    public function enterItemSizeValues(_) {
+        //check w
+        if(Std.parseInt(itemW.textField.text) != null){
+            var value = Std.parseInt(itemW.textField.text);
+            if(value < 1){
+                itemW.textField.text = lastValidItemW;
+            }
+            else{
+                lastValidItemW = Std.string(value);
+                itemWidth = value;
+            }
+        }
+        else{
+            itemW.textField.text = lastValidItemW;
+        }
+
+        //check h
+        if(Std.parseInt(itemH.textField.text) != null){
+            var value = Std.parseInt(itemH.textField.text);
+            if(value < 1){
+                itemH.textField.text = lastValidItemH;
+            }
+            else{
+                lastValidItemH = Std.string(value);
+                itemHeight = value;
+            }
+        }
+        else{
+            itemH.textField.text = lastValidItemH;
+        }
+
+        itemSizeSafeIndicator.color = FlxColor.GREEN;
     }
 
 }
