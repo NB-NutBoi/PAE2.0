@@ -1,3 +1,4 @@
+<!-- THANKS TO KADE ENGINE AND KADEDEV FOR THE INITIAL DOCUMENTATION -->
 # HOW TO BUILD THE ENGINE
 
 You're going to need [Haxe 4.2.5](https://haxe.org/download/version/4.2.5/) as it is the version the engine was last compiled in.<br />
