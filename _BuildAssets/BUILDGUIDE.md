@@ -1,3 +1,4 @@
+<!-- THANKS TO KADE ENGINE AND KADEDEV FOR THE INITIAL DOCUMENTATION -->
 # HOW TO BUILD THE ENGINE
 
 You're going to need [Haxe 4.2.5](https://haxe.org/download/version/4.2.5/) as it is the version the engine was last compiled in.<br />
@@ -26,7 +27,7 @@ To build the engine, you should be familiar with the commandline. If not, read t
 
 ---------------------------------------
 ### Windows only dependencies
-If you are building for Windows, you also need to install **Visual Studio 2019**. While installing it, *don't click on any of the options to install workloads*. Instead, go to the **individual components** tab and choose the following:
+If you are building for Windows, you will also need to install **Visual Studio 2019**. While installing it, *don't click on any of the options to install workloads*. Instead, go to the **individual components** tab and choose the following:
 
 -   MSVC v142 - VS 2019 C++ x64/x86 build tools
 -   Windows SDK (10.0.17763.0)
