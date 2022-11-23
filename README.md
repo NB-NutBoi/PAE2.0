@@ -1,4 +1,4 @@
-              ![PAE2.0](https://github.com/NB-NutBoi/PAE2.0/blob/main/_BuildAssets/icon512.png)
+          ![PAE2.0](https://github.com/NB-NutBoi/PAE2.0/blob/main/_BuildAssets/icon512.png)
 <!-- is there a way to center this image its pissing me off -->
 <!-- found it -->
 
