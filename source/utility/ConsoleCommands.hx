@@ -1,5 +1,7 @@
 package utility;
 
+import leveleditor.LevelEditor;
+import flixel.FlxG;
 import saving.SaveManager;
 import FlxGamePlus.UIPlugin;
 import openfl.display.PNGEncoderOptions;
@@ -29,6 +31,10 @@ class ConsoleCommands {
 
         Console.registerCommand(closeGame, "closegame", "", "Closes the game window.", "Closes the game window.");
         Console.registerCommand(testCloseGameScreen, "testCloseGameScreen", "", "tests the closing game screen.", "tests the closing game screen.");
+
+
+        Console.registerCommand(openLevelEditor, "openLevelEditor", "levelEditor", "Opens the level editor.", "Opens the level editor.");
+        Console.registerCommand(openMainState, "openMain", "main", "Opens the Main state.", "Opens the Main state.");
     }
 
     static function takeDebugScreenshot(args:Array<String>) {
@@ -146,5 +152,13 @@ class ConsoleCommands {
 
     static function testCloseGameScreen(args:Array<String>) {
         Main.onTryCloseGame.dispatch();
+    }
+
+    static function openLevelEditor(args:Array<String>) {
+        if(LevelEditor.instance == null) FlxG.switchState(new LevelEditor());
+    }
+
+    static function openMainState(args:Array<String>) {
+        if(MainState.instance == null) FlxG.switchState(new MainState());
     }
 }

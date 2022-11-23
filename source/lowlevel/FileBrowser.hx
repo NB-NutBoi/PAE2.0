@@ -1,5 +1,6 @@
 package lowlevel;
 
+import utility.LogFile;
 import openfl.Lib;
 import utility.Utils;
 import openfl.events.IOErrorEvent;
@@ -21,6 +22,7 @@ enum FileResult {
 class FileBrowser {
 
     static var _file:FileReference;
+    static var isUsing:Bool = false;
     static var load:Bool = false; //optional loading (might only need the path idk)
 
     /**
@@ -32,7 +34,7 @@ class FileBrowser {
     /**
      * Path to the last referenced file. (save/browse)
      */
-    public static var filePath:String = ""; 
+    public static var filePath:String = "";
 
     /**
      * Data from the last loaded file. (browse)
@@ -50,9 +52,11 @@ class FileBrowser {
         _file = new FileReference();
         _file.addEventListener(Event.CANCEL, onCancel);
         _file.addEventListener(IOErrorEvent.IO_ERROR, onError);
+        isUsing = true;
     }
 
     public static function browse(?filter:Array<FileFilter> = null, ?load:Bool = true) {
+        if(isUsing) { LogFile.warning("cannot use file browser at this time: it is already in use."); return; }
         prepare();
         _file.addEventListener(Event.SELECT, selectFile);
 
@@ -64,6 +68,7 @@ class FileBrowser {
     }
 
     public static function save(content:Dynamic, ?defaultName:Null<String>) {
+        if(isUsing) { LogFile.warning("cannot use file browser at this time: it is already in use."); return; }
         prepare();
         _file.addEventListener(Event.COMPLETE, saveFile);
 
@@ -87,8 +92,11 @@ class FileBrowser {
         _file.removeEventListener(IOErrorEvent.IO_ERROR, onError);
         _file = null;
 
-        if(callback != null) callback();
+        isUsing = false;
+
+        final thCallback = callback;
         callback = null;
+        if(thCallback != null) thCallback();
     }
 
     static function selectFile(_) {
@@ -108,8 +116,11 @@ class FileBrowser {
         _file.removeEventListener(IOErrorEvent.IO_ERROR, onError);
         _file = null;
 
-        if(callback != null) callback();
+        isUsing = false;
+
+        final thCallback = callback;
         callback = null;
+        if(thCallback != null) thCallback();
     }
 
     //-------------------------------------------------------------------------------------------------
@@ -123,10 +134,13 @@ class FileBrowser {
         _file.removeEventListener(IOErrorEvent.IO_ERROR, onError);
         _file = null;
 
-        latestResult = CANCEL;
+        latestResult = CANCEL; //set after check.
 
-        if(callback != null) callback();
+        isUsing = false;
+
+        final thCallback = callback;
         callback = null;
+        if(thCallback != null) thCallback();
     }
 
     static function onError(_) {
@@ -138,9 +152,12 @@ class FileBrowser {
         _file.removeEventListener(IOErrorEvent.IO_ERROR, onError);
         _file = null;
 
-        latestResult = ERROR;
+        latestResult = ERROR; //set after check.
 
-        if(callback != null) callback();
+        isUsing = false;
+
+        final thCallback = callback;
         callback = null;
+        if(thCallback != null) thCallback();
     }
 }

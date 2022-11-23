@@ -302,7 +302,7 @@ class Level {
     public function destroy() {
         trace("level destroyed");
 
-        script.destroy();
+        if(script != null) script.destroy();
         script = null;
 
         layers.destroy();

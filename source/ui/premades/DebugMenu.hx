@@ -8,6 +8,8 @@ package ui.premades;
  *///                                                                                                      |
 //---------------------------------------------------------------------------------------------------------|
 
+import openfl.net.FileFilter;
+import lowlevel.FileBrowser;
 import ui.elements.CustomButton;
 import common.ClientPreferences;
 import flixel.FlxCamera;
@@ -75,16 +77,16 @@ class DebugMenu extends DMenu {
         Main.onPauseGame.add(updatePaused);
         Main.onUnpauseGame.add(updatePaused);
         
-        var debugcam:Checkbox = new Checkbox(10,115,"Debug camera controls",debugCamera);
+        var debugcam:Checkbox = new Checkbox(10,125,"Debug camera controls",debugCamera);
         debugcam.checked = debugCamControls;
         add(debugcam);
 
-        debugCamIndicator = new FlxSprite(260,115,"embed/ui/checkbox.png");
+        debugCamIndicator = new FlxSprite(260,125,"embed/ui/checkbox.png");
         debugCamIndicator.antialiasing = true;
         debugCamIndicator.color = FlxColor.BLACK;
         add(debugCamIndicator);
 
-        add(Utils.makeRamFriendlyRect(10,145,280,2,0xAD646464));
+        add(Utils.makeRamFriendlyRect(10,115,280,2,0xAD646464));
 
         var resetdebugcam = new Button(15, 160, 80, 20, "Reset cam", resetDebugCamera);
         add(resetdebugcam);
@@ -95,11 +97,12 @@ class DebugMenu extends DMenu {
         debugCamLabel.visible = true;
         add(debugCamLabel);
 
+        add(Utils.makeRamFriendlyRect(10,197,280,2,0xAD646464));
 
-        var test:Button = new Button(10, 200, 100, 25, "Test button", test);
-        add(test);
+        var loadLevel = new Button(10,210,100,25,"Open Level",loadLevel);
+        add(loadLevel);
 
-        var measurerTool:CustomButton = new CustomButton(150, 197, 36, 36, toggleMeasuringTool);
+        var measurerTool:CustomButton = new CustomButton(250, 205, 36, 36, toggleMeasuringTool);
         add(measurerTool);
 
         measuringToolSprite = new FlxSprite(3,3,"embed/debug/quill.png");
@@ -130,6 +133,8 @@ class DebugMenu extends DMenu {
 
         test5 = new SelectableList(60,350,["Choice1","Choice2","Choice3"], 100);
         add(test5);
+
+        
 
         debugCam = FlxG.camera;
         lastZoom = debugCam.zoom;
@@ -221,6 +226,18 @@ class DebugMenu extends DMenu {
             measuringTool = new MeasuringTool(FlxG.camera.scroll.x+(FlxG.width*0.5),FlxG.camera.scroll.y+(FlxG.height*0.5));
             FlxG.state.add(measuringTool);
             measuringToolSprite.color = 0xFFFFFFFF;
+        }
+    }
+
+    function loadLevel() {
+        FileBrowser.callback = loadLevelSelect;
+        FileBrowser.browse([new FileFilter("Map files", "*.map")], false);
+    }
+
+    function loadLevelSelect() {
+        switch (FileBrowser.latestResult){
+            case SAVE, CANCEL, ERROR: return;
+            case SELECT: if(MainState.instance != null) MainState.instance.level.loadLevel(FileBrowser.filePath); 
         }
     }
 }

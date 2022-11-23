@@ -57,6 +57,17 @@ class MainState extends CoreState {
         Utils.drawBackground(grid);
     }
 
+    override function destroy() {
+        CoreState.onSave.remove(onSave);
+        CoreState.onLoad.remove(onLoad);
+
+        level.destroy();
+
+        instance = null;
+
+        super.destroy();
+    }
+
     function onSave(where:String) {
         level.onSave();
     }
