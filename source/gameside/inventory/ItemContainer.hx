@@ -14,6 +14,8 @@ typedef ItemSlot = {
 interface ItemContainer {
     private var exists:Bool;
 
+    public function getItemAt(x:Int,y:Int):Item;
+
     public function addItem(item:Item, ?x:Int, ?y:Int):Bool;
     public function addItemToFirstAvailableSlot(item:Item):Bool;
 
@@ -22,6 +24,8 @@ interface ItemContainer {
 
     public function removeItemAt(x:Int, y:Int, ?destroy:Bool = true):Void;
     public function removeItemStackAt(x:Int, y:Int, stack:Int, ?destroy:Bool = true):Void;
+
+    public function transferItemAt(x:Int, y:Int, to:ItemContainer, ?toX:Int = -1, ?toY:Int = -1):Void;
 }
 
 typedef ItemContainerCache = {

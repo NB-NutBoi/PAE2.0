@@ -124,11 +124,23 @@ class ItemContainerList implements ItemContainer{
 
     //misc?
 
-    public function getItemAt(i:Int):Item {
+	public function getItemAt(x:Int,y:Int):Item {
         if(!exists) return null;
-		if(storage.length-1 < i) return null;
+        if(storage[y] == null) return null;
+        
+        var theSlot = storage[y];
 
-		return storage[i].item;
+        return theSlot.item;
+    }
+
+	public function transferItemAt(x:Int, y:Int, to:ItemContainer, ?toX:Int = -1, ?toY:Int = -1) {
+        var item = getItemAt(x,y);
+        if(item == null) return;
+
+        removeItemAt(x,y,false);
+
+        if(toX >= 0 && toY >= 0) to.addItem(item, toX, toY);
+        else to.addItemToFirstAvailableSlot(item);
     }
 
 	//------------------------------------------------------------------------------------------------------------------------------------------------------------------
