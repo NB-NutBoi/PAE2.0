@@ -11,6 +11,8 @@ Purrfect Apawcalypse Engine 2.0 for 2D games.<br>
 Why the name?<br>
 Cause the engine was originally built to make a fangame for the charming purrfect apawcalypse trillogy, i hope to use it for sepparate projects and thus the distinction.
 
+This engine is based off the [flixel](https://github.com/HaxeFlixel/flixel) framework.
+
 # FEATURES
 
 Full game re-coding without recompiling
