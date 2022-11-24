@@ -200,6 +200,8 @@ class FlxGamePlus extends FlxGame {
         if(FlxG.cameras.list.contains(OverlayCam))
             FlxG.cameras.remove(OverlayCam,false);
 
+        if(UIPlugin.instance != null) UIPlugin.preReset();
+
         super.switchState();
 
         if(UIPlugin.instance == null){
@@ -211,6 +213,8 @@ class FlxGamePlus extends FlxGame {
                 }
             }
         }
+
+        if(UIPlugin.instance != null) UIPlugin.reset();
 
         if(GameOverlay.instance == null){
             FlxG.plugins.add(new GameOverlay(OverlayCam));
@@ -410,10 +414,11 @@ class UIPlugin extends FlxBasic {
     }
 
 
+    static var resetting:Bool = false;
     public static var addingCams:Bool = false;
 
     function updateCams(_) {
-        if(addingCams) return;
+        if(addingCams || resetting) return;
         if(containers.length == 0) return;
 
         for (container in containers) {
@@ -425,6 +430,7 @@ class UIPlugin extends FlxBasic {
     }
 
     public static function preReset() {
+        resetting = true;
         for (container in containers) {
             FlxG.cameras.remove(container.cam,false);
         }
@@ -436,6 +442,8 @@ class UIPlugin extends FlxBasic {
             FlxG.cameras.add(container.cam,false);
             addingCams = false;
         }
+
+        resetting = false;
     }
 
     //--------------------------------------------------------------------------------------------------------------

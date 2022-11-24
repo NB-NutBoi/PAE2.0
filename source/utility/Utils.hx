@@ -124,11 +124,17 @@ class Utils {
     public static function overlapsSprite(spr:FlxSprite, mousePos:FlxPoint, ?pixelAccurate:Bool = false) {
         if(spr == null) return false;
 
+		//i forgot this function kinda fucks up the point lol
+		final ogX = mousePos.x;
+		final ogY = mousePos.y;
+
         if(!pixelAccurate){
         	mousePos.rotate(spr.getGraphicMidpoint(FlxPoint.weak()),-spr.angle);
 
 			var b = spr.overlapsPoint(mousePos);
 			
+			mousePos.x = ogX;
+			mousePos.y = ogY;
 			mousePos.putWeak();
             return b;
         }
@@ -143,12 +149,14 @@ class Utils {
 		}
 
         var frameData:BitmapData = spr.updateFramePixels();
-        mousePos.rotate(spr.getGraphicMidpoint(FlxPoint.weak()),-spr.angle);
+        mousePos.rotate(spr.getGraphicMidpoint(FlxPoint.weak()), spr.angle == 0 ? 0 : -spr.angle);
         var rotatedPos:Array<Int> = [
             /*x*/Std.int((mousePos.x - spr.x - spr.offset.x) * spr.scale.x),
             /*y*/Std.int((mousePos.y - spr.y - spr.offset.y) * spr.scale.y)
         ];
 
+		mousePos.x = ogX;
+		mousePos.y = ogY;
         mousePos.putWeak();
 
 		if(isSprite) cast(spr, Sprite).lockFramePixels = previous;
