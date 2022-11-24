@@ -267,7 +267,7 @@ class Main extends Sprite
 	}
 
 	//guarantees a return, no matter how fucked the input is.
-	function _getWindowIcon(path:String):Image {
+	static function _getWindowIcon(path:String):Image {
 		if(path.startsWith("embed") && Assets.exists(path)) return lime.utils.Assets.getImage(path);
 		if(!FileSystem.exists(path)) return lime.utils.Assets.getImage("embed/defaults/icon32.png");
 		return Image.fromFile(path);
