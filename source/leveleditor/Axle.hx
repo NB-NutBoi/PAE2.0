@@ -1,5 +1,7 @@
 package leveleditor;
 
+import flixel.math.FlxAngle;
+import flixel.math.FlxMath;
 import flixel.util.FlxColor;
 import utility.Utils;
 import flixel.FlxG;
@@ -36,7 +38,7 @@ class Axle {
     var rotateAxle:FlxSprite;
     var rotateDirAxle:FlxSprite;
 
-    public var angle:Float;
+    public var angle:Float = 0;
     public var onChangeAngle:Void->Void = null;
 
     public var x:Float;
@@ -47,7 +49,7 @@ class Axle {
 
     public var visible:Bool = false;
     var dragging:Bool = false;
-    var moving:Int = 0;
+    var moving:Int = -1;
 
     public function new() {
         centerAxle = new FlxSprite(0,0,"embed/ui/leveleditor/small_square.png");
@@ -200,6 +202,24 @@ class Axle {
 
                 rotateDirAxle.color = X_IDLE;
                 rotateAxle.color = ROTATE_IDLE;
+
+                var overlap = false;
+
+                if(moving == 0 || Utils.overlapsSprite(rotateAxle,mousePos,true)){
+                    overlap = true;
+                }
+
+                if(overlap) rotateAxle.color = ROTATE_HOVER;
+
+                if(FlxG.mouse.justPressed && overlap) {
+                    dragging = true;
+                    moving = 0;
+                }
+
+                if(dragging){
+                    angle = FlxAngle.angleBetweenPoint(rotateDirAxle,mousePos,true)+90;
+                    if(onChangeAngle != null) onChangeAngle();
+                }
         }
 
         mousePos.put();
@@ -220,5 +240,23 @@ class Axle {
                 rotateDirAxle.draw();
                 rotateAxle.draw();
         }
+    }
+
+    public function destroy() {
+        centerAxle.destroy();
+
+        xMoveAxle.destroy();
+        yMoveAxle.destroy();
+
+        xScaleAxle.destroy();
+        yScaleAxle.destroy();
+
+        rotateAxle.destroy();
+        rotateDirAxle.destroy();
+
+
+        onMove = null;
+        onScale = null;
+        onChangeAngle = null;
     }
 }

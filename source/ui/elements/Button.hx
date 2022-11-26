@@ -20,9 +20,10 @@ import ui.base.Container;
 import ui.base.ContainerObject;
 import utility.Utils;
 
-class Button extends FlxObject implements ContainerObject{
+class Button extends StackableObject implements ContainerObject{
     static final IDLE:Int = 0xFF303030;
     static final HOVER:Int = 0xFF414141;
+    static final DISABLED:Int = 0xFF141414;
 
     var box:FlxSprite;
     var label:FlxText;
@@ -30,6 +31,7 @@ class Button extends FlxObject implements ContainerObject{
 	public var parent:Null<Container> = null;
 
     public var over:Bool = false;
+    public var disabled:Bool = false;
 
     override public function new(x:Float, y:Float, width:Int, height:Int, label:String, callback:Void->Void) {
         super(x,y);
@@ -37,6 +39,7 @@ class Button extends FlxObject implements ContainerObject{
         this.callback = callback;
 
         box = Utils.makeRamFriendlyRect(x,y,width,height,FlxColor.WHITE);
+        super.height = combinedHeight = height;
 
         this.label = new FlxText(x,y,label, Std.int(height * 0.65));
         this.label.font = "vcr";
@@ -58,6 +61,7 @@ class Button extends FlxObject implements ContainerObject{
     }
 
     public function updateInputs(elapsed:Float) {
+        if(disabled) return;
         var localMousePos = FlxPoint.get(0,0);
         localMousePos = Utils.getMousePosInCamera(parent == null ? camera : parent.cam, localMousePos, box);
 
@@ -71,6 +75,14 @@ class Button extends FlxObject implements ContainerObject{
     }
 
     public function postUpdate(elapsed:Float) {
+        if(disabled){
+            box.color = DISABLED;
+            label.color = HOVER;
+            return;
+        }
+
+        label.color = 0xFFFFFFFF;
+
         if(over){
             Mouse.setAs(BUTTON);
             box.color = HOVER;

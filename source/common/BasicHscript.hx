@@ -1,5 +1,8 @@
 package common;
 
+import saving.SaveManager;
+import sys.io.File;
+import sys.FileSystem;
 import JsonDefinitions;
 import assets.AssetCache;
 import flixel.FlxBasic;
@@ -10,6 +13,8 @@ import hscript.Parser;
 import utility.LogFile;
 import utility.Utils;
 
+using StringTools;
+
 class BasicHscript extends FlxBasic implements HScriptable {
     
     public var ready:Bool;
@@ -17,6 +22,12 @@ class BasicHscript extends FlxBasic implements HScriptable {
     public var parser:Parser;
 	public var program:Expr;
 	public var interpreter:Interp;
+
+    //----------------------------------------------
+
+    //scriptdef
+
+    public var properties:Map<String,String>;
 
     override public function new(scriptPath:String) {
         super();
@@ -51,7 +62,7 @@ class BasicHscript extends FlxBasic implements HScriptable {
         //Parse and compile
 		try
         {
-            program = parser.parseString(fullScript);
+            program = parser.parseString(preprocessString(fullScript));
             interpreter.execute(program);
 
             ready = true;
@@ -61,7 +72,106 @@ class BasicHscript extends FlxBasic implements HScriptable {
             // All exceptions will be caught here
             LogFile.error("Script error! |[ " + e.message + " ]| :" + parser.line+"\n",true);
         }
+
+        dynamicImports = null;
     }
+    
+    //------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    //------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    //------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+    var dynamicImports:Array<String> = [];
+    function preprocessString(script:String, ?og:Bool = true) {
+        var finalString:String = script;
+		var lines = script.split("\n");
+
+        for (i in 0...lines.length) {
+            var line = lines[i].trim();
+
+            //optimization
+            if(line.length == 0 || line == "") continue;
+			if(line.startsWith("//")) continue;
+
+            //early stop (optimization)
+			if(line.startsWith("#FLAG_STOP_PREPROCESS")){
+				finalString = finalString.replace(lines[i],"");
+
+				break;
+			}
+
+            // imports
+            if(line.startsWith("#import")){
+                var imp:String = line.split(" ")[1].trim();
+				
+
+				if (dynamicImports.contains(imp)){
+                    finalString = finalString.replace(lines[i],"");
+                    continue;
+                }
+					
+
+				dynamicImports.push(imp);
+
+				if (!FileSystem.exists(imp) || !imp.endsWith(".hx")){
+                    finalString = finalString.replace(lines[i],"");
+                    continue;
+                }
+					
+                finalString = finalString.replace(lines[i],preprocessString(File.getContent(imp).toString(),false));
+				continue;
+            }
+
+            //defines pieces of code
+			if(line.startsWith("#define")){
+				var dNd = getDefineAndDefined(line);
+
+                // remove to avoid crash
+				finalString = finalString.replace(lines[i], "");
+
+                if(dNd.length != 2) continue;
+
+				var defined:String = dNd[0];
+				var define:String = dNd[1];
+
+				//careful with your defines, they replace ALL instances of that string in the code, no matter where
+				finalString = finalString.replace(defined, define);
+				continue;
+			}
+
+            //defines properties
+            if (line.startsWith("#property")){
+
+                // remove to avoid crash
+				finalString = finalString.replace(lines[i], "");
+
+                if(!og) continue;
+
+                final propertees = line.split(" ");
+				var property:String = propertees[1].trim();
+				var value:String = propertees[2].trim();
+
+				properties.set(property,value);
+
+				continue;
+            }
+        }
+
+        lines = null;
+
+        return finalString;
+    }
+
+    static function getDefineAndDefined(s:String):Array<String> {
+		var r:Array<String> = [];
+
+		s = s.replace("#define","").trim();
+
+		r = s.split(" as ").map(function (s:String) {
+			return s.trim();
+		});
+
+		return r;
+	}
 
     //------------------------------------------------------------------------------------------------------------------------------------------------------------------
     //------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -107,6 +217,27 @@ class BasicHscript extends FlxBasic implements HScriptable {
     public function AddVariables() {
 		//BASICS
         AddGeneral("trace", _trace);
+
+
+        //GLOBALS
+
+        //initializers
+        AddGeneral("initializeGlobalString",initializeGlobalString);
+        AddGeneral("initializeGlobalInt",initializeGlobalInt);
+        AddGeneral("initializeGlobalFloat",initializeGlobalFloat);
+        AddGeneral("initializeGlobalBool",initializeGlobalBool);
+
+        //getters
+        AddGeneral("getGlobalString",getGlobalString);
+        AddGeneral("getGlobalInt",getGlobalInt);
+        AddGeneral("getGlobalFloat",getGlobalFloat);
+        AddGeneral("getGlobalBool",getGlobalBool);
+
+        //setters
+        AddGeneral("setGlobalBool",setGlobalBool);
+        AddGeneral("setGlobalFloat",setGlobalFloat);
+        AddGeneral("setGlobalInt",setGlobalInt);
+        AddGeneral("setGlobalString",setGlobalString);
     }
 
 	public function AddGeneral(name:String,toAdd:Dynamic)
@@ -172,6 +303,114 @@ class BasicHscript extends FlxBasic implements HScriptable {
         if(!exists || !ready) return;
 
         doFunction("OnLoad");
+    }
+
+    //------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    //------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    //------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+    //------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    //------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    //------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+    public function initializeGlobalString(name:String, value:String):Null<String> {
+        var s = SaveManager.curSaveData.globals.scriptSaveables.get(name);
+        if(s == null){
+            SaveManager.curSaveData.globals.scriptSaveables.set(name,value);
+        }
+
+        return SaveManager.curSaveData.globals.scriptSaveables.get(name);
+    }
+
+    public function initializeGlobalInt(name:String, value:Int):Null<Int> {
+        var i = SaveManager.curSaveData.globals.scriptSaveables.get(name);
+        if(i == null){
+            SaveManager.curSaveData.globals.scriptSaveables.set(name,value);
+        }
+
+        return SaveManager.curSaveData.globals.scriptSaveables.get(name);
+    }
+
+    public function initializeGlobalFloat(name:String, value:Float):Null<Float> {
+        var f = SaveManager.curSaveData.globals.scriptSaveables.get(name);
+        if(f == null){
+            SaveManager.curSaveData.globals.scriptSaveables.set(name,value);
+        }
+
+        return SaveManager.curSaveData.globals.scriptSaveables.get(name);
+    }
+
+    public function initializeGlobalBool(name:String, value:Bool):Null<Bool> {
+        var b = SaveManager.curSaveData.globals.scriptSaveables.get(name);
+        if(b == null){
+            SaveManager.curSaveData.globals.scriptSaveables.set(name,value);
+        }
+
+        return SaveManager.curSaveData.globals.scriptSaveables.get(name);
+    }
+
+    public function getGlobalString(name:String):Null<String> {
+        var s = SaveManager.curSaveData.globals.scriptSaveables.get(name);
+        if(s != null){
+            if(Std.isOfType(s,String)){
+                return s;
+            }
+        }
+
+        LogFile.error("Global STRING "+name+" Doesn't exist or is not a STRING type!");
+        return null;
+    }
+
+    public function getGlobalInt(name:String):Null<Int> {
+        var i = SaveManager.curSaveData.globals.scriptSaveables.get(name);
+        if(i != null){
+            if(Std.isOfType(i,Int)){
+                return i;
+            }
+        }
+
+        LogFile.error("Global INT "+name+" Doesn't exist or is not an INT type!");
+        return null;
+    }
+
+    public function getGlobalFloat(name:String):Null<Float> {
+        var f = SaveManager.curSaveData.globals.scriptSaveables.get(name);
+        if(f != null){
+            if(Std.isOfType(f,Float)){
+                return f;
+            }
+        }
+
+        LogFile.error("Global FLOAT "+name+" Doesn't exist or is not a FLOAT type!");
+        return null;
+    }
+
+    public function getGlobalBool(name:String):Null<Bool> {
+        var b = SaveManager.curSaveData.globals.scriptSaveables.get(name);
+        if(b != null){
+            if(Std.isOfType(b,Bool)){
+                return b;
+            }
+        }
+
+        LogFile.error("Global BOOL "+name+" Doesn't exist or is not a BOOL type!");
+        return null;
+    }
+
+    public function setGlobalBool(name:String,b:Bool):Null<Bool> {
+        return SaveManager.curSaveData.globals.scriptSaveables.set(name,b);
+    }
+
+    public function setGlobalFloat(name:String,f:Float):Null<Float> {
+        return SaveManager.curSaveData.globals.scriptSaveables.set(name,f);
+    }
+
+    public function setGlobalInt(name:String,i:Int):Null<Int> {
+        return SaveManager.curSaveData.globals.scriptSaveables.set(name,i);
+    }
+
+    public function setGlobalString(name:String,s:String):Null<String> {
+        return SaveManager.curSaveData.globals.scriptSaveables.set(name,s);
     }
 }
 

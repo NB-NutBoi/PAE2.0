@@ -20,9 +20,10 @@ import ui.base.Container;
 import ui.base.ContainerObject;
 import utility.Utils;
 
-class CustomButton extends FlxObject implements ContainerObject{
+class CustomButton extends StackableObject implements ContainerObject{
     static final IDLE:Int = 0xFF303030;
     static final HOVER:Int = 0xFF414141;
+    static final DISABLED:Int = 0xFF141414;
 
     var box:FlxSprite;
     public var content:Array<FlxObject> = [];
@@ -30,6 +31,7 @@ class CustomButton extends FlxObject implements ContainerObject{
 	public var parent:Null<Container> = null;
 
     public var over:Bool = false;
+    public var disabled:Bool = false;
 
     override public function new(x:Float, y:Float, width:Int, height:Int, callback:Void->Void) {
         super(x,y);
@@ -37,7 +39,7 @@ class CustomButton extends FlxObject implements ContainerObject{
         this.callback = callback;
 
         box = Utils.makeRamFriendlyRect(x,y,width,height,FlxColor.WHITE);
-
+        super.height = combinedHeight = height;
     }
 
     override function update(elapsed:Float) {
@@ -52,6 +54,7 @@ class CustomButton extends FlxObject implements ContainerObject{
     }
 
     public function updateInputs(elapsed:Float) {
+        if(disabled) return;
         var localMousePos = FlxPoint.get(0,0);
         localMousePos = Utils.getMousePosInCamera(parent == null ? camera : parent.cam, localMousePos, box);
 
@@ -65,6 +68,11 @@ class CustomButton extends FlxObject implements ContainerObject{
     }
 
     public function postUpdate(elapsed:Float) {
+        if(disabled){
+            box.color = DISABLED;
+            return;
+        }
+
         if(over){
             Mouse.setAs(BUTTON);
             box.color = HOVER;

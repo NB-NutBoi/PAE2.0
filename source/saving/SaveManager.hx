@@ -1,5 +1,6 @@
 package saving;
 
+import gameside.dialogue.DialogueState.DialogueCache;
 import gameside.inventory.ItemContainer.ItemContainerCache;
 import CoreState.GlobalSaveables;
 import assets.AssetCache;
@@ -34,6 +35,7 @@ typedef Save = {
     public var pluginSavedata:DynamicAccess<PluginSavedata>;
 
     public var containers:DynamicAccess<ItemContainerCache>;
+    public var dialogues:DynamicAccess<DialogueCache>;
 
 
     public var dynamics:DynamicAccess<Dynamic>; //there it is, the "make your own save format yourself" field. good fucking luck managing any data in this.
@@ -49,6 +51,7 @@ class SaveManager {
         pluginSavedata: new DynamicAccess(),
 
         containers: new DynamicAccess(),
+        dialogues: new DynamicAccess(),
 
 
         dynamics: new DynamicAccess()

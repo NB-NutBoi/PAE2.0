@@ -21,10 +21,11 @@ import ui.base.Container;
 import ui.base.ContainerObject;
 import utility.Utils;
 
-class Checkbox extends FlxObject implements ContainerObject {
+class Checkbox extends StackableObject implements ContainerObject {
 
     static final IDLE:Int = 0xFF303030;
     static final HOVER:Int = 0xFF414141;
+    static final DISABLED:Int = 0xFF141414;
 
     public var checked:Bool = false;
     var callback:Bool->Void;
@@ -35,6 +36,7 @@ class Checkbox extends FlxObject implements ContainerObject {
     
 	public var parent:Null<Container>;
     public var over:Bool = false;
+    public var disabled:Bool = false;
 
     override public function new(x:Float,y:Float,label:String,callback:Bool->Void) {
         super(x,y);
@@ -48,6 +50,8 @@ class Checkbox extends FlxObject implements ContainerObject {
         tick.antialiasing = true;
         tick.graphic.destroyOnNoUse = false;
         tick.graphic.persist = true;
+
+        height = combinedHeight = box.height;
 
         if(label != null){
             this.label = new FlxText(0,0,label,17);
@@ -83,6 +87,7 @@ class Checkbox extends FlxObject implements ContainerObject {
     }
 
     public function updateInputs(elapsed:Float) {
+        if(disabled) return;
         var localMousePos = FlxPoint.get(0,0);
         localMousePos = Utils.getMousePosInCamera(parent == null ? camera : parent.cam, localMousePos, box);
 
@@ -100,6 +105,18 @@ class Checkbox extends FlxObject implements ContainerObject {
     }
 
 	public function postUpdate(elapsed:Float) {
+        if(disabled){
+            box.color = DISABLED;
+            if(label != null){
+                label.color = HOVER;
+            }
+            return;
+        }
+
+        if(label != null){
+            label.color = 0xFFFFFFFF;
+        }
+        
         if(over){
             Mouse.setAs(BUTTON);
             box.color = HOVER;

@@ -123,6 +123,7 @@ class Utils {
     
     public static function overlapsSprite(spr:FlxSprite, mousePos:FlxPoint, ?pixelAccurate:Bool = false) {
         if(spr == null) return false;
+		if(mousePos == null) return false;
 
 		//i forgot this function kinda fucks up the point lol
 		final ogX = mousePos.x;

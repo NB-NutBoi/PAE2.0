@@ -1,5 +1,6 @@
 package leveleditor;
 
+import flixel.group.FlxGroup.FlxTypedGroup;
 import lime.app.Application;
 import lime.utils.Assets;
 
@@ -8,6 +9,8 @@ class LevelEditor extends CoreState {
 
 
     var axle:Axle;
+
+    public var layers:FlxTypedGroup<LayerVisualizer>;
 
     override function create() {
         super.create();
@@ -24,6 +27,14 @@ class LevelEditor extends CoreState {
         axle = new Axle();
         axle.visible = true;
         axle.state = ROTATE;
+
+        axle.onMove = move;
+        axle.onScale = scale;
+        axle.onChangeAngle = rotate;
+
+        //------------------------------------
+
+        layers = new FlxTypedGroup();
     }
 
     @:access(Main)
@@ -32,10 +43,30 @@ class LevelEditor extends CoreState {
         //reset to default
         instance = null;
 
+        axle.destroy();
+
         Application.current.window.setIcon(Main._getWindowIcon(Main.SetupConfig.getConfig("WindowIcon", "string", "embed/defaults/icon32.png")));
 		Application.current.window.title = Main.SetupConfig.getConfig("WindowName", "string", "PAE 2.0");
 
         super.destroy();
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    //AXLE HANDLES
+
+    function move() {
+        
+    }
+
+    function scale(axis:Int) {
+        
+    }
+
+    function rotate() {
+        
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

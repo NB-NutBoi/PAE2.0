@@ -12,7 +12,7 @@ import ui.base.Container;
 import ui.base.ContainerObject;
 import utility.Utils;
 
-class SelectableList extends FlxObject implements ContainerObject {
+class SelectableList extends StackableObject implements ContainerObject {
     static final IDLE:Int = 0xFF292929;
     static final HOVER:Int = 0xFF3B3B3B;
     static final SELECTED:Int = 0xFF575757;
@@ -44,6 +44,9 @@ class SelectableList extends FlxObject implements ContainerObject {
 
         selectedBox = Utils.makeRamFriendlyRect(box.x, box.y + (21*selected), width, 21, SELECTED);
         selectorBox = Utils.makeRamFriendlyRect(box.x, box.y + (21*selected), width, 21, HOVER);
+
+
+        height = combinedHeight = box.height;
     }
 
     override function update(elapsed:Float) {
@@ -104,6 +107,9 @@ class SelectableList extends FlxObject implements ContainerObject {
         choices.add(t);
         box.setGraphicSize(Std.int(box.width),21*choices.length);
         box.updateHitbox();
+
+        height = combinedHeight = box.height;
+
         return choices.length-1;
     }
 
@@ -121,6 +127,8 @@ class SelectableList extends FlxObject implements ContainerObject {
                 }  
             }
         }
+
+        height = combinedHeight = box.height;
     }
 
     public function setChoices(choices:Array<String>) {

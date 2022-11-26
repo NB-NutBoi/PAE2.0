@@ -24,7 +24,7 @@ using StringTools;
 //oh yeah if it breaks with dconsole, disable the lines Lib.current.stage.focus = null; and Lib.current.stage.focus = txtPrompt;  
 //not sure why this fixes it since it seemingly gets set to null every other second, but manually setting it breaks stuff for some reason???
 //shitty workaround i know but not the first time i've had to tweak code on dconsole
-class TextField extends FlxObject implements ContainerObject {
+class TextField extends StackableObject implements ContainerObject {
 	public var parent:Null<Container>;
 
     static final IDLE:Int = 0xFF303030;
@@ -69,6 +69,8 @@ class TextField extends FlxObject implements ContainerObject {
         _caret = Utils.makeRamFriendlyRect(0,0,2, Std.int(textField.size + 2),FlxColor.WHITE);
         _caret.antialiasing = true;
         _caret.pixelPerfectRender = true;
+
+        height = combinedHeight = box.height;
     }
 
     override function update(elapsed:Float) {

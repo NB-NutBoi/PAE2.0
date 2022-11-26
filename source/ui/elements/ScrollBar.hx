@@ -16,7 +16,7 @@ enum ScrollDirection {
     HORIZONTAL;
 }
 
-class ScrollBar extends FlxObject implements ContainerObject {
+class ScrollBar extends StackableObject implements ContainerObject {
     static final IDLE:Int = 0xFF3A3A3A;
     static final HOVER:Int = 0xFF4B4B4B;
     static final BACKGROUND:Int = 0xFF292929;
@@ -47,6 +47,8 @@ class ScrollBar extends FlxObject implements ContainerObject {
         bg = Utils.makeRamFriendlyRect(x,y,width,height);
         bg.color = BACKGROUND;
         box = Utils.makeRamFriendlyRect(x,y,direction == HORIZONTAL ? scrollerSize : width ,direction == VERTICAL ? scrollerSize : height );
+
+        super.height = combinedHeight = height;
     }
 
     override function update(elapsed:Float) {
