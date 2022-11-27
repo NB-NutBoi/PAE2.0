@@ -1,5 +1,6 @@
 package;
 
+import ui.elements.Context;
 import common.Keyboard;
 import common.Mouse;
 import flixel.FlxBasic;
@@ -104,6 +105,8 @@ class FlxGamePlus extends FlxGame {
     public static var mouseMove:Array<Float> = [0,0];
 
     override function update() {
+        CoreState._frame = true;
+        CoreState._lateFrame = true;
         Mouse.reset();
         super.update();
         DebugCam.scroll.set(FlxG.camera.scroll.x, FlxG.camera.scroll.y);
@@ -294,9 +297,11 @@ class GameOverlay extends FlxBasic {
     }
 
     override function update(elapsed:Float) {
-        CoreState._frame = true;
-        CoreState._lateFrame = true;
         super.update(elapsed);
+        if(Context.instance != null){
+            Context.instance.update(elapsed);
+        }
+
         if(defaultActive){
             bg.update(elapsed);
             tx1.update(elapsed);
@@ -338,6 +343,10 @@ class GameOverlay extends FlxBasic {
 
             tx2.draw();
             tx3.draw();
+        }
+        
+        if(Context.instance != null){
+            Context.instance.draw();
         }
     }
 

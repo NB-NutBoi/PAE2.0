@@ -24,13 +24,13 @@ class CorePlugin extends BasicHscript {
     public var name:String;
 
     override public function new(scriptPath:String, id:String) {
-        super(scriptPath);
-
         savedata = {
             scriptSaveables: new DynamicAccess()
         }
 
         name = id;
+
+        super(scriptPath);
     }
 
     override private function compile(fullScript:String) {

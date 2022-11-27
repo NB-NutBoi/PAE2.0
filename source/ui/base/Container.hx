@@ -18,6 +18,8 @@ import utility.Utils;
 
 class Container extends FlxBasic {
 
+    public static var contextActive:Bool = false;
+
     public var bg:FlxSprite;
     public var stuffs:FlxTypedGroup<FlxBasic>;
     public var cam:FlxCamera;
@@ -122,6 +124,7 @@ class Container extends FlxBasic {
     public function updateInputs(elapsed:Float) {
         if(!visible) return;
         if(!overlapped) return;
+        if(contextActive) return;
 
         //logic
         if(mover != null){
