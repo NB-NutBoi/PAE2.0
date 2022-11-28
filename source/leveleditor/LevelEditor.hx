@@ -142,12 +142,14 @@ class LevelEditor extends CoreState {
         if(curEditedObject == null) return;
 
         if(snappingEnabled){
-            curEditedObject.x = axle.x = Math.round(axle.nonVisualX / snapping) * snapping;
-            curEditedObject.y = axle.y = Math.round(axle.nonVisualY / snapping) * snapping;
+
+            axle.x = Math.round(axle.nonVisualX / snapping) * snapping;
+            axle.y = Math.round(axle.nonVisualY / snapping) * snapping;
+
+            curEditedObject.transform.setVisualPosition(axle.x,axle.y);
         }
         else{
-            curEditedObject.x = axle.x;
-            curEditedObject.y = axle.y;
+            curEditedObject.transform.setVisualPosition(axle.x,axle.y);
         }
     }
 
@@ -156,7 +158,9 @@ class LevelEditor extends CoreState {
     }
 
     function rotate() {
-        
+        if(curEditedObject == null) return;
+
+        curEditedObject.transform.angle = axle.angle;
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -174,14 +178,15 @@ class LevelEditor extends CoreState {
                 i++;
             }
         }
+
         layers.update(elapsed);
+        axle.update(elapsed);
 
         updateTaskbar(elapsed);
 
-        axle.update(elapsed);
         if(FlxG.mouse.justReleased){
             if(curEditedObject != null){
-                axle.setPosition(curEditedObject.x, curEditedObject.y);
+                axle.setPosition(curEditedObject.transform.internalX, curEditedObject.transform.internalY);
             }
         }
         
@@ -268,7 +273,8 @@ class LevelEditor extends CoreState {
 
 	static function set_curEditedObject(value:ObjectVisualizer):ObjectVisualizer {
         if(value != null) {
-            LevelEditor.instance.axle.setPosition(value.x, value.y);
+            LevelEditor.instance.axle.setPosition(value.transform.internalX, value.transform.internalY);
+            LevelEditor.instance.axle.angle = value.transform.internalAngle;
             LevelEditor.instance.axle.visible = true;
         }
         else{
@@ -287,8 +293,8 @@ class LevelEditor extends CoreState {
     public function createBlankObject(?parent:ObjectVisualizer) {
         var o = new ObjectVisualizer();
 
-        o.x = 500;
-        o.y = 500;
+        o.transform.x = 500;
+        o.transform.y = 500;
 
         if(parent == null) layers.members[curLayer].add(o);
         else parent.children.add(o);
@@ -306,6 +312,31 @@ class LevelEditor extends CoreState {
         }
 
         obj.destroy();
+    }
+
+    private function duplicate(obj:ObjectVisualizer, ?parent:ObjectVisualizer):ObjectVisualizer {
+        var o = new ObjectVisualizer();
+
+        if(parent == null) layers.members[curLayer].add(o);
+        else parent.children.add(o);
+
+        o.transform.x = obj.transform.x;
+        o.transform.y = obj.transform.y;
+        o.transform.angle = obj.transform.angle;
+
+        //TODO
+
+        for (object in obj.children) {
+            var child = duplicate(object, o);
+            o.children.add(child);
+        }
+
+        return o;
+    }
+
+    public function duplicateObject(obj:ObjectVisualizer) {
+        var o = duplicate(obj, obj.parent);
+        hierarchy.addNodeFor(o);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
