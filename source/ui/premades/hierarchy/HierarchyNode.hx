@@ -1,5 +1,7 @@
 package ui.premades.hierarchy;
 
+import leveleditor.LevelEditor;
+import flixel.text.FlxText;
 import flixel.FlxG;
 import flixel.math.FlxPoint;
 import flixel.util.FlxColor;
@@ -14,7 +16,7 @@ class HierarchyNode extends StackableObject implements ContainerObject{
 	public var parent:Null<Container>;
 
 
-	static final IDLE:Int = 0xFF303030;
+	public static final IDLE:Int = 0xFF303030;
     static final HOVER:Int = 0xFF414141;
 	static final SELECTED:Int = 0xFF484474;
 
@@ -31,6 +33,7 @@ class HierarchyNode extends StackableObject implements ContainerObject{
 	public var over:Int = -1;
 
 	public var box:FlxSprite;
+	public var label:FlxText;
 
 	override public function new(x:Float, y:Float) {
 		super(x,y);
@@ -42,6 +45,11 @@ class HierarchyNode extends StackableObject implements ContainerObject{
 		box = Utils.makeRamFriendlyRect(x,y,200,20,FlxColor.WHITE);
 		height = 20;
 		combinedHeight = 20;
+
+		label = new FlxText(0,0,180,"",16);
+		label.font = "vcr";
+		label.textField.wordWrap = false;
+		label.textField.multiline = false;
 	}
 
 	override function destroy() {
@@ -58,12 +66,20 @@ class HierarchyNode extends StackableObject implements ContainerObject{
 		super.destroy();
 	}
 
+	public function delete() {
+		LevelEditor.instance.deleteObject(objectReference);
+	}
+
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	public function setReference(reference:ObjectVisualizer) {
 		if(reference == null) return;
+
+		objectReference = reference;
+
+		label.text = reference.name;
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -90,12 +106,13 @@ class HierarchyNode extends StackableObject implements ContainerObject{
 		}
 
 		rotateSymbol.update(elapsed);
-		rotateSymbol.angle = extended == true ? 0 : 90;
+		rotateSymbol.angle = extended == true ? 0 : -90;
 
 		combinedHeight = height;
 
 		box.setPosition(x,y);
-		rotateSymbol.setPosition(x,y);
+		label.setPosition(x+rotateSymbol.width+2.5,y+1);
+		rotateSymbol.setPosition(x+2.5,y+2.5);
 
 		if(extended){
 			for (node in children) {
@@ -115,11 +132,12 @@ class HierarchyNode extends StackableObject implements ContainerObject{
         localMousePos = Utils.getMousePosInCamera(parent == null ? camera : parent.cam, localMousePos, box);
 
 		if(box.overlapsPoint(localMousePos)) over = 0;
-		if(Utils.overlapsSprite(rotateSymbol,localMousePos,true)) over = 1;
+		if(children.length > 0 && Utils.overlapsSprite(rotateSymbol,localMousePos,false)) over = 1;
 
 		if(FlxG.mouse.justPressed){
+			if(over != -1) LevelEditor.tempCurEdited = objectReference;
 			if(over == 1) extended = !extended;
-			//if(over == 0) TODO!!!
+			if(over == 0) LevelEditor.curEditedObject = objectReference;
 		}
 		
 
@@ -135,7 +153,7 @@ class HierarchyNode extends StackableObject implements ContainerObject{
 	public function postUpdate(elapsed:Float) {
 		if(!exists) return;
 
-		if(Inspector.curEditedObject == objectReference) box.color = SELECTED;
+		if(LevelEditor.curEditedObject == objectReference) box.color = SELECTED;
 		else if(over == 0) box.color = HOVER;
 		else box.color = IDLE;
 
@@ -150,7 +168,8 @@ class HierarchyNode extends StackableObject implements ContainerObject{
 		super.draw();
 
 		box.draw();
-		rotateSymbol.draw();
+		if(children.length > 0) rotateSymbol.draw();
+		label.draw();
 
 		if(extended){
 			for (node in children) {

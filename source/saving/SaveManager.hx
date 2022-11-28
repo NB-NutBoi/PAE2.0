@@ -34,10 +34,6 @@ typedef Save = {
     public var globals:GlobalSaveables;
     public var pluginSavedata:DynamicAccess<PluginSavedata>;
 
-    public var containers:DynamicAccess<ItemContainerCache>;
-    public var dialogues:DynamicAccess<DialogueCache>;
-
-
     public var dynamics:DynamicAccess<Dynamic>; //there it is, the "make your own save format yourself" field. good fucking luck managing any data in this.
 }
 
@@ -47,12 +43,12 @@ class SaveManager {
         currentMap: "",
         mapSaveables: new DynamicAccess(),
 
-        globals: null,
+        globals: {
+            scriptSaveables: new DynamicAccess(),
+            dialogues: new DynamicAccess(),
+            containers: new DynamicAccess()
+        },
         pluginSavedata: new DynamicAccess(),
-
-        containers: new DynamicAccess(),
-        dialogues: new DynamicAccess(),
-
 
         dynamics: new DynamicAccess()
     };

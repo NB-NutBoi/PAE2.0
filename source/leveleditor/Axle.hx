@@ -43,6 +43,8 @@ class Axle {
 
     public var x:Float;
     public var y:Float;
+    public var nonVisualX:Float;
+    public var nonVisualY:Float;
     public var onMove:Void->Void = null;
 
     public var onScale:Int->Void = null;
@@ -73,7 +75,7 @@ class Axle {
 
         var mousePos = FlxPoint.get(FlxG.mouse.x, FlxG.mouse.y);
 
-        if(FlxG.mouse.justReleased) { dragging = false; moving = -1; }
+        if(FlxG.mouse.justReleased) { dragging = false; moving = -1; nonVisualX = x; nonVisualY = y; }
 
         switch (state){
             case MOVE:
@@ -126,13 +128,17 @@ class Axle {
                     switch (moving){
                         case 0:
                             x += FlxGamePlus.mouseMove[0];
+                            nonVisualX += FlxGamePlus.mouseMove[0];
                             if(onMove != null) onMove();
                         case 1:
                             y += FlxGamePlus.mouseMove[1];
+                            nonVisualY += FlxGamePlus.mouseMove[1];
                             if(onMove != null) onMove();
                         case 2:
                             x += FlxGamePlus.mouseMove[0];
                             y += FlxGamePlus.mouseMove[1];
+                            nonVisualX += FlxGamePlus.mouseMove[0];
+                            nonVisualY += FlxGamePlus.mouseMove[1];
                             if(onMove != null) onMove();
                         default:
                     }
@@ -258,5 +264,10 @@ class Axle {
         onMove = null;
         onScale = null;
         onChangeAngle = null;
+    }
+
+    public function setPosition(X:Float, Y:Float) {
+        nonVisualX = x = X;
+        nonVisualY = y = Y;
     }
 }

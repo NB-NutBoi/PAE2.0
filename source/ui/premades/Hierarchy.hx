@@ -1,5 +1,10 @@
 package ui.premades;
 
+import ui.elements.ContainerMover;
+import leveleditor.LevelEditor;
+import ui.elements.Context;
+import flixel.FlxG;
+import ui.base.Container;
 import leveleditor.LayerVisualizer;
 import leveleditor.ObjectVisualizer;
 import flixel.group.FlxGroup.FlxTypedGroup;
@@ -11,7 +16,9 @@ import flixel.group.FlxSpriteGroup.FlxTypedSpriteGroup;
 //store a reference to the object and check every frame if the object's been deleted?
 class Hierarchy extends DMenu {
 
-    static final nodesBaseY:Float = 0;
+    static final nodesBaseY:Float = 50;
+
+
     var hierarchyCombinedHeight:Float = 0;
 
     public var nodes:FlxTypedGroup<HierarchyNode>;
@@ -20,6 +27,25 @@ class Hierarchy extends DMenu {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     //creating/destroying
+
+    override public function new() {
+        super(0,0,400,600);
+
+        var mover:ContainerMover = new ContainerMover();
+        super.mover = mover;
+
+        canScroll = true;
+
+        nodes = new FlxTypedGroup();
+        nodes.camera = cam;
+    }
+
+    override function destroy() {
+        nodes.destroy();
+        nodes = null;
+
+        super.destroy();
+    }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -42,16 +68,70 @@ class Hierarchy extends DMenu {
 
         hierarchyCombinedHeight = 0;
 
-        elapsed_UpdateNode = elapsed;
         nodes.forEach(updateNode);
+        nodes.update(elapsed);
     }
-
-    var elapsed_UpdateNode:Float = 0;
 
     function updateNode(node:HierarchyNode) {
         node.setPosition(20/*temp x*/, nodesBaseY + hierarchyCombinedHeight);
-        node.update(elapsed_UpdateNode);
         hierarchyCombinedHeight += node.combinedHeight;
+    }
+
+    override function updateInputs(elapsed:Float) {
+        if(!visible) return;
+        if(!overlapped) return;
+        if(Container.contextActive) return;
+
+        if(FlxG.mouse.justPressed && !mover.overlaps(null)){
+            LevelEditor.tempCurEdited = null;
+        }
+        
+        super.updateInputs(elapsed);
+        for (node in nodes) {
+            node.updateInputs(elapsed);
+        }
+
+        if(LevelEditor.tempCurEdited == null){
+            LevelEditor.curEditedObject = null;
+            LevelEditor.tempCurEdited = null;
+        }
+
+        if(FlxG.mouse.justPressedRight){
+            var options:Array<ContextOption> = [
+                new BasicContextOption("Create blank object", blankObject)
+            ];
+
+            if(LevelEditor.curEditedObject != null) options.push(new BasicContextOption("Delete", deleteObject));
+
+            Context.create(options);
+        }
+    }
+
+    override function postUpdate(elapsed:Float) {
+        super.postUpdate(elapsed);
+
+        for (node in nodes) {
+            node.postUpdate(elapsed);
+        }
+    }
+
+    override function draw() {
+        super.draw();
+
+        nodes.draw();
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    //world modification
+
+    function blankObject() {
+        LevelEditor.instance.createBlankObject(LevelEditor.curEditedObject);
+    }
+
+    function deleteObject() {
+        LevelEditor.instance.deleteObject(LevelEditor.curEditedObject);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -64,14 +144,27 @@ class Hierarchy extends DMenu {
         nodes = new FlxTypedGroup();
     }
 
-    function createNode(object:ObjectVisualizer):HierarchyNode {
+    function createNode(object:ObjectVisualizer, ?nesting:Int = 0):HierarchyNode {
         var node = new HierarchyNode(0,0);
         node.setReference(object);
+
+        node.parent = this;
 
         for (childObject in object.children) {
             var child = createNode(childObject);
             node.children.push(child);
         }
+
+        //fix wrong positioning
+        node.x = 20+(10*nesting);
+        node.y = nodesBaseY + hierarchyCombinedHeight;
+        node.box.color = HierarchyNode.IDLE;
+        node.box.x = node.x;
+        node.box.y = node.y;
+        node.label.x = node.x+20;
+        node.label.y = node.y+1;
+        node.rotateSymbol.x = node.x+2.5;
+        node.rotateSymbol.y = node.y+2.5;
 
         return node;
     }
@@ -104,9 +197,10 @@ class Hierarchy extends DMenu {
             }
         }
 
-        var node = createNode(object);
+        var node = createNode(object,parents.length);
 
         correctNode.children.push(node);
+        correctNode.extended = true;
     }
 
     public function switchLayerTo(layer:LayerVisualizer) {

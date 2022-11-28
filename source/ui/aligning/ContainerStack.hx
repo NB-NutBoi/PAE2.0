@@ -10,6 +10,8 @@ import ui.base.ContainerObject;
 class ContainerStack extends FlxTypedGroup<StackableObject> implements ContainerObject{
 	public var parent:Null<Container>;
 
+	public var stack:StackableObject;
+
 	public function updateInputs(elapsed:Float) {}
 
 	public function postUpdate(elapsed:Float) {}

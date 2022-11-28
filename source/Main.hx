@@ -99,7 +99,7 @@ class Main extends Sprite
 	public static var mempeak:String;
 	public static var mempeakGaugue:String;
 
-	var nofps = false;
+	public var nofps = false;
 
 	public static function main():Void
 	{
@@ -114,7 +114,7 @@ class Main extends Sprite
 	}
 
 	public static var game:FlxGamePlus;
-	static var fps:FPS_Mem;
+	public static var fps:FPS_Mem;
 
 	public function new()
 	{
@@ -355,6 +355,11 @@ class Main extends Sprite
 		}
 
 		return Paused;
+	}
+
+	public function toggleFps() {
+		if(nofps) return;
+		fps.visible = !fps.visible;
 	}
 }
 

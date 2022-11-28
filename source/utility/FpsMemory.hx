@@ -22,7 +22,7 @@ import openfl.text.TextFormat;
  */
 class FPS_Mem extends TextField
 {
-	private var times:Array<Float>;
+	public var times:Array<Float>;
 
 	public var mempeak:String = "";
 	public var vmemtotal:String = "";

@@ -1,5 +1,7 @@
 package;
 
+import gameside.inventory.ItemContainer;
+import gameside.dialogue.DialogueState;
 import saving.SaveManager;
 import JsonDefinitions;
 import haxe.DynamicAccess;
@@ -103,17 +105,10 @@ class CoreState extends FlxState {
     public static var mainScript:CorePlugin;
     public static var plugins:Map<String,CorePlugin>;
 
-    public static var globals:GlobalSaveables;
-
     public static var tryUpdatePlugin:String->Bool;
 
     public static function initCore() {
         coreInitialized = true;
-
-        globals = 
-        {
-            scriptSaveables: new DynamicAccess()
-        }
 
         tryUpdatePlugin = defaultUpdatePlugin;
 
@@ -179,12 +174,10 @@ class CoreState extends FlxState {
 
     public static function Save(where:String) {
         mainScript.save();
-        SaveManager.curSaveData.globals = globals;
         onSave.dispatch(where);
     }
 
     public static function Load(what:String) {
-        globals = SaveManager.curSaveData.globals;
         mainScript.load();
         onLoad.dispatch(what);
     }
@@ -193,4 +186,7 @@ class CoreState extends FlxState {
 
 typedef GlobalSaveables = {
     public var scriptSaveables:DynamicAccess<ScriptVariable>;
+
+    public var containers:DynamicAccess<ItemContainerCache>;
+    public var dialogues:DynamicAccess<DialogueCache>;
 }

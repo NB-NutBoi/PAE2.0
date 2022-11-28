@@ -35,6 +35,9 @@ class ConsoleCommands {
 
         Console.registerCommand(openLevelEditor, "openLevelEditor", "levelEditor", "Opens the level editor.", "Opens the level editor.");
         Console.registerCommand(openMainState, "openMain", "main", "Opens the Main state.", "Opens the Main state.");
+
+
+        Console.registerCommand(toggleFps, "togglefps", "fps", "Toggles the debug fps viewer.", "Toggles the debug fps viewer.");
     }
 
     static function takeDebugScreenshot(args:Array<String>) {
@@ -160,5 +163,9 @@ class ConsoleCommands {
 
     static function openMainState(args:Array<String>) {
         if(MainState.instance == null) FlxG.switchState(new MainState());
+    }
+
+    static function toggleFps(args:Array<String>) {
+        Main.instance.toggleFps();
     }
 }

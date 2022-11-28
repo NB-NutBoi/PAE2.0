@@ -1,5 +1,7 @@
 package levels;
 
+import gameside.dialogue.DialogueState;
+import gameside.inventory.ItemContainer;
 import oop.Rail;
 import openfl.Assets;
 import pgr.dconsole.DC;
@@ -72,6 +74,9 @@ typedef LevelSaveables = {
     public var firstTime:Bool; //used live, no need to load
     public var scriptSaveables:DynamicAccess<ScriptVariable>; //used live, no need to load
     public var saveDataComponents:DynamicAccess<DynamicAccess<Dynamic>>; //used live, no need to load
+
+    public var containers:DynamicAccess<ItemContainerCache>;
+    public var dialogues:DynamicAccess<DialogueCache>;
 }
 
 typedef Callback = {
@@ -150,7 +155,10 @@ class Level {
                 saveables = {
                     firstTime: true,
                     scriptSaveables: new DynamicAccess(),
-                    saveDataComponents: new DynamicAccess()
+                    saveDataComponents: new DynamicAccess(),
+
+                    dialogues: new DynamicAccess(),
+                    containers: new DynamicAccess()
                 }
             }
 

@@ -224,7 +224,9 @@ class FlxGamePlus extends FlxGame {
         }
 
         FlxG.cameras.add(DebugCam,false);
-        FlxG.cameras.add(OverlayCam,false);
+        UIPlugin.addingCams = true;
+        if(!FlxG.cameras.list.contains(OverlayCam)) FlxG.cameras.add(FlxGamePlus.OverlayCam,false);
+        UIPlugin.addingCams = false;
     }
 }
 
@@ -430,12 +432,22 @@ class UIPlugin extends FlxBasic {
         if(addingCams || resetting) return;
         if(containers.length == 0) return;
 
+        addingCams = true;
+        if(FlxG.cameras.list.contains(FlxGamePlus.OverlayCam))
+            FlxG.cameras.remove(FlxGamePlus.OverlayCam,false);
+        addingCams = false;
+
         for (container in containers) {
             FlxG.cameras.remove(container.cam,false);
             addingCams = true;
             FlxG.cameras.add(container.cam,false);
             addingCams = false;
         }       //keep cams on front at all times if a non-ui cam is added.
+
+        //its the overlay, duh.
+        addingCams = true;
+        FlxG.cameras.add(FlxGamePlus.OverlayCam,false);
+        addingCams = false;
     }
 
     public static function preReset() {
@@ -461,9 +473,18 @@ class UIPlugin extends FlxBasic {
         if(x == null) return;
 
         UIPlugin.addingCams = true;
+        if(FlxG.cameras.list.contains(FlxGamePlus.OverlayCam))
+            FlxG.cameras.remove(FlxGamePlus.OverlayCam,false);
+        UIPlugin.addingCams = false;
+
+        UIPlugin.addingCams = true;
 
 		FlxG.cameras.add(x.cam, false);
 
+        UIPlugin.addingCams = false;
+
+        UIPlugin.addingCams = true;
+        if(!FlxG.cameras.list.contains(FlxGamePlus.OverlayCam)) FlxG.cameras.add(FlxGamePlus.OverlayCam,false);
         UIPlugin.addingCams = false;
 
         x.open = true;

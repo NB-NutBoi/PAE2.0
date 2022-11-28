@@ -1,5 +1,6 @@
 package ui.elements;
 
+import common.Mouse;
 import ui.base.Container;
 import flixel.FlxSprite;
 import flixel.text.FlxText;
@@ -124,6 +125,8 @@ class Context extends StackableObject {
 
     override function draw() {
         super.draw();
+
+        Mouse.setAs(BUTTON);
 
         box.draw();
         for (option in options) {

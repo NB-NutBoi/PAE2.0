@@ -196,6 +196,7 @@ class DMenu extends Container {
     override function updateInputs(elapsed:Float) {
         if(!visible) return;
         if(!overlapped) return;
+        if(Container.contextActive) return;
         
         super.updateInputs(elapsed);
 
