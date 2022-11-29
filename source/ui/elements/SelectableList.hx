@@ -19,7 +19,7 @@ class SelectableList extends StackableObject implements ContainerObject {
 	
     public var parent:Null<Container>;
 
-    var box:FlxSprite;
+    public var box:FlxSprite;
     var selectorBox:FlxSprite;
     var selectedBox:FlxSprite;
 
@@ -98,12 +98,23 @@ class SelectableList extends StackableObject implements ContainerObject {
         choices.draw();
     }
 
+    override function setScrollFactor(x:Float = 0, y:Float = 0) {
+        super.setScrollFactor(x, y);
+        box.scrollFactor.set(x,y);
+        selectorBox.scrollFactor.set(x,y);
+        selectedBox.scrollFactor.set(x,y);
+        for (text in choices) {
+            text.scrollFactor.set(x,y);
+        }
+    }
+
     //-------------------------------------------------------------------------------------------------------
 
     public function addChoice(s:String):Int {
         var t = new FlxText(box.x+1, box.y + (21*choices.length),box.width-4,s,15);
         t.font = "vcr";
         t.alignment = CENTER;
+        t.scrollFactor.set().addPoint(scrollFactor);
         choices.add(t);
         box.setGraphicSize(Std.int(box.width),21*choices.length);
         box.updateHitbox();

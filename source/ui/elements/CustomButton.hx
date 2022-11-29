@@ -100,6 +100,11 @@ class CustomButton extends StackableObject implements ContainerObject{
         }
     }
 
+    override function setScrollFactor(x:Float = 0, y:Float = 0) {
+        super.setScrollFactor(x, y);
+        box.scrollFactor.set(x,y);
+    }
+
     override function destroy() {
         box.destroy();
         content.resize(0);

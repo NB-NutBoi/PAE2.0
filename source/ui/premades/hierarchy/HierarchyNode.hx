@@ -54,6 +54,7 @@ class HierarchyNode extends StackableObject implements ContainerObject{
 
 	override function destroy() {
 
+		if(LevelEditor.curEditedObject == objectReference) { LevelEditor.tempCurEdited = null; LevelEditor.curEditedObject = null; }
 		objectReference = null;
 
 		for (node in children) {
@@ -80,6 +81,7 @@ class HierarchyNode extends StackableObject implements ContainerObject{
 		objectReference = reference;
 
 		label.text = reference.name;
+		extended = reference.extended;
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -136,7 +138,7 @@ class HierarchyNode extends StackableObject implements ContainerObject{
 
 		if(FlxG.mouse.justPressed){
 			if(over != -1) LevelEditor.tempCurEdited = objectReference;
-			if(over == 1) extended = !extended;
+			if(over == 1) { extended = !extended; objectReference.extended = extended; }
 			if(over == 0) LevelEditor.curEditedObject = objectReference;
 		}
 		

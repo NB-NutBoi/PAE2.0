@@ -138,6 +138,13 @@ class Checkbox extends StackableObject implements ContainerObject {
         super.destroy();
     }
 
+    override function setScrollFactor(x:Float = 0, y:Float = 0) {
+        super.setScrollFactor(x, y);
+        box.scrollFactor.set(x,y);
+        tick.scrollFactor.set(x,y);
+        label.scrollFactor.set(x,y);
+    }
+
     override function set_camera(value:FlxCamera):FlxCamera {
         box.camera = value;
         tick.camera = value;

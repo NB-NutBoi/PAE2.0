@@ -113,6 +113,7 @@ class LevelEditor extends CoreState {
         layers = new FlxTypedGroup();
         //create default layer 0
         layers.add(new LayerVisualizer());
+        layers.members[0].selected = true;
     }
 
     @:access(Main)

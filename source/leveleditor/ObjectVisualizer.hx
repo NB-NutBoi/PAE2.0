@@ -13,6 +13,11 @@ class ObjectVisualizer extends FlxBasic {
     public var parent:Null<ObjectVisualizer>;
 
     public var children:FlxTypedGroup<ObjectVisualizer>;
+    public var components:FlxTypedGroup<ComponentVisualizer>;
+
+    //-----------------------------------------------------------------
+
+    public var extended:Bool = false; //hierarchy temp data
 
     override public function new() {
         super();
@@ -23,6 +28,8 @@ class ObjectVisualizer extends FlxBasic {
         children = new FlxTypedGroup();
         children.memberAdded.add(onAdd);
         children.memberRemoved.add(onAdd);
+
+        components = new FlxTypedGroup();
     }
 
     override function destroy() {
@@ -56,6 +63,20 @@ class ObjectVisualizer extends FlxBasic {
 
     public function onRemove(child:ObjectVisualizer) {
         child.parent = null;
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public function onActiveLayerChange(to:Bool) {
+        for (component in components) {
+            component.onActiveLayerChange(to);
+        }
+
+        for (object in children) {
+            object.onActiveLayerChange(to);
+        }
     }
 
 }

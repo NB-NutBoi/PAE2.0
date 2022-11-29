@@ -102,6 +102,12 @@ class Button extends StackableObject implements ContainerObject{
         label.draw();
     }
 
+    override function setScrollFactor(x:Float = 0, y:Float = 0) {
+        super.setScrollFactor(x, y);
+        box.scrollFactor.set(x,y);
+        label.scrollFactor.set(x,y);
+    }
+
     override function destroy() {
         box.destroy();
         label.destroy();

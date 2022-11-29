@@ -23,4 +23,8 @@ class StackableObject extends FlxObject{
         rootX = x;
         rootY = y;
     }
+
+    public function setScrollFactor(x:Float = 0, y:Float = 0) {
+        scrollFactor.set(x, y);
+    }
 }

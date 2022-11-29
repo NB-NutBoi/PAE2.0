@@ -1,5 +1,10 @@
 package ui.premades;
 
+import ui.elements.Button;
+import ui.elements.DropdownList;
+import flixel.text.FlxText;
+import flixel.math.FlxPoint;
+import utility.Utils;
 import ui.elements.ContainerMover;
 import leveleditor.LevelEditor;
 import ui.elements.Context;
@@ -16,10 +21,19 @@ import flixel.group.FlxSpriteGroup.FlxTypedSpriteGroup;
 //store a reference to the object and check every frame if the object's been deleted?
 class Hierarchy extends DMenu {
 
-    static final nodesBaseY:Float = 50;
-
+    static final nodesBaseY:Float = 120;
+    static final nodesBaseX:Float = 25;
 
     var hierarchyCombinedHeight:Float = 0;
+
+
+    public var topFlap:FlxSprite;
+    public var bottomFlap:FlxSprite;
+
+    public var line:FlxSprite;
+
+
+    public var curLayer:DropdownList;
 
     public var nodes:FlxTypedGroup<HierarchyNode>;
 
@@ -34,7 +48,35 @@ class Hierarchy extends DMenu {
         var mover:ContainerMover = new ContainerMover();
         super.mover = mover;
 
-        canScroll = true;
+        topFlap = Utils.makeRamFriendlyRect(0,0,400,100,0xFF1F1F1F);
+        topFlap.scrollFactor.set();
+        topFlap.camera = cam;
+
+        bottomFlap = Utils.makeRamFriendlyRect(0,500,400,100,0xFF1F1F1F);
+        bottomFlap.scrollFactor.set();
+        bottomFlap.camera = cam;
+
+        line = Utils.makeRamFriendlyRect(13,0,2,600,0xFFFFFFFF);
+        line.scrollFactor.set();
+        line.camera = cam;
+
+        var label = new FlxText(66,10,0,"Current layer",18); label.font = "vcr";
+        label.scrollFactor.set();
+        add(label);
+
+        curLayer = new DropdownList(220,10,["0"],100);
+        curLayer.setScrollFactor();
+        add(curLayer);
+
+        var addLayer = new Button(340,10,21,21,"+",createNewLayer);
+        addLayer.setScrollFactor();
+        add(addLayer);
+
+        var removeLayer = new Button(370,10,21,21,"-",deleteLayer);
+        removeLayer.setScrollFactor();
+        add(removeLayer);
+
+        curLayer.onSelect = changeToLayer;
 
         nodes = new FlxTypedGroup();
         nodes.camera = cam;
@@ -55,6 +97,9 @@ class Hierarchy extends DMenu {
     override function update(elapsed:Float) {
         super.update(elapsed);
 
+        cam.scroll.y -= FlxG.mouse.wheel * 10;
+        if(cam.scroll.y < 0) cam.scroll.y = 0;
+
         var i = 0;
         while (i < nodes.length) {
             if(nodes.members[i] != null){
@@ -73,7 +118,7 @@ class Hierarchy extends DMenu {
     }
 
     function updateNode(node:HierarchyNode) {
-        node.setPosition(20/*temp x*/, nodesBaseY + hierarchyCombinedHeight);
+        node.setPosition(nodesBaseX, nodesBaseY + hierarchyCombinedHeight);
         hierarchyCombinedHeight += node.combinedHeight;
     }
 
@@ -82,14 +127,30 @@ class Hierarchy extends DMenu {
         if(!overlapped) return;
         if(Container.contextActive) return;
 
-        if(FlxG.mouse.justPressed && !mover.overlaps(null)){
+        var overlaps = false;
+
+        var localMousePos = FlxPoint.get(0,0);
+        localMousePos = Utils.getMousePosInCamera(cam, localMousePos, topFlap);
+
+        overlaps = topFlap.overlapsPoint(localMousePos) || bottomFlap.overlapsPoint(localMousePos);
+
+        localMousePos.put();
+
+        if(FlxG.mouse.justPressed && !mover.overlaps(null) && !overlaps && exclusiveInputs == null){
             LevelEditor.tempCurEdited = null;
         }
         
         super.updateInputs(elapsed);
-        for (node in nodes) {
-            node.updateInputs(elapsed);
+
+        if(exclusiveInputs != null) return;
+
+        if(!overlaps){
+            for (node in nodes) {
+                node.updateInputs(elapsed);
+            }
         }
+
+        //--------------------------------------------------------
 
         if(LevelEditor.tempCurEdited == null){
             LevelEditor.curEditedObject = null;
@@ -116,9 +177,19 @@ class Hierarchy extends DMenu {
     }
 
     override function draw() {
-        super.draw();
+        bg.draw();
 
+        line.draw();
         nodes.draw();
+
+        topFlap.draw();
+        bottomFlap.draw();
+
+        if(mover != null)
+            mover.draw();
+        if(closer != null)
+            closer.draw();
+        stuffs.draw();
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -134,6 +205,37 @@ class Hierarchy extends DMenu {
         LevelEditor.instance.deleteObject(LevelEditor.curEditedObject);
     }
 
+    function createNewLayer() {
+        curLayer.addChoice(Std.string(LevelEditor.instance.layers.length));
+        LevelEditor.instance.layers.add(new LayerVisualizer());
+    }
+
+    function deleteLayer() {
+        if(LevelEditor.instance.curLayer == 0) return;
+        var layers:Array<String> = [];
+
+        LevelEditor.instance.layers.members[LevelEditor.instance.curLayer].destroy();
+        LevelEditor.instance.layers.remove(LevelEditor.instance.layers.members[LevelEditor.instance.curLayer],true);
+
+        for (i in 0...LevelEditor.instance.layers.length) {
+            layers.push(Std.string(i));
+        }
+
+        curLayer.setChoices(layers);
+
+        if(LevelEditor.instance.curLayer > LevelEditor.instance.layers.length) LevelEditor.instance.curLayer = LevelEditor.instance.layers.length;
+        changeToLayer(LevelEditor.instance.curLayer);
+    }
+
+    function changeToLayer(i:Int) {
+        if(i == LevelEditor.instance.curLayer) return;
+        if(i > LevelEditor.instance.layers.length) return;
+        LevelEditor.instance.layers.members[LevelEditor.instance.curLayer].selected = false;
+        LevelEditor.instance.curLayer = i;
+        LevelEditor.instance.layers.members[LevelEditor.instance.curLayer].selected = true;
+        switchLayerTo(LevelEditor.instance.layers.members[i]);
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -142,6 +244,7 @@ class Hierarchy extends DMenu {
     function clearNodes() {
         nodes.destroy();
         nodes = new FlxTypedGroup();
+        nodes.camera = cam;
     }
 
     function createNode(object:ObjectVisualizer, ?nesting:Int = 0):HierarchyNode {
@@ -156,7 +259,7 @@ class Hierarchy extends DMenu {
         }
 
         //fix wrong positioning
-        node.x = 20+(10*nesting);
+        node.x = nodesBaseX+(10*nesting);
         node.y = nodesBaseY + hierarchyCombinedHeight;
         node.box.color = HierarchyNode.IDLE;
         node.box.x = node.x;
@@ -200,7 +303,7 @@ class Hierarchy extends DMenu {
         var node = createNode(object,parents.length);
 
         correctNode.children.push(node);
-        correctNode.extended = true;
+        correctNode.extended = true; correctNode.objectReference.extended = true;
     }
 
     public function switchLayerTo(layer:LayerVisualizer) {
