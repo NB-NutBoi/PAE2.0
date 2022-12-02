@@ -75,8 +75,8 @@ class Container extends FlxBasic {
 
         FlxG.signals.gameResized.add(onGameResize);
 
-		cam.x = x;
-		cam.y = y;
+		cam.x = -x;
+		cam.y = -y;
 		cam.bgColor.alpha = 0;
 		cam.visible = false;
         cam.antialiasing = true;
@@ -101,8 +101,8 @@ class Container extends FlxBasic {
 
         if(move){
             //add position
-            x -= FlxGamePlus.mouseMove[0];
-            y -= FlxGamePlus.mouseMove[1];
+            x += FlxGamePlus.mouseMove[0];
+            y += FlxGamePlus.mouseMove[1];
             if(FlxG.mouse.justReleased || !FlxG.mouse.pressed){
                 move = false;
             }
@@ -177,8 +177,8 @@ class Container extends FlxBasic {
     }
 
     public function updatePosition() {
-		cam.x = _x;
-		cam.y = _y;
+		cam.x = -_x;
+		cam.y = -_y;
     }
 
     public function setSize(w:Int, h:Int) {

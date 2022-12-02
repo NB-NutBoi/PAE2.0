@@ -52,6 +52,7 @@ class Axle {
     public var visible:Bool = false;
     var dragging:Bool = false;
     var moving:Int = -1;
+    public var overlap:Int = -1;
 
     public function new() {
         centerAxle = new FlxSprite(0,0,"embed/ui/leveleditor/small_square.png");
@@ -95,7 +96,7 @@ class Axle {
 
                 //------------------------------------
 
-                var overlap = -1;
+                overlap = -1;
 
                 if(moving == 0 || Utils.overlapsSprite(xMoveAxle,mousePos,true)){
                     overlap = 0;
@@ -160,7 +161,7 @@ class Axle {
 
                 //------------------------------------
 
-                var overlap = -1;
+                overlap = -1;
 
                 if(moving == 0 || Utils.overlapsSprite(xScaleAxle,mousePos,true)){
                     overlap = 0;
@@ -209,15 +210,15 @@ class Axle {
                 rotateDirAxle.color = X_IDLE;
                 rotateAxle.color = ROTATE_IDLE;
 
-                var overlap = false;
+                overlap = -1;
 
                 if(moving == 0 || Utils.overlapsSprite(rotateAxle,mousePos,true)){
-                    overlap = true;
+                    overlap = 0;
                 }
 
-                if(overlap) rotateAxle.color = ROTATE_HOVER;
+                if(overlap == 0) rotateAxle.color = ROTATE_HOVER;
 
-                if(FlxG.mouse.justPressed && overlap) {
+                if(FlxG.mouse.justPressed && overlap == 0) {
                     dragging = true;
                     moving = 0;
                 }

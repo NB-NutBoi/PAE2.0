@@ -1,5 +1,6 @@
 package ui.premades.hierarchy;
 
+import leveleditor.GenericObjectVisualizer;
 import leveleditor.LevelEditor;
 import flixel.text.FlxText;
 import flixel.FlxG;
@@ -21,7 +22,7 @@ class HierarchyNode extends StackableObject implements ContainerObject{
 	static final SELECTED:Int = 0xFF484474;
 
 
-	public var objectReference:Null<ObjectVisualizer>;
+	public var objectReference:Null<GenericObjectVisualizer>;
 
 	public var rotateSymbol:FlxSprite;
 	
@@ -35,6 +36,15 @@ class HierarchyNode extends StackableObject implements ContainerObject{
 	public var box:FlxSprite;
 	public var label:FlxText;
 
+	public var icons:Array<FlxSprite>;
+
+	//drag'n drop
+
+	public var held:Bool = false;
+	public var heldTimer:Int = 0;
+
+	public var Drag:Bool = false;
+
 	override public function new(x:Float, y:Float) {
 		super(x,y);
 
@@ -42,6 +52,7 @@ class HierarchyNode extends StackableObject implements ContainerObject{
 
 		rotateSymbol = new FlxSprite(0,0,"embed/ui/smallarrow.png");
 
+		icons = [];
 		box = Utils.makeRamFriendlyRect(x,y,200,20,FlxColor.WHITE);
 		height = 20;
 		combinedHeight = 20;
@@ -54,15 +65,29 @@ class HierarchyNode extends StackableObject implements ContainerObject{
 
 	override function destroy() {
 
+		if(hierarchyParent != null) {
+			hierarchyParent.children.remove(this);
+			hierarchyParent = null;
+		}
+
 		if(LevelEditor.curEditedObject == objectReference) { LevelEditor.tempCurEdited = null; LevelEditor.curEditedObject = null; }
 		objectReference = null;
+
+		icons.resize(0);
+		icons = null;
 
 		for (node in children) {
 			node.destroy();
 		}
 
+		box.destroy();
+		box = null;
 
 		rotateSymbol.destroy();
+		rotateSymbol = null;
+
+		label.destroy();
+		label = null;
 
 		super.destroy();
 	}
@@ -75,7 +100,7 @@ class HierarchyNode extends StackableObject implements ContainerObject{
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	public function setReference(reference:ObjectVisualizer) {
+	public function setReference(reference:GenericObjectVisualizer) {
 		if(reference == null) return;
 
 		objectReference = reference;
@@ -90,7 +115,6 @@ class HierarchyNode extends StackableObject implements ContainerObject{
 
 	override function update(elapsed:Float) {
 		if(!exists) return;
-		super.update(elapsed);
 
 		if(objectReference == null) { destroy(); return; }
 		if(!objectReference.existsInLevel) { destroy(); return; }
@@ -112,9 +136,24 @@ class HierarchyNode extends StackableObject implements ContainerObject{
 
 		combinedHeight = height;
 
+		if(Drag){
+			var localMousePos = FlxPoint.get(0,0);
+        	localMousePos = Utils.getMousePosInCamera(parent == null ? camera : parent.cam, localMousePos, box);
+			x = localMousePos.x - 20;
+			y = localMousePos.y - 10;
+			localMousePos.put();
+		}
+
+		over = -1;
+		super.update(elapsed);
+
 		box.setPosition(x,y);
 		label.setPosition(x+rotateSymbol.width+2.5,y+1);
 		rotateSymbol.setPosition(x+2.5,y+2.5);
+
+		for (i in 0...icons.length) {
+			icons[i].setPosition(x+box.width-15-(20*i),y+2.5);
+		}
 
 		if(extended){
 			for (node in children) {
@@ -123,8 +162,6 @@ class HierarchyNode extends StackableObject implements ContainerObject{
 				combinedHeight += node.combinedHeight;
 			}
 		}
-
-		over = -1;
 	}
 
 	public function updateInputs(elapsed:Float) {
@@ -135,11 +172,26 @@ class HierarchyNode extends StackableObject implements ContainerObject{
 
 		if(box.overlapsPoint(localMousePos)) over = 0;
 		if(children.length > 0 && Utils.overlapsSprite(rotateSymbol,localMousePos,false)) over = 1;
+		if(over != -1 && !Drag) { Hierarchy.overlappedNode = this; } else if(Hierarchy.overlappedNode == this) { Hierarchy.overlappedNode = null; }
 
 		if(FlxG.mouse.justPressed){
 			if(over != -1) LevelEditor.tempCurEdited = objectReference;
 			if(over == 1) { extended = !extended; objectReference.extended = extended; }
-			if(over == 0) LevelEditor.curEditedObject = objectReference;
+			if(over == 0) { LevelEditor.curEditedObject = objectReference; held = true; }
+		}
+
+		if(FlxG.mouse.pressed && held){
+			if(!Drag) {
+				heldTimer++;
+				if(heldTimer > 6) Drag = true;
+			}
+		}
+		else{
+			held = false;
+			heldTimer = 0;
+			if(Drag) Hierarchy.instance.dropNode(this);
+
+			Drag = false;
 		}
 		
 
@@ -168,6 +220,9 @@ class HierarchyNode extends StackableObject implements ContainerObject{
 
 	override function draw() {
 		super.draw();
+
+		if(objectReference == null) { return; } // why does this get called twice after being destroyed???
+		if(!objectReference.existsInLevel) { return; }
 
 		box.draw();
 		if(children.length > 0) rotateSymbol.draw();

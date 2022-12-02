@@ -82,8 +82,8 @@ class TextComponent extends Component {
     override function update(elapsed:Float) {
         if(!exists || !ready) return;
 
-        _text.x = owner.transform.getPosition_x() + offsetX;
-        _text.y = owner.transform.getPosition_y() + offsetY;
+        _text.x = owner.transform.internalPosition.x + offsetX;
+        _text.y = owner.transform.internalPosition.y + offsetY;
 
         _text.angle = owner.transform.angle;
 

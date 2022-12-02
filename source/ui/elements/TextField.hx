@@ -45,6 +45,8 @@ class TextField extends StackableObject implements ContainerObject {
     var lastScroll:Int = 0;
     var maxWidth:Int = 0;
 
+    public var onDeselect(default, null) = new Event<Void->Void>();
+    public var onClick(default, null) = new Event<Void->Void>();
     public var onPressEnter(default, null) = new Event<String->Void>();
 	public var onType(default, null) = new Event<Void->Void>(); // don't pass every letter or every value, that sounds like a nightmare.
 
@@ -101,6 +103,8 @@ class TextField extends StackableObject implements ContainerObject {
             onUpdateText();
             drawCaret = true;
             caretTimer = 0.5;
+
+            onClick.dispatch();
         }
 
         localMousePos.put();
@@ -115,9 +119,11 @@ class TextField extends StackableObject implements ContainerObject {
         box.color = over ? HOVER : IDLE;
 
         if(curSelected != null){
-            if(FlxG.mouse.justPressed && !over && !curSelected.over) curSelected = null;
-            if(curSelected == this){
-                
+            if(FlxG.mouse.justPressed && !over && !curSelected.over) {
+                if(curSelected == this){
+                    onDeselect.dispatch();
+                }
+                curSelected = null;
             }
         }
     }

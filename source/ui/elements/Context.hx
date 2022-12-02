@@ -274,6 +274,7 @@ class CollapsableContextOption extends ContextOption {
 
         secondMenu = new FlxTypedGroup();
         secondMenuObject = new StackableObject(0,0);
+        secondMenu.camera = FlxGamePlus.OverlayCam;
 
         secondMenuObject.combinedHeight = 0;
         secondMenuObject.combinedWidth = 0;
@@ -312,6 +313,7 @@ class CollapsableContextOption extends ContextOption {
         }
 
         secondMenuSprite = Utils.makeRamFriendlyRect(x,y,Std.int(secondMenuObject.combinedWidth),Std.int(secondMenuObject.combinedHeight)); secondMenuSprite.color = Context.BACKGROUND;
+        secondMenuSprite.camera = FlxGamePlus.OverlayCam;
 
         secondMenuSprite.setPosition(x+combinedWidth,y);
 

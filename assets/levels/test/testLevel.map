@@ -1,14 +1,17 @@
 {
   "layers": [
     {
+		"enabledByDefault": true,
 		"objects": [
 			{
 				"_TYPE": "FULL",
 				"name": "test",
-				"x": 20,
-				"y": 30,
-				"z": 0,
-				"angle": 0,
+				"transform": {
+					"X": 20,
+					"Y": 30,
+					"Z": 0,
+					"A": 0
+				},
 				"components": [
 					{
 						"component": "Sprite",

@@ -1,44 +1,23 @@
 package leveleditor;
 
+import flixel.math.FlxPoint;
 import flixel.group.FlxGroup.FlxTypedGroup;
 import flixel.FlxBasic;
 
-class ObjectVisualizer extends FlxBasic {
+class ObjectVisualizer extends GenericObjectVisualizer {
 
-    public var existsInLevel:Bool = true; //to see if hierarchy or inspector need to remove the node.
-
-    public var name:String;
-    public var transform:TransformVisualizer;
-    
-    public var parent:Null<ObjectVisualizer>;
-
-    public var children:FlxTypedGroup<ObjectVisualizer>;
     public var components:FlxTypedGroup<ComponentVisualizer>;
-
-    //-----------------------------------------------------------------
-
-    public var extended:Bool = false; //hierarchy temp data
 
     override public function new() {
         super();
-
-        name = "unnamed";
-        transform = new TransformVisualizer(this);
-
-        children = new FlxTypedGroup();
-        children.memberAdded.add(onAdd);
-        children.memberRemoved.add(onAdd);
 
         components = new FlxTypedGroup();
     }
 
     override function destroy() {
-        existsInLevel = false;
 
-        children.destroy();
-        children = null;
-
-        parent = null;
+        components.destroy();
+        components = null;
 
         super.destroy();
     }
@@ -48,35 +27,37 @@ class ObjectVisualizer extends FlxBasic {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     
     override function update(elapsed:Float) {
-        super.update(elapsed);
         transform.update(elapsed);
+        components.update(elapsed);
         children.update(elapsed);
     }
 
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    public function onAdd(child:ObjectVisualizer) {
-        child.parent = this;
-    }
-
-    public function onRemove(child:ObjectVisualizer) {
-        child.parent = null;
+    override function drawObject() {
+        components.draw();
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public function onActiveLayerChange(to:Bool) {
+    override public function onActiveLayerChange(to:Bool) {
         for (component in components) {
             component.onActiveLayerChange(to);
         }
 
-        for (object in children) {
-            object.onActiveLayerChange(to);
+        super.onActiveLayerChange(to);
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    override public function checkIsHit(mousePos:FlxPoint):ObjectVisualizer {
+        for (component in components) {
+            if(component.checkCollides(mousePos)) return this;
         }
+        
+        return super.checkIsHit(mousePos);
     }
 
 }

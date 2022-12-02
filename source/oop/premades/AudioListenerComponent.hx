@@ -86,12 +86,12 @@ class AudioListenerComponent extends Component {
     override function update(elapsed:Float) {
         if(!exists || !ready) return;
 
-        internalListener.setPosition(owner.transform.getPosition_x(), owner.transform.getPosition_y());
+        internalListener.setPosition(owner.transform.internalPosition.x, owner.transform.internalPosition.y);
 
         internalListener.update(elapsed);
 
         if(Main.DEBUG){
-            listenerSprite.setPosition(owner.transform.getPosition_x() - (listenerSprite.width * 0.5), owner.transform.getPosition_y()  - (listenerSprite.height * 0.5));
+            listenerSprite.setPosition(owner.transform.internalPosition.x - (listenerSprite.width * 0.5), owner.transform.internalPosition.y  - (listenerSprite.height * 0.5));
             listenerSprite.update(elapsed);
         }
     }

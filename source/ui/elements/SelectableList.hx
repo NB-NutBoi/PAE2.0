@@ -124,36 +124,48 @@ class SelectableList extends StackableObject implements ContainerObject {
         return choices.length-1;
     }
 
-    public function removeChoice(s:String) {
-        for (i in 0...choices.length) {
-            if(choices.members[i].text == s){
+    public function removeChoice(s:String, ?nocallback:Bool = false) {
+        var i = 0;
+        while (i < choices.members.length) {
+            if(choices.members[i] == null) { choices.remove(choices.members[i], true); i--; }
+            else if(choices.members[i].text == s){
+                if(i >= selected){
+                    selected = 0;
+                    if(onSelect != null && !nocallback) onSelect(selected);
+                }
+
                 choices.members[i].destroy();
                 choices.remove(choices.members[i], true);
                 box.setGraphicSize(Std.int(box.width),21*choices.length);
                 box.updateHitbox();
 
-                if(i >= selected){
-                    selected = 0;
-                    if(onSelect != null) onSelect(selected);
-                }  
+                break;
             }
+
+            i++;
         }
 
         height = combinedHeight = box.height;
     }
 
-    public function setChoices(choices:Array<String>) {
-        if(choices.length < 1) choices = ["default"];
+    public function setChoices(newChoices:Array<String>) {
+        if(newChoices.length < 1) newChoices = ["default"];
 
-        if(this.choices.length > 1){
-            for (i in 1...this.choices.length) {
-                removeChoice(this.choices.members[i].text);
+        choices.members[0].text = newChoices[0];
+
+        if(choices.length > 1){
+            while (1 < choices.length) {
+                removeChoice(choices.members[1].text,true);
+            }
+
+            for (i in 1...newChoices.length) {
+                addChoice(newChoices[i]);
             }
         }
 
-        this.choices.members[0].text = choices[0];
-        for (i in 1...choices.length) {
-            addChoice(choices[i]);
+        if(choices.length <= selected){
+            selected = 0;
+            if(onSelect != null) onSelect(selected);
         }
     }
 

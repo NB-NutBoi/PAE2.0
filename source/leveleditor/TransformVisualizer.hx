@@ -2,25 +2,22 @@ package leveleditor;
 
 class TransformVisualizer {
 
-    public var owner:ObjectVisualizer;
+    public var owner:GenericObjectVisualizer;
 
     //----------------------------------------
 
     public var internalX:Float;
     public var internalY:Float;
 
-    @:isVar public var x(get,set):Float;
-    @:isVar public var y(get,set):Float;
-    public var localX:Float;
-    public var localY:Float;
+    public var x:Float;
+    public var y:Float;
 
-    public var z:Int;
+    public var z:Int; //is z really required at this point? we can just move the order of objects around in the editor lol
 
     public var internalAngle:Float;
+    public var angle:Float;
 
-    public var angle(default,set):Float;
-
-    public function new(owner:ObjectVisualizer) {
+    public function new(owner:GenericObjectVisualizer) {
         this.owner = owner;
     }
 
@@ -32,8 +29,8 @@ class TransformVisualizer {
 
     public function update(elapsed:Float) {
         if(owner.parent != null){
-            internalX = localX + owner.parent.transform.internalX;
-            internalY = localY + owner.parent.transform.internalY;
+            internalX = x + owner.parent.transform.internalX;
+            internalY = y + owner.parent.transform.internalY;
             internalAngle = angle + owner.parent.transform.internalAngle;
         }
         else {
@@ -45,30 +42,7 @@ class TransformVisualizer {
     
     //--------------------------------------------------------------------------------
 
-	function set_x(value:Float):Float {
-        if(owner.parent != null) return localX = value;
-		return x = value;
-	}
-
-	function set_y(value:Float):Float {
-		if(owner.parent != null) return localY = value;
-		return y = value;
-	}
-
-	function get_x():Float {
-		if(owner.parent != null) return localX;
-		return x;
-	}
-
-	function get_y():Float {
-		if(owner.parent != null) return localY;
-		return y;
-	}
-
-    function set_angle(value:Float):Float {
-		if(owner.parent != null) return angle = value-owner.parent.transform.internalAngle;
-        return angle = value;
-	}
+    
 
     //--------------------------------------------------------------------------------
 
@@ -82,4 +56,9 @@ class TransformVisualizer {
             y = Y;
         }
     }
+
+    public function setVisualAngle(A:Float):Float {
+		if(owner.parent != null) return angle = A-owner.parent.transform.internalAngle;
+        return angle = A;
+	}
 }

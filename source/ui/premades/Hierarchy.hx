@@ -1,5 +1,8 @@
 package ui.premades;
 
+import ui.elements.Checkbox;
+import flixel.FlxCamera;
+import leveleditor.GenericObjectVisualizer;
 import ui.elements.Button;
 import ui.elements.DropdownList;
 import flixel.text.FlxText;
@@ -20,6 +23,8 @@ import flixel.group.FlxSpriteGroup.FlxTypedSpriteGroup;
 //how the fuck do i handle this
 //store a reference to the object and check every frame if the object's been deleted?
 class Hierarchy extends DMenu {
+    public static var instance:Hierarchy = null;
+    public static var overlappedNode:HierarchyNode = null;
 
     static final nodesBaseY:Float = 120;
     static final nodesBaseX:Float = 25;
@@ -37,6 +42,11 @@ class Hierarchy extends DMenu {
 
     public var nodes:FlxTypedGroup<HierarchyNode>;
 
+    //-------------------------------------------------------
+
+    public var layerEnabled:Checkbox;
+    public var layerVisible:Checkbox; //in-editor only
+
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -44,6 +54,8 @@ class Hierarchy extends DMenu {
 
     override public function new() {
         super(0,0,400,600);
+
+        instance = this;
 
         var mover:ContainerMover = new ContainerMover();
         super.mover = mover;
@@ -66,7 +78,6 @@ class Hierarchy extends DMenu {
 
         curLayer = new DropdownList(220,10,["0"],100);
         curLayer.setScrollFactor();
-        add(curLayer);
 
         var addLayer = new Button(340,10,21,21,"+",createNewLayer);
         addLayer.setScrollFactor();
@@ -77,6 +88,22 @@ class Hierarchy extends DMenu {
         add(removeLayer);
 
         curLayer.onSelect = changeToLayer;
+
+        //------------------------------------------------------------------
+
+        layerEnabled = new Checkbox(10,40,"Layer Enabled by default",setLayerEnabled);
+        layerEnabled.checked = true;
+        layerEnabled.setScrollFactor();
+        add(layerEnabled);
+
+        layerVisible = new Checkbox(10,70,"Layer Visible (editor only)",setLayerVisible);
+        layerVisible.checked = true;
+        layerVisible.setScrollFactor();
+        add(layerVisible);
+
+        //------------------------------------------------------------------
+
+        add(curLayer);
 
         nodes = new FlxTypedGroup();
         nodes.camera = cam;
@@ -95,10 +122,10 @@ class Hierarchy extends DMenu {
     //updating and shit
 
     override function update(elapsed:Float) {
-        super.update(elapsed);
-
-        cam.scroll.y -= FlxG.mouse.wheel * 10;
-        if(cam.scroll.y < 0) cam.scroll.y = 0;
+        if(overlapped && focused){
+            cam.scroll.y -= FlxG.mouse.wheel * 10;
+            if(cam.scroll.y < 0) cam.scroll.y = 0;
+        }
 
         var i = 0;
         while (i < nodes.length) {
@@ -113,8 +140,12 @@ class Hierarchy extends DMenu {
 
         hierarchyCombinedHeight = 0;
 
+        
+
         nodes.forEach(updateNode);
         nodes.update(elapsed);
+
+        super.update(elapsed);
     }
 
     function updateNode(node:HierarchyNode) {
@@ -139,7 +170,7 @@ class Hierarchy extends DMenu {
         if(FlxG.mouse.justPressed && !mover.overlaps(null) && !overlaps && exclusiveInputs == null){
             LevelEditor.tempCurEdited = null;
         }
-        
+
         super.updateInputs(elapsed);
 
         if(exclusiveInputs != null) return;
@@ -162,7 +193,10 @@ class Hierarchy extends DMenu {
                 new BasicContextOption("Create blank object", blankObject)
             ];
 
-            if(LevelEditor.curEditedObject != null) options.push(new BasicContextOption("Delete", deleteObject));
+            if(LevelEditor.curEditedObject != null) {
+                options.push(new BasicContextOption("Duplicate Object", duplicateObject));
+                options.push(new BasicContextOption("Delete", deleteObject));
+            } 
 
             Context.create(options);
         }
@@ -176,11 +210,33 @@ class Hierarchy extends DMenu {
         }
     }
 
+    @:access(flixel.FlxCamera)
     override function draw() {
         bg.draw();
 
         line.draw();
-        nodes.draw();
+
+        //nodes---------------------------------------------------------------------------------
+        var dragNode:HierarchyNode = null;
+
+        var oldDefaultCameras = FlxCamera._defaultCameras;
+		if (nodes.cameras != null)
+		{
+			FlxCamera._defaultCameras = nodes.cameras;
+		}
+
+        var i = 0;
+        while (i < nodes.length) {
+            final node = nodes.members[i];
+            if(node != null && node.Drag) {dragNode = node; i++; continue;}
+            if(node != null && node.exists && node.visible) node.draw();
+            i++;
+        }
+
+        if(dragNode != null) dragNode.draw();
+
+        FlxCamera._defaultCameras = oldDefaultCameras;
+        //--------------------------------------------------------------------------------------
 
         topFlap.draw();
         bottomFlap.draw();
@@ -205,6 +261,10 @@ class Hierarchy extends DMenu {
         LevelEditor.instance.deleteObject(LevelEditor.curEditedObject);
     }
 
+    function duplicateObject() {
+        LevelEditor.instance.duplicateObject(LevelEditor.curEditedObject);
+    }
+
     function createNewLayer() {
         curLayer.addChoice(Std.string(LevelEditor.instance.layers.length));
         LevelEditor.instance.layers.add(new LayerVisualizer());
@@ -221,19 +281,27 @@ class Hierarchy extends DMenu {
             layers.push(Std.string(i));
         }
 
-        curLayer.setChoices(layers);
-
-        if(LevelEditor.instance.curLayer > LevelEditor.instance.layers.length) LevelEditor.instance.curLayer = LevelEditor.instance.layers.length;
+        if(LevelEditor.instance.curLayer >= LevelEditor.instance.layers.length) LevelEditor.instance.curLayer = LevelEditor.instance.layers.length-1;
         changeToLayer(LevelEditor.instance.curLayer);
+
+        curLayer.setChoices(layers);
     }
 
     function changeToLayer(i:Int) {
         if(i == LevelEditor.instance.curLayer) return;
-        if(i > LevelEditor.instance.layers.length) return;
-        LevelEditor.instance.layers.members[LevelEditor.instance.curLayer].selected = false;
+        if(i >= LevelEditor.instance.layers.length) return;
+        if(LevelEditor.instance.layers.members[LevelEditor.instance.curLayer] != null) LevelEditor.instance.layers.members[LevelEditor.instance.curLayer].selected = false;
         LevelEditor.instance.curLayer = i;
         LevelEditor.instance.layers.members[LevelEditor.instance.curLayer].selected = true;
         switchLayerTo(LevelEditor.instance.layers.members[i]);
+    }
+
+    function setLayerEnabled(to:Bool) {
+        LevelEditor.instance.layers.members[LevelEditor.instance.curLayer].enabledByDefault = to;
+    }
+
+    function setLayerVisible(to:Bool) {
+        LevelEditor.instance.layers.members[LevelEditor.instance.curLayer].visible = to;
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -247,7 +315,7 @@ class Hierarchy extends DMenu {
         nodes.camera = cam;
     }
 
-    function createNode(object:ObjectVisualizer, ?nesting:Int = 0):HierarchyNode {
+    function createNode(object:GenericObjectVisualizer, ?nesting:Int = 0):HierarchyNode {
         var node = new HierarchyNode(0,0);
         node.setReference(object);
 
@@ -272,8 +340,8 @@ class Hierarchy extends DMenu {
         return node;
     }
 
-    public function addNodeFor(object:ObjectVisualizer) {
-        var parents:Array<ObjectVisualizer> = [];
+    public function addNodeFor(object:GenericObjectVisualizer) {
+        var parents:Array<GenericObjectVisualizer> = [];
 
         var curObj = object;
         while(curObj.parent != null){
@@ -303,6 +371,7 @@ class Hierarchy extends DMenu {
         var node = createNode(object,parents.length);
 
         correctNode.children.push(node);
+        node.hierarchyParent = correctNode;
         correctNode.extended = true; correctNode.objectReference.extended = true;
     }
 
@@ -312,6 +381,123 @@ class Hierarchy extends DMenu {
         for (object in layer) {
             var node = createNode(object);
             nodes.add(node);
+        }
+
+        layerEnabled.checked = layer.enabledByDefault;
+        layerVisible.checked = layer.visible;
+    }
+
+    //this took        SO         long.
+    public function dropNode(node:HierarchyNode) {
+        var localMousePos = FlxPoint.get(0,0);
+        localMousePos = Utils.getMousePosInCamera(cam, localMousePos, topFlap);
+
+        final nodeY = localMousePos.y - nodesBaseY;
+        var theNodeToAddendum:HierarchyNode = nodes.members[0];
+        var listDepth = 0;
+        var depthIdx:Map<Int,Int> = [0 => 0];
+        final goalCoords:Float = Math.floor(Math.round(nodeY) / 20) * 20;
+
+        localMousePos.put();
+
+        var coords:Float = 0;
+        while (coords < goalCoords){
+            if(coords > goalCoords) break;
+
+            coords +=20;
+
+            if(theNodeToAddendum.extended && theNodeToAddendum.children.length > 0){
+                listDepth++;
+                if(!depthIdx.exists(listDepth))depthIdx.set(listDepth,0);
+                depthIdx[listDepth]=0;
+                theNodeToAddendum = theNodeToAddendum.children[depthIdx[listDepth]];
+            }
+            else if(listDepth > 0 && theNodeToAddendum.hierarchyParent.children.length-1 == depthIdx[listDepth]){
+                //reached end of sublist, go up one
+                listDepth--;
+                depthIdx[listDepth]++;
+                if(listDepth > 0){
+                    if(theNodeToAddendum.hierarchyParent.hierarchyParent.children[depthIdx[listDepth]] == null) { theNodeToAddendum = theNodeToAddendum.hierarchyParent.hierarchyParent; continue; }
+                    theNodeToAddendum = theNodeToAddendum.hierarchyParent.hierarchyParent.children[depthIdx[listDepth]];
+                }
+                else{
+                    if(nodes.members[depthIdx[listDepth]] == null) { theNodeToAddendum = theNodeToAddendum.hierarchyParent; continue; }
+                    theNodeToAddendum = nodes.members[depthIdx[listDepth]];
+                }
+            }
+            else if(listDepth > 0){
+                depthIdx[listDepth]++;
+                theNodeToAddendum = theNodeToAddendum.hierarchyParent.children[depthIdx[listDepth]];
+            }
+            else{
+                depthIdx[listDepth]++;
+                if(nodes.members[depthIdx[listDepth]] == null) continue;
+                theNodeToAddendum = nodes.members[depthIdx[listDepth]];
+            }
+        }
+
+        if(theNodeToAddendum == node) return;
+
+        depthIdx.clear();
+        depthIdx = null;
+
+        final leeway = nodeY-(theNodeToAddendum.y-nodesBaseY);
+
+        if(leeway >= 17 || leeway <= 3){
+            //in-between.
+            
+            var type = 0;
+
+            if(leeway >= 17) type = 1; //below
+            if(leeway <= 3) type = -1; //above
+
+            if(node.hierarchyParent != null){
+                node.objectReference.parent.children.remove(node.objectReference,true);
+                node.objectReference.parent = null;
+                node.hierarchyParent.children.remove(node);
+                node.hierarchyParent = null;
+            }
+            else{
+                nodes.remove(node,true);
+            }
+
+            switch (type){
+                case 1:
+                    if(theNodeToAddendum.hierarchyParent == null){
+                        nodes.insert(nodes.members.indexOf(theNodeToAddendum)+1,node);
+                    }
+                    else{
+                        final idx = theNodeToAddendum.hierarchyParent.children.indexOf(theNodeToAddendum)+1;
+                        theNodeToAddendum.hierarchyParent.objectReference.children.insert(idx,node.objectReference);
+                        theNodeToAddendum.hierarchyParent.children.insert(idx,node);
+                        node.hierarchyParent = theNodeToAddendum.hierarchyParent;
+                    }
+                case -1:
+                    if(theNodeToAddendum.hierarchyParent == null){
+                        nodes.insert(nodes.members.indexOf(theNodeToAddendum),node);
+                    }
+                    else{
+                        final idx = theNodeToAddendum.hierarchyParent.children.indexOf(theNodeToAddendum);
+                        theNodeToAddendum.hierarchyParent.objectReference.children.insert(idx,node.objectReference);
+                        theNodeToAddendum.hierarchyParent.children.insert(idx,node);
+                        node.hierarchyParent = theNodeToAddendum.hierarchyParent;
+                    }
+            }
+        }
+        else{
+            if(node.hierarchyParent != null){
+                node.objectReference.parent.children.remove(node.objectReference,true);
+                node.objectReference.parent = null;
+                node.hierarchyParent.children.remove(node);
+                node.hierarchyParent = null;
+            }
+            else{
+                nodes.remove(node,true);
+            }
+            theNodeToAddendum.objectReference.children.add(node.objectReference);
+            theNodeToAddendum.children.push(node);
+            node.hierarchyParent = theNodeToAddendum;
+            theNodeToAddendum.extended = theNodeToAddendum.objectReference.extended = true;
         }
     }
     

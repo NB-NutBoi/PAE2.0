@@ -1,5 +1,7 @@
 package leveleditor;
 
+import ui.base.Container;
+import ui.elements.Context;
 import common.Mouse;
 import flixel.math.FlxPoint;
 import flixel.FlxObject;
@@ -19,8 +21,8 @@ import lime.utils.Assets;
 class LevelEditor extends CoreState {
     public static var instance:LevelEditor;
 
-    @:isVar public static var curEditedObject(get,set):ObjectVisualizer = null;
-    public static var tempCurEdited:ObjectVisualizer = null;
+    @:isVar public static var curEditedObject(get,set):GenericObjectVisualizer = null;
+    public static var tempCurEdited:GenericObjectVisualizer = null;
 
     public var hierarchy:Hierarchy;
     public var inspector:Inspector;
@@ -32,7 +34,7 @@ class LevelEditor extends CoreState {
 
     //------------------------------------
 
-    public var snappingEnabled:Bool = true;
+    public var snappingEnabled:Bool = false;
     public var snapping:Float = 25;
 
     //taskbar
@@ -52,6 +54,21 @@ class LevelEditor extends CoreState {
         //------------------------------------
 
         public var HierarchyButton:FlxSprite;
+        public var InspectorButton:FlxSprite;
+
+
+        static final Camera_Off:Int = 0xFFFF0000;
+        static final Camera_Idle:Int = 0xFFFFCF33;
+        static final Camera_On:Int = 0xFF33FF66;
+
+        public var CameraIcon:FlxSprite;
+        public var CameraCoordsXY:FlxText;
+
+
+        public var MagnetIcon:FlxSprite;
+        public var MagnetSetting100:FlxSprite;
+        public var MagnetSetting50:FlxSprite;
+        public var MagnetSetting25:FlxSprite;
 
         //------------------------------------
 
@@ -87,18 +104,58 @@ class LevelEditor extends CoreState {
         TaskbarGroup = new FlxTypedGroup();
         TaskbarGroup.camera = FlxGamePlus.OverlayCam;
 
+        TaskbarGroup.add(Utils.makeRamFriendlyRect(110,Taskbar.y+5,2,55,Taskbar_Off));
+        TaskbarGroup.add(Utils.makeRamFriendlyRect(250,Taskbar.y+5,2,55,Taskbar_Off));
 
-        HierarchyButton = new FlxSprite(130,FlxG.height-63,"embed/ui/leveleditor/HierarchyIcon.png");
+        HierarchyButton = new FlxSprite(260,Taskbar.y+2,"embed/ui/leveleditor/HierarchyIcon.png");
         HierarchyButton.camera = FlxGamePlus.OverlayCam;
         HierarchyButton.color = Taskbar_Off;
 
-        TaskbarGroup.add(HierarchyButton);
+        InspectorButton = new FlxSprite(330,Taskbar.y+2,"embed/ui/leveleditor/InspectorIcon.png");
+        InspectorButton.camera = FlxGamePlus.OverlayCam;
+        InspectorButton.color = Taskbar_Off;
 
-        FlxGamePlus.OverlayCam.bgColor.alpha = 0;
+        TaskbarGroup.add(HierarchyButton);
+        TaskbarGroup.add(InspectorButton);
+
+        CameraIcon = new FlxSprite(120,Taskbar.y+35, "embed/ui/leveleditor/cameraIcon.png");
+        CameraIcon.camera = FlxGamePlus.OverlayCam;
+        CameraIcon.color = Camera_Off;
+        CameraIcon.antialiasing = true;
+
+        CameraCoordsXY = new FlxText(150,Taskbar.y+35,0,"X: 0\nY: 0",12);
+        CameraCoordsXY.font = "vcr";
+        CameraCoordsXY.antialiasing = true;
+
+        TaskbarGroup.add(CameraCoordsXY);
+        TaskbarGroup.add(CameraIcon);
+
+        MagnetIcon = new FlxSprite(120,Taskbar.y+10, "embed/ui/leveleditor/magnetIcon.png");
+        MagnetIcon.camera = FlxGamePlus.OverlayCam;
+        MagnetIcon.color = Taskbar_Off;
+        MagnetIcon.antialiasing = true;
+
+        MagnetSetting100 = new FlxSprite(150,Taskbar.y+10, "embed/ui/leveleditor/snap100.png");
+        MagnetSetting100.color = Taskbar_Off;
+        MagnetSetting100.antialiasing = true;
+
+        MagnetSetting50 = new FlxSprite(180,Taskbar.y+10, "embed/ui/leveleditor/snap50.png");
+        MagnetSetting50.color = Taskbar_Off;
+        MagnetSetting50.antialiasing = true;
+
+        MagnetSetting25 = new FlxSprite(210,Taskbar.y+10, "embed/ui/leveleditor/snap25.png");
+        MagnetSetting25.color = Taskbar_Off;
+        MagnetSetting25.antialiasing = true;
+
+        TaskbarGroup.add(MagnetSetting25);
+        TaskbarGroup.add(MagnetSetting50);
+        TaskbarGroup.add(MagnetSetting100);
+        TaskbarGroup.add(MagnetIcon);
 
         //------------------------------------
 
         hierarchy = new Hierarchy();
+        inspector = new Inspector();
 
         //------------------------------------
 
@@ -161,7 +218,7 @@ class LevelEditor extends CoreState {
     function rotate() {
         if(curEditedObject == null) return;
 
-        curEditedObject.transform.angle = axle.angle;
+        curEditedObject.transform.setVisualAngle(axle.angle);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -191,6 +248,31 @@ class LevelEditor extends CoreState {
             }
         }
         
+        if(FlxG.mouse.justPressed){
+            var overlapsMain = true;
+
+            if(inspector.overlapped || hierarchy.overlapped) overlapsMain = false;
+            if(overlaps != -1) overlapsMain = false;
+            if(Container.contextActive) overlapsMain = false;
+            if(axle.overlap != -1) overlapsMain = false;
+
+            if(overlapsMain){
+                var localMousePos = FlxPoint.get(0,0);
+                localMousePos = Utils.getMousePosInCamera(FlxG.camera, localMousePos);
+
+                var result:ObjectVisualizer = null;
+
+                for (i in layers.members[curLayer].length...0) {
+                    result = layers.members[curLayer].members[i].checkIsHit(localMousePos);
+                    if(result != null) { tempCurEdited = result; curEditedObject = result; break; }
+                }
+
+                if(result == null) { tempCurEdited = null; curEditedObject = null; }
+
+                localMousePos.put();
+            }
+        }
+
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -212,14 +294,14 @@ class LevelEditor extends CoreState {
 
     //taskbar
 
-    var overlaps = false;
+    var overlaps = -1;
 
     function drawTaskbar() {
         Taskbar.draw();
         TaskbarFps.draw();
         TaskbarGroup.draw();
 
-        if(overlaps) Mouse.setAs(BUTTON);
+        if(overlaps > -1) Mouse.setAs(BUTTON);
     }
 
     function updateTaskbar(elapsed:Float) {
@@ -232,21 +314,63 @@ class LevelEditor extends CoreState {
         //buttons--------------------------------------------------------------------------------------------------
         var localMousePos = FlxPoint.get(0,0);
         localMousePos = Utils.getMousePosInCamera(FlxGamePlus.OverlayCam, localMousePos, HierarchyButton);
-        
-        overlaps = false;
 
-        if(Utils.overlapsSprite(HierarchyButton,localMousePos)) overlaps = true;
+        overlaps = -1;
+        if(Taskbar.overlapsPoint(localMousePos)) overlaps = -2;
+        if(Utils.overlapsSprite(HierarchyButton,localMousePos)) overlaps = 0;
+        if(Utils.overlapsSprite(InspectorButton,localMousePos)) overlaps = 1;
+        if(Utils.overlapsSprite(MagnetIcon,localMousePos)) overlaps = 2;
+        if(Utils.overlapsSprite(MagnetSetting100,localMousePos)) overlaps = 3;
+        if(Utils.overlapsSprite(MagnetSetting50,localMousePos)) overlaps = 4;
+        if(Utils.overlapsSprite(MagnetSetting25,localMousePos)) overlaps = 5;
 
-        if(overlaps && FlxG.mouse.justPressed) hierarchyOpen ? close_hierarchy() : open_Hierarchy();
+        if(FlxG.mouse.justPressed){
+            switch (overlaps){
+                case 0: hierarchyOpen ? close_hierarchy() : open_Hierarchy();
+                case 1: inspectorOpen ? close_Inspector() : open_Inspector();
+                case 2: snappingEnabled = !snappingEnabled; MagnetIcon.color = snappingEnabled ? Taskbar_On : Taskbar_Off;
+                case 3: snapping = 100;
+                case 4: snapping = 50;
+                case 5: snapping = 25;
+            }
+        }
 
         //-----------------------------------------------
 
+        //camera--------------------------------------------------------------------------------------------------
         
+        CameraIcon.color = Camera_Off;
+
+        if(FlxG.keys.pressed.ALT){
+            CameraIcon.color = Camera_Idle;
+            if(FlxG.mouse.pressedMiddle) {
+                FlxG.camera.scroll.x -= FlxGamePlus.mouseMove[0];
+                FlxG.camera.scroll.y -= FlxGamePlus.mouseMove[1];
+                CameraIcon.color = Camera_On;
+            }
+            else if (FlxG.mouse.wheel != 0) {
+                FlxG.camera.zoom -= (FlxG.mouse.wheel * 0.005);
+                CameraIcon.color = Camera_On;
+            }
+            
+        }
+
+        CameraCoordsXY.text = "X: "+Math.round(FlxG.camera.scroll.x)+"\nY: "+Math.round(FlxG.camera.scroll.y);
+
+        //-----------------------------------------------
+
+        //magnet--------------------------------------------------------------------------------------------------
+
+        MagnetSetting100.color = snapping == 100 ? Taskbar_On : Taskbar_Off;
+        MagnetSetting50.color = snapping == 50 ? Taskbar_On : Taskbar_Off;
+        MagnetSetting25.color = snapping == 25 ? Taskbar_On : Taskbar_Off;
+
+        //-----------------------------------------------
 
         localMousePos.put();
     }
 
-
+    var inspectorOpen = false;
     var hierarchyOpen = false;
 
     function open_Hierarchy() {
@@ -261,6 +385,18 @@ class LevelEditor extends CoreState {
         HierarchyButton.color = Taskbar_Off;
     }
 
+    function open_Inspector() {
+        inspectorOpen = true;
+        UIPlugin.addContainer(inspector);
+        InspectorButton.color = Taskbar_On;
+    }
+
+    function close_Inspector() {
+        inspectorOpen = false;
+        inspector.close();
+        InspectorButton.color = Taskbar_Off;
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -268,11 +404,11 @@ class LevelEditor extends CoreState {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    static function get_curEditedObject():ObjectVisualizer {
+    static function get_curEditedObject():GenericObjectVisualizer {
 		return curEditedObject;
 	}
 
-	static function set_curEditedObject(value:ObjectVisualizer):ObjectVisualizer {
+	static function set_curEditedObject(value:GenericObjectVisualizer):GenericObjectVisualizer {
         if(value != null) {
             LevelEditor.instance.axle.setPosition(value.transform.internalX, value.transform.internalY);
             LevelEditor.instance.axle.angle = value.transform.internalAngle;
@@ -291,11 +427,16 @@ class LevelEditor extends CoreState {
 
     //world modifying
 
-    public function createBlankObject(?parent:ObjectVisualizer) {
+    public function createBlankObject(?parent:GenericObjectVisualizer) { //creates a dynamic object, for other types, make/use a designated function.
         var o = new ObjectVisualizer();
 
-        o.transform.x = 500;
-        o.transform.y = 500;
+        o.name = "unnamed "+FlxG.random.int(0,20); //TODO this is temporary.
+
+        if(parent == null){
+            o.transform.x = FlxG.width*0.5 + FlxG.camera.scroll.x;
+            o.transform.y = FlxG.height*0.5 + FlxG.camera.scroll.y;
+        }
+        
 
         if(parent == null) layers.members[curLayer].add(o);
         else parent.children.add(o);
@@ -303,7 +444,7 @@ class LevelEditor extends CoreState {
         hierarchy.addNodeFor(o);
     }
 
-    public function deleteObject(obj:ObjectVisualizer) {
+    public function deleteObject(obj:GenericObjectVisualizer) {
         if(obj == null) return;
         obj.existsInLevel = false;
 
@@ -315,8 +456,8 @@ class LevelEditor extends CoreState {
         obj.destroy();
     }
 
-    private function duplicate(obj:ObjectVisualizer, ?parent:ObjectVisualizer):ObjectVisualizer {
-        var o = new ObjectVisualizer();
+    private function duplicate(obj:GenericObjectVisualizer, ?parent:GenericObjectVisualizer):GenericObjectVisualizer {
+        var o = Type.createInstance(Type.getClass(obj),[]);
 
         if(parent == null) layers.members[curLayer].add(o);
         else parent.children.add(o);
@@ -325,7 +466,9 @@ class LevelEditor extends CoreState {
         o.transform.y = obj.transform.y;
         o.transform.angle = obj.transform.angle;
 
-        //TODO
+        o.name = obj.name; //TODO add name engine
+
+        obj.duplicate(o);
 
         for (object in obj.children) {
             var child = duplicate(object, o);
@@ -335,7 +478,7 @@ class LevelEditor extends CoreState {
         return o;
     }
 
-    public function duplicateObject(obj:ObjectVisualizer) {
+    public function duplicateObject(obj:GenericObjectVisualizer) {
         var o = duplicate(obj, obj.parent);
         hierarchy.addNodeFor(o);
     }

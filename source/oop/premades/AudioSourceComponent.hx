@@ -107,7 +107,7 @@ class AudioSourceComponent extends Component {
         if(clip != null){
             if(usingProximity){
                 if(clip != null)
-                    clip.setPosition(owner.transform.getPosition_x() + offsetX ,owner.transform.getPosition_y() + offsetY);
+                    clip.setPosition(owner.transform.internalPosition.x + offsetX ,owner.transform.internalPosition.y + offsetY);
             }
     
             if(_drawDebug && clip.curAsset != null) {
@@ -167,7 +167,7 @@ class AudioSourceComponent extends Component {
 
     override function draw() {
         if(_drawDebug && ClientPreferences.drawDebug){
-            _debugSprite_icon.setPosition(owner.transform.getPosition_x() - (_debugSprite_icon.width * 0.5), owner.transform.getPosition_y()  - (_debugSprite_icon.height * 0.5));
+            _debugSprite_icon.setPosition(owner.transform.internalPosition.x - (_debugSprite_icon.width * 0.5), owner.transform.internalPosition.y  - (_debugSprite_icon.height * 0.5));
             _debugSprite_icon.draw();
             Component.precisionSprite.setPosition(_debugSprite_icon.x, _debugSprite_icon.y);
             Component.precisionSprite.draw();
@@ -177,12 +177,12 @@ class AudioSourceComponent extends Component {
         } 
 
         if(_debugSprite_radius != null && ClientPreferences.drawDebug){
-            _debugSprite_radius.setPosition(owner.transform.getPosition_x() + offsetX - radius, owner.transform.getPosition_y() + offsetY - radius);
+            _debugSprite_radius.setPosition(owner.transform.internalPosition.x + offsetX - radius, owner.transform.internalPosition.y + offsetY - radius);
             _debugSprite_radius.draw();
 
             if(drawDebugRuler){
-                var point = FlxPoint.get(owner.transform.getPosition_x(), owner.transform.getPosition_y());
-                var point2 = FlxPoint.get(AudioListenerComponent.listener.owner.transform.getPosition_x(),AudioListenerComponent.listener.owner.transform.getPosition_y());
+                var point = FlxPoint.get(owner.transform.internalPosition.x, owner.transform.internalPosition.y);
+                var point2 = FlxPoint.get(AudioListenerComponent.listener.owner.transform.internalPosition.x,AudioListenerComponent.listener.owner.transform.internalPosition.y);
                 if(point.distanceTo(point2) < radius){
                     Ruler.measure(point,point2, FlxColor.LIME);
                     //Ruler.measure(point.set(0,0),point2, FlxColor.BLUE);
@@ -258,7 +258,7 @@ class AudioSourceComponent extends Component {
             clip = this.clip;
         }
         
-        clip.setProximity(owner.transform.getPosition_x() + offsetX, owner.transform.getPosition_y() + offsetY,
+        clip.setProximity(owner.transform.internalPosition.x + offsetX, owner.transform.internalPosition.y + offsetY,
         AudioListenerComponent.listener.internalListener,
         radius,
         panning);

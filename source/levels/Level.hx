@@ -1,5 +1,6 @@
 package levels;
 
+import oop.GenericObject;
 import gameside.dialogue.DialogueState;
 import gameside.inventory.ItemContainer;
 import oop.Rail;
@@ -48,6 +49,8 @@ typedef LevelFile = {
 }
 
 typedef LayerStructure = {
+    public var enabledByDefault:Bool;
+    public var visible:Bool; //level editor only.
     public var objects:Array<Dynamic>;
     public var rails:Array<RailStructure>;
 }
@@ -336,14 +339,14 @@ class Level {
     //-------------------------------------------------------------------------------------------------------------
 
     //generic
-    public function getObjectByName(name:String):Object {
+    public function getObjectByName(name:String):GenericObject {
         if(layers.members.length == 1) return getObjectInLayerByName(name,0);
 
         for (layer in layers.members) {
             if(layer.members.length == 0) continue;
             for (basic in layer.members) {
-                if(!Std.isOfType(basic, Object)) continue;
-                if(cast(basic, Object).name == name) return cast basic;
+                if(!Std.isOfType(basic, GenericObject)) continue;
+                if(cast(basic, GenericObject).name == name) return cast basic;
             }
         }
 
@@ -366,7 +369,7 @@ class Level {
     }
 
     //specific
-    public function getObjectInLayerByName(name:String, layer:Int):Object {
+    public function getObjectInLayerByName(name:String, layer:Int):GenericObject {
         if(layers.members[layer] == null || layer < 0) {
             LogFile.log("Layer "+layer+" does not exist!");
             return null;
@@ -374,8 +377,8 @@ class Level {
 
         if(layers.members[layer].members.length != 0){
             for (basic in layers.members[layer].members) {
-                if(!Std.isOfType(basic, Object)) continue;
-                if(cast(basic, Object).name == name) return cast basic;
+                if(!Std.isOfType(basic, GenericObject)) continue;
+                if(cast(basic, GenericObject).name == name) return cast basic;
             }
         }
 
