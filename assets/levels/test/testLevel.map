@@ -32,7 +32,7 @@
   "curLayer": 0,
   "gridSize": 20,
   "skybox": "",
-  "script": "",
+  "script": "assets/levels/test/testLevel.hx",
   "backgroundColor": {
 	  "R": 255,
       "G": 255,

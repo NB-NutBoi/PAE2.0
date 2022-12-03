@@ -104,7 +104,6 @@ class Main extends Sprite
 	public static function main():Void
 	{
 		//first called when launching the game.
-		Keyboard.initialize();
 		Component.registerStandardComponents();
 
 		Lib.current.addChild(new Main());
@@ -120,6 +119,8 @@ class Main extends Sprite
 	{
 		super();
 		instance = this;
+
+		
 
 		crash_prevention_bitmap = Assets.getBitmapData("embed/assetPrevention/Image_not_found.png");
 		crash_prevention_string = Assets.getText("embed/assetPrevention/Data_not_found.txt").toString();
@@ -142,6 +143,8 @@ class Main extends Sprite
 		);
 
 		addChild(game);
+
+		Keyboard.initialize();
 
 		if(!nofps){
 			fps = new FPS_Mem(10, 3, 0xFFFFFF);

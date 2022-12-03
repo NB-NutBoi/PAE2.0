@@ -35,6 +35,7 @@ using StringTools;
 
 typedef LevelFile = {
     //editor-only
+    public var levelName:String;
     public var curLayer:Int;
     public var gridSize:Float;
 
@@ -44,6 +45,7 @@ typedef LevelFile = {
     //actual level data
     public var layers:Array<LayerStructure>;
     public var skybox:String;
+    public var skyboxVisible:Bool; //level editor only.
     public var script:String;
     public var backgroundColor:Null<JSONColor>;
 }
@@ -233,6 +235,12 @@ class Level {
                 //load saveables stuff that isn't live usage here.
             }
 
+            if(load) for (layer in layers) {
+                for (basic in layer) {
+                    if(Std.isOfType(basic, GenericObject)) cast(basic, GenericObject).load();
+                }
+            }
+
             //--------------------------------------------------------------------------------------------------------------------------------
 
             
@@ -325,6 +333,8 @@ class Level {
     //-------------------------------------------------------------------------------------------------------------
 
     public function onSave() {
+        script.save();
+
         SaveManager.curSaveData.mapSaveables.set(this.path,saveables);
     }
 

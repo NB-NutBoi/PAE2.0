@@ -1,12 +1,13 @@
 package ui.premades;
 
+import ui.base.Container;
 import ui.elements.ContainerMover;
 import flixel.FlxG;
 import leveleditor.ObjectVisualizer;
 
 //SPECIAL CASE!!!
 //no need to optimize beyond standard, it's only ever gonna be used in the level editor
-class Inspector extends DMenu {
+class Inspector extends Container {
 
     override public function new() {
         super(FlxG.width-250,0,250,700);

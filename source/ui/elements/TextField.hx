@@ -21,8 +21,7 @@ using StringTools;
 
 //this is shit and because of openfl i can't update scroll without updating text so it breaks very bad with values longer than the bar allows for, but oh well.
 //THIS IS NOT FINISHED BUT WHO GIVES A SHIT
-//oh yeah if it breaks with dconsole, disable the lines Lib.current.stage.focus = null; and Lib.current.stage.focus = txtPrompt;  
-//not sure why this fixes it since it seemingly gets set to null every other second, but manually setting it breaks stuff for some reason???
+//oh yeah if it breaks with dconsole, go to the lines Lib.current.stage.focus = null; and Lib.current.stage.focus = txtPrompt; in DCOpenflInterface.hx and place Lib.current.stage.window.textInputEnabled = true; below them.
 //shitty workaround i know but not the first time i've had to tweak code on dconsole
 class TextField extends StackableObject implements ContainerObject {
 	public var parent:Null<Container>;
@@ -58,8 +57,9 @@ class TextField extends StackableObject implements ContainerObject {
 
         maxWidth = totalWidth;
 
-        box = Utils.makeRamFriendlyRect(0,0,totalWidth+4,27, FlxColor.WHITE);
+        box = Utils.makeRamFriendlyRect(x,y,totalWidth+4,27, FlxColor.WHITE);
         box.antialiasing = true;
+        box.color = IDLE;
 
         textField = new FlxText(0,0,maxWidth,"",18);
         textField.font = "vcr"; //i think i can get away with being cheap because this font has the exact same spacings across all characters

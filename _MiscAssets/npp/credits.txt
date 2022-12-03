@@ -1,1 +1,4 @@
+Haxe for npp by azrafe7, redestributing here for convenience.
+
+Original link:
 https://github.com/azrafe7/Haxe-for-Notepad-plusplus

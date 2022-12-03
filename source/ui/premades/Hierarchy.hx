@@ -22,7 +22,7 @@ import flixel.group.FlxSpriteGroup.FlxTypedSpriteGroup;
 
 //how the fuck do i handle this
 //store a reference to the object and check every frame if the object's been deleted?
-class Hierarchy extends DMenu {
+class Hierarchy extends Container {
     public static var instance:Hierarchy = null;
     public static var overlappedNode:HierarchyNode = null;
 

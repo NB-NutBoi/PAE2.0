@@ -1,5 +1,9 @@
 package leveleditor;
 
+import assets.ImageAsset;
+import sys.FileSystem;
+import rendering.Skybox;
+import ui.premades.LevelProperties;
 import ui.base.Container;
 import ui.elements.Context;
 import common.Mouse;
@@ -18,14 +22,30 @@ import flixel.group.FlxGroup.FlxTypedGroup;
 import lime.app.Application;
 import lime.utils.Assets;
 
+using StringTools;
+
 class LevelEditor extends CoreState {
     public static var instance:LevelEditor;
 
     @:isVar public static var curEditedObject(get,set):GenericObjectVisualizer = null;
     public static var tempCurEdited:GenericObjectVisualizer = null;
 
+    public var name:String;
+
+    public var script:String;
+
+    public var staticAssets:Array<String>;
+
     public var hierarchy:Hierarchy;
     public var inspector:Inspector;
+    public var properties:LevelProperties;
+
+    
+
+    //rendering
+    public var skybox:String;
+    public var curSkybox:Skybox;
+    public var skyboxVisible:Bool = true;
 
     var axle:Axle;
 
@@ -55,6 +75,7 @@ class LevelEditor extends CoreState {
 
         public var HierarchyButton:FlxSprite;
         public var InspectorButton:FlxSprite;
+        public var PropertiesButton:FlxSprite;
 
 
         static final Camera_Off:Int = 0xFFFF0000;
@@ -82,7 +103,12 @@ class LevelEditor extends CoreState {
         //map-icon
         Application.current.window.setIcon(Assets.getImage("embed/defaults/leveleditor/icon512.png"));
 
+        name = "Unnamed map.";
         Application.current.window.title = "PAE2.0 - Level editor - Unnamed map.";
+
+        skybox = "";
+        script = "";
+        staticAssets = [];
 
         //------------------------------------
 
@@ -115,8 +141,13 @@ class LevelEditor extends CoreState {
         InspectorButton.camera = FlxGamePlus.OverlayCam;
         InspectorButton.color = Taskbar_Off;
 
+        PropertiesButton = new FlxSprite(400,Taskbar.y+2,"embed/ui/leveleditor/PropertiesIcon.png");
+        PropertiesButton.camera = FlxGamePlus.OverlayCam;
+        PropertiesButton.color = Taskbar_Off;
+
         TaskbarGroup.add(HierarchyButton);
         TaskbarGroup.add(InspectorButton);
+        TaskbarGroup.add(PropertiesButton);
 
         CameraIcon = new FlxSprite(120,Taskbar.y+35, "embed/ui/leveleditor/cameraIcon.png");
         CameraIcon.camera = FlxGamePlus.OverlayCam;
@@ -156,6 +187,7 @@ class LevelEditor extends CoreState {
 
         hierarchy = new Hierarchy();
         inspector = new Inspector();
+        properties = new LevelProperties();
 
         //------------------------------------
 
@@ -176,14 +208,43 @@ class LevelEditor extends CoreState {
     @:access(Main)
     override function destroy() {
 
-        //reset to default
+        curEditedObject = null;
+        tempCurEdited = null;
+
+        
         instance = null;
 
         axle.destroy();
+        axle = null;
 
         hierarchy.destroy();
         hierarchy = null;
 
+        inspector.destroy();
+        inspector = null;
+
+        properties.destroy();
+        properties = null;
+
+        Taskbar.destroy();
+        Taskbar = null;
+
+        TaskbarGroup.destroy();
+        TaskbarGroup = null;
+
+        layers.destroy();
+
+
+        if(curSkybox != null){
+            curSkybox.asset.important = false;
+            curSkybox.destroy();
+            curSkybox = null;
+        }
+
+        staticAssets.resize(0);
+        staticAssets = null;
+
+        //reset to default
         Application.current.window.setIcon(Main._getWindowIcon(Main.SetupConfig.getConfig("WindowIcon", "string", "embed/defaults/icon32.png")));
 		Application.current.window.title = Main.SetupConfig.getConfig("WindowName", "string", "PAE 2.0");
 
@@ -282,6 +343,7 @@ class LevelEditor extends CoreState {
     override function draw() {
         super.draw();
 
+        if(curSkybox != null && skyboxVisible) Utils.drawSkybox(curSkybox);
         layers.draw();
         axle.draw();
 
@@ -323,6 +385,7 @@ class LevelEditor extends CoreState {
         if(Utils.overlapsSprite(MagnetSetting100,localMousePos)) overlaps = 3;
         if(Utils.overlapsSprite(MagnetSetting50,localMousePos)) overlaps = 4;
         if(Utils.overlapsSprite(MagnetSetting25,localMousePos)) overlaps = 5;
+        if(Utils.overlapsSprite(PropertiesButton,localMousePos)) overlaps = 6;
 
         if(FlxG.mouse.justPressed){
             switch (overlaps){
@@ -332,6 +395,7 @@ class LevelEditor extends CoreState {
                 case 3: snapping = 100;
                 case 4: snapping = 50;
                 case 5: snapping = 25;
+                case 6: propertiesOpen ? close_Properties() : open_Properties();
             }
         }
 
@@ -372,6 +436,7 @@ class LevelEditor extends CoreState {
 
     var inspectorOpen = false;
     var hierarchyOpen = false;
+    var propertiesOpen = false;
 
     function open_Hierarchy() {
         hierarchyOpen = true;
@@ -395,6 +460,18 @@ class LevelEditor extends CoreState {
         inspectorOpen = false;
         inspector.close();
         InspectorButton.color = Taskbar_Off;
+    }
+
+    function open_Properties() {
+        propertiesOpen = true;
+        UIPlugin.addContainer(properties);
+        PropertiesButton.color = Taskbar_On;
+    }
+
+    function close_Properties() {
+        propertiesOpen = false;
+        properties.close();
+        PropertiesButton.color = Taskbar_Off;
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -483,6 +560,36 @@ class LevelEditor extends CoreState {
         hierarchy.addNodeFor(o);
     }
 
+    public function setSkybox(to:String) {
+        if(to == ""){
+            curSkybox.asset.important = false;
+            curSkybox.destroy();
+            curSkybox = null;
+
+            skybox = to;
+
+            return;
+        }
+        if(!FileSystem.exists(to) || !to.endsWith(".asset")) return;
+
+        if(curSkybox == null) curSkybox = new Skybox(0,0,null);
+        else {
+            curSkybox.graphic = null;
+            
+            if(curSkybox.animOffsets != null) curSkybox.animOffsets.clear();
+            curSkybox.animOffsets = null;
+
+            curSkybox.asset.important = false;
+            curSkybox.asset.destroy();
+
+            curSkybox.asset = null;
+        }
+
+        curSkybox.setAsset(ImageAsset.get(to));
+
+        skybox = to;
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -503,5 +610,12 @@ class LevelEditor extends CoreState {
 
     public function getObjectByName(name:String):ObjectVisualizer {
         return null;
+    }
+
+    //technically not nameEngine but still a name
+
+    public function setLevelName(to:String){
+        name = to;
+        Application.current.window.title = "PAE2.0 - Level editor - "+name;
     }
 }

@@ -13,7 +13,7 @@ class TransformField extends StackableObject implements ContainerObject {
 
     public var x_field:TextField;
     public var y_field:TextField;
-    public var z_field:TextField;
+    //public var z_field:TextField; deprecated
 
     public var angle_field:TextField;
 

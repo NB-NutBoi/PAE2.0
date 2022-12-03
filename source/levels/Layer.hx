@@ -56,4 +56,10 @@ class Layer extends FlxTypedGroup<FlxBasic> {
         super.destroy();
         rails.destroy();
     }
+
+    public function save() {
+        for (basic in members) {
+            if(Std.isOfType(basic, GenericObject)) cast(basic, GenericObject).save();
+        }
+    }
 }
