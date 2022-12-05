@@ -34,6 +34,7 @@ class Skybox extends FlxSprite {
 
     public function setAsset(a:ImageAsset) {
         asset = a;
+        asset.users++;
 
         forceNoAA = a.forceNoAA;
         
@@ -120,8 +121,9 @@ class Skybox extends FlxSprite {
         animOffsets = null;
 
         if(asset != null){
-            if(!asset.important)
+            if(!asset.important && asset.users <= 0)
                 asset.destroy();
+            else asset.users--;
 
             asset = null;
         }

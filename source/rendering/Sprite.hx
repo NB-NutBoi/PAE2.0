@@ -34,6 +34,7 @@ class Sprite extends FlxSprite{
 
     public function setAsset(a:ImageAsset) {
         assets = [a];
+        a.users++;
 
         forceNoAA = a.forceNoAA;
         
@@ -122,6 +123,7 @@ class Sprite extends FlxSprite{
         if(assets.contains(asset)) return;
 
         assets.push(asset);
+        asset.users++;
 
         var newFrames = Utils.makeSparrowAtlas(asset.graphic, asset.xml);
         for (frame in newFrames.frames) {
@@ -240,8 +242,9 @@ class Sprite extends FlxSprite{
 
         if(assets != null){
             for (asset in assets) {
-                if(!asset.important)
+                if(!asset.important && asset.users <= 0)
                 asset.destroy();
+                else asset.users--;
             }
             assets = null;
         }

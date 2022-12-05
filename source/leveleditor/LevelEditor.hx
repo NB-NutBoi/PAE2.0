@@ -119,6 +119,9 @@ class LevelEditor extends CoreState {
 
         //------------------------------------
 
+        //disable watermark
+        if(CoreState.watermark != null) CoreState.watermark.visible = false;
+
         Taskbar = Utils.makeRamFriendlyRect(0,FlxG.height-65, FlxG.width,65,TaskbarBG);
         Taskbar.camera = FlxGamePlus.OverlayCam;
 
@@ -233,12 +236,10 @@ class LevelEditor extends CoreState {
         TaskbarGroup = null;
 
         layers.destroy();
-
+        layers = null;
 
         if(curSkybox != null){
-            curSkybox.asset.important = false;
             curSkybox.destroy();
-            curSkybox = null;
         }
 
         staticAssets.resize(0);
@@ -247,6 +248,8 @@ class LevelEditor extends CoreState {
         //reset to default
         Application.current.window.setIcon(Main._getWindowIcon(Main.SetupConfig.getConfig("WindowIcon", "string", "embed/defaults/icon32.png")));
 		Application.current.window.title = Main.SetupConfig.getConfig("WindowName", "string", "PAE 2.0");
+
+        if(CoreState.watermark != null) CoreState.watermark.visible = true;
 
         super.destroy();
     }
@@ -312,7 +315,7 @@ class LevelEditor extends CoreState {
         if(FlxG.mouse.justPressed){
             var overlapsMain = true;
 
-            if(inspector.overlapped || hierarchy.overlapped) overlapsMain = false;
+            if(inspector.overlapped || hierarchy.overlapped || properties.overlapped) overlapsMain = false;
             if(overlaps != -1) overlapsMain = false;
             if(Container.contextActive) overlapsMain = false;
             if(axle.overlap != -1) overlapsMain = false;
@@ -341,13 +344,13 @@ class LevelEditor extends CoreState {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     override function draw() {
-        super.draw();
-
         if(curSkybox != null && skyboxVisible) Utils.drawSkybox(curSkybox);
         layers.draw();
         axle.draw();
 
         drawTaskbar();
+
+        super.draw();
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -386,6 +389,8 @@ class LevelEditor extends CoreState {
         if(Utils.overlapsSprite(MagnetSetting50,localMousePos)) overlaps = 4;
         if(Utils.overlapsSprite(MagnetSetting25,localMousePos)) overlaps = 5;
         if(Utils.overlapsSprite(PropertiesButton,localMousePos)) overlaps = 6;
+
+        if(inspector.overlapped || hierarchy.overlapped || properties.overlapped || Container.contextActive) overlaps = -1;
 
         if(FlxG.mouse.justPressed){
             switch (overlaps){
@@ -562,11 +567,10 @@ class LevelEditor extends CoreState {
 
     public function setSkybox(to:String) {
         if(to == ""){
-            curSkybox.asset.important = false;
+            skybox = to;
+            if(curSkybox == null) return;
             curSkybox.destroy();
             curSkybox = null;
-
-            skybox = to;
 
             return;
         }
@@ -574,15 +578,8 @@ class LevelEditor extends CoreState {
 
         if(curSkybox == null) curSkybox = new Skybox(0,0,null);
         else {
-            curSkybox.graphic = null;
-            
-            if(curSkybox.animOffsets != null) curSkybox.animOffsets.clear();
-            curSkybox.animOffsets = null;
-
-            curSkybox.asset.important = false;
             curSkybox.asset.destroy();
-
-            curSkybox.asset = null;
+            curSkybox = null;
         }
 
         curSkybox.setAsset(ImageAsset.get(to));

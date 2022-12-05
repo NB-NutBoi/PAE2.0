@@ -1,5 +1,6 @@
 package;
 
+import ui.elements.ColorPicker.ColorWheel;
 import gameside.inventory.ItemContainer;
 import gameside.dialogue.DialogueState;
 import saving.SaveManager;
@@ -65,7 +66,8 @@ class CoreState extends FlxState {
 
     override function draw() {
         super.draw();
-        if(watermark != null) watermark.draw();
+        if(watermark != null && watermark.visible) watermark.draw();
+        if(ColorWheel.instance != null) ColorWheel.instance.draw(); //color wheel :D
     }
     
     override function tryUpdate(elapsed:Float) {

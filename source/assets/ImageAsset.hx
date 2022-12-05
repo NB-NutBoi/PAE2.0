@@ -122,6 +122,8 @@ class ImageAsset {
     public var defaultWidth:Int = 0;
     public var defaultHeight:Int = 0;
 
+    public var users:Int = 0;
+
     public function new(file:ImageAssetFile, key:String) {
         this.key = key;
         animated = false;

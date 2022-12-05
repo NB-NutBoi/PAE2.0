@@ -1,5 +1,8 @@
 package ui.premades;
 
+import flixel.FlxG;
+import flixel.util.FlxColor;
+import ui.elements.ColorPicker;
 import ui.elements.Checkbox;
 import sys.FileSystem;
 import lowlevel.FileBrowser;
@@ -23,6 +26,8 @@ class LevelProperties extends Container {
     public var skyboxVisible:Checkbox;
 
     public var script:TextField;
+
+    public var bgColor:ColorPicker;
 
     override public function new() {
         super(0,700,400,300);
@@ -64,6 +69,10 @@ class LevelProperties extends Container {
         label = new FlxText(10,185,0,"Background color",18); label.font = "vcr";
         add(label);
 
+        bgColor = new ColorPicker(200,185,FlxColor.BLACK);
+        bgColor.onUpdateColor = setBgColor;
+        add(bgColor);
+
         add(Utils.makeRamFriendlyRect(5,220,390,2));
 
         label = new FlxText(10,235,0,"Script",18); label.font = "vcr";
@@ -80,6 +89,10 @@ class LevelProperties extends Container {
 
     function setSkybox(to:String) {
         LevelEditor.instance.setSkybox(to);
+    }
+
+    function setBgColor(to:FlxColor) {
+        FlxG.camera.bgColor = to;
     }
 
     function setSkyboxVisible(to:Bool) {

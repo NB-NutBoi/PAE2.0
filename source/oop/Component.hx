@@ -624,8 +624,8 @@ class Component extends FlxBasic {
         });
 
         final aSourceEditables = new DynamicAccess();
-        aSourceEditables.set("clip", "string");
-        aSourceEditables.set("panning", "float");
+        aSourceEditables.set("clip", "filepath");
+        aSourceEditables.set("panning", "range(-1,1,0)");
 
         aSourceEditables.set("usingProximity", "bool");
         aSourceEditables.set("usingProximityPanning", "bool");

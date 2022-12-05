@@ -1,15 +1,36 @@
 package leveleditor;
 
+import oop.Component;
+import haxe.DynamicAccess;
 import flixel.math.FlxPoint;
 import rendering.Sprite;
 import flixel.FlxBasic;
 
 class ComponentVisualizer extends FlxBasic {
-    
-    public var visual:Sprite; //used as visual collision if not null.
 
-    public function new(type:String) {
+    public var owner:ObjectVisualizer; //only dynamic objects use components.
+
+    public var variables:DynamicAccess<Dynamic>;
+
+    public var component:ComponentClass;
+
+    public static function make(type:String):ComponentVisualizer {
+        return null;
+    }
+
+    public function new(type:ComponentClass, parent:ObjectVisualizer) {
         super();
+
+        owner = parent;
+
+        component = type;
+        variables = new DynamicAccess();
+
+        //----------------------------------------------------------------------------
+
+        for (variable in component.defaultVars.keys()) {
+            variables.set(variable, component.defaultVars.get(variable));
+        }
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
