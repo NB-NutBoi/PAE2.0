@@ -43,6 +43,7 @@ class BasicHscript extends FlxBasic implements HScriptable {
         parser.preprocesorValues.set("desktop", #if desktop true #else false #end);
         parser.preprocesorValues.set("telemetry", #if telemetry true #else false #end);
         parser.preprocesorValues.set("linux", #if linux true #else false #end);
+        parser.preprocesorValues.set("debug", Main.DEBUG);
 
 		interpreter = new hscript.Interp();
 

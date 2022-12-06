@@ -112,7 +112,7 @@ class SpriteComponent extends Component {
 
     override function update(elapsed:Float) {
         if(!exists || !ready) return;
-
+        
         sprite.x = owner.transform.internalPosition.x + offsetX;
         sprite.y = owner.transform.internalPosition.y + offsetY;
 

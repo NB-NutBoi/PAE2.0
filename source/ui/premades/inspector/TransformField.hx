@@ -17,10 +17,6 @@ class TransformField extends StackableObject implements ContainerObject {
 
     public var angle_field:TextField;
 
-    public var sizeEnabled:Bool = false;
-    public var w_field:TextField;
-    public var h_field:TextField;
-
 	public function updateInputs(elapsed:Float) {}
 
 	public function postUpdate(elapsed:Float) {}

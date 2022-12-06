@@ -5,6 +5,7 @@
 		"objects": [
 			{
 				"_TYPE": "FULL",
+				"extended": true,
 				"name": "test",
 				"transform": {
 					"X": 20,
@@ -15,6 +16,7 @@
 				"components": [
 					{
 						"component": "Sprite",
+						"extended": true,
 						"startingData": {
 							"texture": "assets/images/JennTest.asset"
 						}

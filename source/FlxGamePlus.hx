@@ -346,10 +346,6 @@ class GameOverlay extends FlxBasic {
             tx2.draw();
             tx3.draw();
         }
-        
-        if(Context.instance != null){
-            Context.instance.draw();
-        }
     }
 
     function yes() {

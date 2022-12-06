@@ -33,6 +33,7 @@ class Sprite extends FlxSprite{
     }
 
     public function setAsset(a:ImageAsset) {
+        if(assets != null) removeAssets();
         assets = [a];
         a.users++;
 
@@ -61,6 +62,17 @@ class Sprite extends FlxSprite{
         updateHitbox();
 
         antialiasing = (!forceNoAA && ClientPreferences.globalAA);
+    }
+
+    public function removeAssets() {
+        if(assets != null){
+            for (asset in assets) {
+                asset.users--;
+                if(!asset.important && asset.users <= 0)
+                asset.destroy();
+            }
+            assets = null;
+        }
     }
 
     public function playAnimation(name:String, ?force:Bool = false) {
@@ -240,20 +252,13 @@ class Sprite extends FlxSprite{
         if(animOffsets != null) animOffsets.clear();
         animOffsets = null;
 
-        if(assets != null){
-            for (asset in assets) {
-                if(!asset.important && asset.users <= 0)
-                asset.destroy();
-                else asset.users--;
-            }
-            assets = null;
-        }
+        if(assets != null) removeAssets();
 
         super.destroy();
     }
 
     override function updateFramePixels():BitmapData {
-        if(lockFramePixels) return framePixels;
+        if(lockFramePixels && framePixels != null) return framePixels;
         
         return super.updateFramePixels();
     }

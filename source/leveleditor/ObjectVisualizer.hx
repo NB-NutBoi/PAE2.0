@@ -60,4 +60,10 @@ class ObjectVisualizer extends GenericObjectVisualizer {
         return super.checkIsHit(mousePos);
     }
 
+    override function handleScaling(axis:Int) {
+        for (component in components) {
+            component.handleScaling(axis);
+        }
+    }
+
 }

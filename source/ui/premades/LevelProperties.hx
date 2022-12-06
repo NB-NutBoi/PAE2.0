@@ -1,5 +1,6 @@
 package ui.premades;
 
+import flixel.FlxSprite;
 import flixel.FlxG;
 import flixel.util.FlxColor;
 import ui.elements.ColorPicker;
@@ -25,6 +26,7 @@ class LevelProperties extends Container {
     public var skybox:TextField;
     public var skyboxVisible:Checkbox;
 
+    var scriptSafe:FlxSprite;
     public var script:TextField;
 
     public var bgColor:ColorPicker;
@@ -77,6 +79,19 @@ class LevelProperties extends Container {
 
         label = new FlxText(10,235,0,"Script",18); label.font = "vcr";
         add(label);
+
+        scriptSafe = new FlxSprite(370,235,"embed/ui/tick.png");
+        scriptSafe.antialiasing = true;
+        scriptSafe.color = FlxColor.LIME;
+        add(scriptSafe);
+
+        script = new TextField(60,263,326);
+        script.onPressEnter.add(setScript);
+        script.onType.add(editScript);
+        add(script);
+
+        selectButton = new Button(10,263,20,27,"...",browseScript);
+        add(selectButton);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -99,6 +114,15 @@ class LevelProperties extends Container {
         LevelEditor.instance.skyboxVisible = to;
     }
 
+    function setScript(to:String) {
+        LevelEditor.instance.setScript(to);
+        scriptSafe.color = FlxColor.LIME;
+    }
+
+    function editScript() {
+        scriptSafe.color = FlxColor.RED;
+    }
+
     function browseSkybox() {
         FileBrowser.callback = _fileBrowsed;
         FileBrowser.browse([new FileFilter("Asset files", "*.asset")], false);
@@ -115,6 +139,25 @@ class LevelProperties extends Container {
                 skybox.onUpdateText();
 
                 setSkybox(skybox.textField.text);
+        }
+    }
+
+    function browseScript() {
+        FileBrowser.callback = _scriptBrowsed;
+        FileBrowser.browse([new FileFilter("Script files", "*.hx")], false);
+    }
+
+    function _scriptBrowsed() {
+        switch (FileBrowser.latestResult){
+            case SAVE, CANCEL, ERROR: return;
+            case SELECT:
+                if(!FileBrowser.filePath.endsWith(".hx")) return;
+
+                script.textField.text = FileBrowser.filePath;
+                script.caret = FileBrowser.filePath.length;
+                script.onUpdateText();
+
+                setScript(script.textField.text);
         }
     }
 }

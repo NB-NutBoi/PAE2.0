@@ -1,5 +1,7 @@
 package leveleditor;
 
+import leveleditor.componentvisualizers.TextVisualizer;
+import leveleditor.componentvisualizers.SpriteVisualizer;
 import oop.Component;
 import haxe.DynamicAccess;
 import flixel.math.FlxPoint;
@@ -10,12 +12,26 @@ class ComponentVisualizer extends FlxBasic {
 
     public var owner:ObjectVisualizer; //only dynamic objects use components.
 
-    public var variables:DynamicAccess<Dynamic>;
+    public var variables:Array<Array<Dynamic>>;
 
     public var component:ComponentClass;
 
-    public static function make(type:String):ComponentVisualizer {
-        return null;
+    public var extended:Bool = true; //hierarchy temp data
+    public var UPDATE_VARIABLES:Bool = false; //hierarchy temp data
+
+    public static function make(type:String, owner:ObjectVisualizer):ComponentVisualizer {
+        var component:ComponentVisualizer = null;
+        switch (type){
+            case "Sprite":
+                component = new SpriteVisualizer(Component.componentClasses.get(type),owner);
+            case "Text":
+                component = new TextVisualizer(Component.componentClasses.get(type),owner);
+            default:
+                component = new ComponentVisualizer(Component.componentClasses.get(type),owner);
+        }
+         
+        owner.components.add(component);
+        return component;
     }
 
     public function new(type:ComponentClass, parent:ObjectVisualizer) {
@@ -24,13 +40,29 @@ class ComponentVisualizer extends FlxBasic {
         owner = parent;
 
         component = type;
-        variables = new DynamicAccess();
+        variables = [];
 
         //----------------------------------------------------------------------------
 
-        for (variable in component.defaultVars.keys()) {
-            variables.set(variable, component.defaultVars.get(variable));
+        for (variable in component.defaultVars) {
+            variables.push(variable.copy());
         }
+    }
+
+    override function destroy() {
+        super.destroy();
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public function changeVariable(key:String) {
+        
+    }
+
+    public function handleScaling(axis:Int) {
+        
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -1,5 +1,6 @@
 package ui.elements;
 
+import ui.elements.ColorPicker.ColorWheel;
 import common.Keyboard;
 import common.Mouse;
 import flixel.FlxCamera;
@@ -61,7 +62,7 @@ class TextField extends StackableObject implements ContainerObject {
         box.antialiasing = true;
         box.color = IDLE;
 
-        textField = new FlxText(0,0,maxWidth,"",18);
+        textField = new FlxText(x,y+4,maxWidth,"",18);
         textField.font = "vcr"; //i think i can get away with being cheap because this font has the exact same spacings across all characters
         //textField.clipRect = new FlxRect(0,0,totalWidth,textField.height);
         
@@ -90,12 +91,14 @@ class TextField extends StackableObject implements ContainerObject {
     }
 
 	public function updateInputs(elapsed:Float) {
+        if(ColorWheel.instance != null) return;
         var localMousePos = FlxPoint.get(0,0);
         localMousePos = Utils.getMousePosInCamera(parent == null ? camera : parent.cam, localMousePos, box);
 
         over = box.overlapsPoint(localMousePos);
 
         if(over && FlxG.mouse.justPressed){
+            if(curSelected != null && curSelected != this) curSelected.onDeselect.dispatch();
             curSelected = this;
             localMousePos.x -= textField.textField.scrollH;
             getCaret(localMousePos);
@@ -122,8 +125,8 @@ class TextField extends StackableObject implements ContainerObject {
             if(FlxG.mouse.justPressed && !over && !curSelected.over) {
                 if(curSelected == this){
                     onDeselect.dispatch();
+                    curSelected = null;
                 }
-                curSelected = null;
             }
         }
     }
@@ -218,6 +221,13 @@ class TextField extends StackableObject implements ContainerObject {
         _caret.destroy();
 
         super.destroy();
+    }
+
+    override function setScrollFactor(x:Float = 0, y:Float = 0) {
+        super.setScrollFactor(x, y);
+        box.scrollFactor.set(x,y);
+        textField.scrollFactor.set(x,y);
+        _caret.scrollFactor.set(x,y);
     }
 
     override function set_camera(value:FlxCamera):FlxCamera {

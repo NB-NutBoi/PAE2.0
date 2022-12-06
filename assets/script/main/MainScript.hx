@@ -3,7 +3,6 @@
 //-------------------------------------------------------
 import("CoreState", "core");
 import("MainState", "Main");
-import("Main", "_Main");
 import("utility.LogFile", "Log");
 import("Console", "Console");
 import("assets.AssetCache", "AssetCache");
@@ -23,12 +22,19 @@ function OnAwake()
 	Console.log("\n------------------------------\nMAIN SCRIPT PROCESS\n", Console.CONSOLE_COLOR_1);
 	Log.log("Hooks set.");
 	
-	if(_Main.DEBUG){
+	//Pretty essential and its like 9 pixels worth of memory, who's gonna complain??
+	AssetCache.cacheImage("embed/debug/ramSaver.png");
+	
+	#if debug
 		//fuck the debug warnings.
 		AssetCache.cacheData("embed/debug/TestSliced.asset");
 		AssetCache.cacheImage("embed/debug/testSliced.png");
-		AssetCache.cacheImage("embed/debug/ramSaver.png");
-	}
+
+		AssetCache.cacheImage("embed/ui/default_item.png");
+		AssetCache.cacheData("embed/ui/default_item.asset");
+		
+		AssetCache.cacheImage("embed/components/Sprite.png");
+	#end
 }
 
 function OnStart()

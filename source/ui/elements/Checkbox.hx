@@ -8,6 +8,7 @@ package ui.elements;
  *///                                                                                                      |
 //---------------------------------------------------------------------------------------------------------|
 
+import ui.elements.ColorPicker.ColorWheel;
 import common.Mouse;
 import flixel.FlxCamera;
 import flixel.FlxG;
@@ -41,12 +42,12 @@ class Checkbox extends StackableObject implements ContainerObject {
     override public function new(x:Float,y:Float,label:String,callback:Bool->Void) {
         super(x,y);
 
-        box = new FlxSprite(0,0,"embed/ui/checkbox.png");
+        box = new FlxSprite(x,y,"embed/ui/checkbox.png");
         box.color = IDLE;
         box.graphic.destroyOnNoUse = false;
         box.graphic.persist = true;
         
-        tick = new FlxSprite(0,0,"embed/ui/tick.png");
+        tick = new FlxSprite(x,y,"embed/ui/tick.png");
         tick.antialiasing = true;
         tick.graphic.destroyOnNoUse = false;
         tick.graphic.persist = true;
@@ -88,6 +89,7 @@ class Checkbox extends StackableObject implements ContainerObject {
 
     public function updateInputs(elapsed:Float) {
         if(disabled) return;
+        if(ColorWheel.instance != null) return;
         var localMousePos = FlxPoint.get(0,0);
         localMousePos = Utils.getMousePosInCamera(parent == null ? camera : parent.cam, localMousePos, box);
 

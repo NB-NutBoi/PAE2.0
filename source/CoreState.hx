@@ -1,5 +1,6 @@
 package;
 
+import ui.elements.Context;
 import ui.elements.ColorPicker.ColorWheel;
 import gameside.inventory.ItemContainer;
 import gameside.dialogue.DialogueState;
@@ -36,8 +37,8 @@ class CoreState extends FlxState {
         var watermarkText = "";
         switch (Main.buildType){
             case INDEV, PRE_RELEASE:
-                watermark = true;
-                watermarkText = "This is a "+ Main.buildType.getName() +" build.\nAll content is not representative of final quality and is subject to change.";
+                watermark = true;               //FUCK GRAMMAR
+                watermarkText = "This is "+(Main.buildType == INDEV ? "an INDEV" : "a PRE RELEASE")+" build.\nAll content is not representative of final quality and is subject to change.";
             case PRIVATE_BUILD:
                 watermark = true;
                 watermarkText = "This is a Private Build.\nDo not show any footage or distribute it.";
@@ -68,6 +69,7 @@ class CoreState extends FlxState {
         super.draw();
         if(watermark != null && watermark.visible) watermark.draw();
         if(ColorWheel.instance != null) ColorWheel.instance.draw(); //color wheel :D
+        if(Context.instance != null) Context.instance.draw();
     }
     
     override function tryUpdate(elapsed:Float) {

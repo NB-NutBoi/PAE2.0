@@ -11,6 +11,10 @@ import flixel.group.FlxGroup.FlxTypedGroup;
 typedef StaticSpriteDataStructure = {
     public var _TYPE:String; //"STATIC_SPRITE" in this case
     public var name:String;
+    public var extended:Bool; //editor data
+    public var active:Bool;
+    //-----------------------------------------------------------
+
 
     public var transform:JSONTransform;
     public var scale:JSONScale;
@@ -21,6 +25,10 @@ typedef StaticSpriteDataStructure = {
 typedef FullObjectDataStructure = {
     public var _TYPE:String; //"FULL" in this case.
     public var name:String;
+    public var extended:Bool; //editor data
+    public var active:Bool;
+    //-----------------------------------------------------------
+    
 
     public var transform:JSONTransform;
 
@@ -67,7 +75,7 @@ class Object extends GenericObject {
     }
 
     override public function new(x:Float = 0, y:Float = 0) {
-        super();
+        super(x,y);
 
         componets = new FlxTypedGroup();
 

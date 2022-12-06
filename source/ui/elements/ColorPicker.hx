@@ -37,8 +37,8 @@ class ColorPicker extends StackableObject implements ContainerObject {
 
         color = defaultColor;
 
-        box = Utils.makeRamFriendlyRect(x,y,30,30,IDLE);
-        colorBox = Utils.makeRamFriendlyRect(x+2,y+2,26,26,color);
+        box = Utils.makeRamFriendlyRect(x,y,30,30,IDLE,true);
+        colorBox = Utils.makeRamFriendlyRect(x+2,y+2,26,26,color,true);
 
         height = combinedHeight = box.height;
     }
@@ -99,8 +99,7 @@ class ColorPicker extends StackableObject implements ContainerObject {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public function updateColor(to:FlxColor) {
-        color = to;
+    public function updateColor() {
         if(onUpdateColor != null) onUpdateColor(color);
     }
     
@@ -161,6 +160,9 @@ class ColorWheel extends FlxObject {
             secondaryColorBox.updateHitbox();
             secondaryColorBox.camera = FlxGamePlus.OverlayCam;
         }
+
+        primaryColorBox.setPosition(x+10,y+10);
+        secondaryColorBox.setPosition(x+140,y+10);
 
         box = Utils.makeRamFriendlyRect(x,y,200,200,BG);
         box.camera = FlxGamePlus.OverlayCam;
@@ -283,7 +285,8 @@ class ColorWheel extends FlxObject {
     }
 
     function onUpdateColor() {
-        owner.updateColor(FlxColor.fromHSB(hue,saturation,brightness));
+        owner.color.setHSB(hue,saturation,brightness,1);
+        owner.updateColor();
         colorBox.color = owner.color;
     }
 

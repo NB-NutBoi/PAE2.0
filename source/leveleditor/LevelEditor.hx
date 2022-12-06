@@ -1,5 +1,16 @@
 package leveleditor;
 
+import utility.LogFile;
+import haxe.Json;
+import sys.io.File;
+import lowlevel.FileBrowser;
+import oop.Component.ComponentInstance;
+import oop.Object.FullObjectDataStructure;
+import levels.Level.LayerStructure;
+import levels.Level.LevelFile;
+import ui.elements.TextField;
+import lime.ui.KeyCode;
+import common.Keyboard;
 import assets.ImageAsset;
 import sys.FileSystem;
 import rendering.Skybox;
@@ -27,7 +38,7 @@ using StringTools;
 class LevelEditor extends CoreState {
     public static var instance:LevelEditor;
 
-    @:isVar public static var curEditedObject(get,set):GenericObjectVisualizer = null;
+    public static var curEditedObject(default,set):GenericObjectVisualizer = null;
     public static var tempCurEdited:GenericObjectVisualizer = null;
 
     public var name:String;
@@ -200,6 +211,9 @@ class LevelEditor extends CoreState {
         axle.onScale = scale;
         axle.onChangeAngle = rotate;
 
+        Keyboard.onUiKeyDown.add(OnKeyDown);
+	    Keyboard.onUiKeyUp.add(OnKeyUp);
+
         //------------------------------------
 
         layers = new FlxTypedGroup();
@@ -216,6 +230,9 @@ class LevelEditor extends CoreState {
 
         
         instance = null;
+
+        Keyboard.onUiKeyDown.remove(OnKeyDown);
+	    Keyboard.onUiKeyUp.remove(OnKeyUp);
 
         axle.destroy();
         axle = null;
@@ -276,13 +293,28 @@ class LevelEditor extends CoreState {
     }
 
     function scale(axis:Int) {
-        
+        if(curEditedObject.usesSize) curEditedObject.handleScaling(axis); //components and static objects handle scaling differently.
     }
 
     function rotate() {
         if(curEditedObject == null) return;
 
         curEditedObject.transform.setVisualAngle(axle.angle);
+    }
+
+    function OnKeyDown(key:KeyCode){
+        if(TextField.curSelected != null) return;
+
+        switch (key){
+            case W: if(curEditedObject != null) axle.state = MOVE;
+            case S: if(curEditedObject != null && curEditedObject.usesSize) axle.state = SCALE;
+            case R: if(curEditedObject != null) axle.state = ROTATE;
+            case DELETE: if(curEditedObject != null) deleteObject(curEditedObject);
+            default:
+        }
+    }
+    
+    function OnKeyUp(key:KeyCode){
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -326,7 +358,9 @@ class LevelEditor extends CoreState {
 
                 var result:ObjectVisualizer = null;
 
-                for (i in layers.members[curLayer].length...0) {
+                var i = layers.members[curLayer].length;
+                while (i-- > 0) {
+                    if(!layers.members[curLayer].members[i].visible) continue;
                     result = layers.members[curLayer].members[i].checkIsHit(localMousePos);
                     if(result != null) { tempCurEdited = result; curEditedObject = result; break; }
                 }
@@ -335,6 +369,12 @@ class LevelEditor extends CoreState {
 
                 localMousePos.put();
             }
+        }
+
+
+        //TEMP
+        if(FlxG.keys.justPressed.F5){
+            browseSave();
         }
 
     }
@@ -389,8 +429,9 @@ class LevelEditor extends CoreState {
         if(Utils.overlapsSprite(MagnetSetting50,localMousePos)) overlaps = 4;
         if(Utils.overlapsSprite(MagnetSetting25,localMousePos)) overlaps = 5;
         if(Utils.overlapsSprite(PropertiesButton,localMousePos)) overlaps = 6;
+        if(Utils.overlapsSprite(CameraIcon,localMousePos)) overlaps = 7;
 
-        if(inspector.overlapped || hierarchy.overlapped || properties.overlapped || Container.contextActive) overlaps = -1;
+        if(inspector.overlapped || hierarchy.overlapped || properties.overlapped || Container.contextActive) overlaps = -2;
 
         if(FlxG.mouse.justPressed){
             switch (overlaps){
@@ -401,6 +442,7 @@ class LevelEditor extends CoreState {
                 case 4: snapping = 50;
                 case 5: snapping = 25;
                 case 6: propertiesOpen ? close_Properties() : open_Properties();
+                case 7: FlxG.camera.scroll.set();
             }
         }
 
@@ -486,21 +528,23 @@ class LevelEditor extends CoreState {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    static function get_curEditedObject():GenericObjectVisualizer {
-		return curEditedObject;
-	}
-
 	static function set_curEditedObject(value:GenericObjectVisualizer):GenericObjectVisualizer {
         if(value != null) {
             LevelEditor.instance.axle.setPosition(value.transform.internalX, value.transform.internalY);
             LevelEditor.instance.axle.angle = value.transform.internalAngle;
             LevelEditor.instance.axle.visible = true;
+
+            if(LevelEditor.instance.axle.state == SCALE && !curEditedObject.usesSize) LevelEditor.instance.axle.state = MOVE;
         }
         else{
             LevelEditor.instance.axle.visible = false;
         }
+
+        curEditedObject = value;
+
+        LevelEditor.instance.inspector.setObject();
         
-		return curEditedObject = value;
+		return curEditedObject;
 	}
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -578,13 +622,17 @@ class LevelEditor extends CoreState {
 
         if(curSkybox == null) curSkybox = new Skybox(0,0,null);
         else {
-            curSkybox.asset.destroy();
+            curSkybox.destroy();
             curSkybox = null;
         }
 
         curSkybox.setAsset(ImageAsset.get(to));
 
         skybox = to;
+    }
+
+    public function setScript(to:String) {
+        script = to;
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -614,5 +662,126 @@ class LevelEditor extends CoreState {
     public function setLevelName(to:String){
         name = to;
         Application.current.window.title = "PAE2.0 - Level editor - "+name;
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    //SAVES
+
+    public function save():LevelFile {
+        var data:LevelFile = {
+            levelName: name,
+            curLayer: curLayer,
+            gridSize: snapping,
+
+            bitmaps: [],
+
+            layers: [],
+            skybox: skybox,
+            skyboxVisible: skyboxVisible,
+            script: script,
+            backgroundColor: {
+                R: FlxG.camera.bgColor.red,
+                G: FlxG.camera.bgColor.green,
+                B: FlxG.camera.bgColor.blue,
+                A: FlxG.camera.bgColor.alpha
+            }
+        }
+
+        for (layer in layers) {
+            var l:LayerStructure = {
+                enabledByDefault: layer.enabledByDefault,
+                visible: layer.visible,
+                objects: [],
+                rails: []
+            }
+
+            for (object in layer) {
+                var o = parseObjectData(object);
+                l.objects.push(o);
+            }
+
+            data.layers.push(l);
+        }
+
+        return data;
+    }
+
+    function parseObjectData(object:GenericObjectVisualizer):Dynamic {
+        if(Std.isOfType(object,ObjectVisualizer)){
+            var object:ObjectVisualizer = cast object;
+            var obj:FullObjectDataStructure = {
+                _TYPE: "FULL",
+                name: object.name,
+                extended: object.extended,
+                active: object.visible,
+                transform: {
+                    X: object.transform.x,
+                    Y: object.transform.y,
+                    A: object.transform.angle,
+                    Z: 0
+                },
+                components: [],
+                children: [],
+                drawOrder: object.drawOrder,
+                Static: object.isStatic
+            }
+
+            for (component in object.components) {
+                var startingData:Dynamic = {};
+                for (variable in component.variables) {
+                    Reflect.setField(startingData,variable[0],variable[1]);
+                }
+
+                var comp:ComponentInstance = {
+                    component: component.component.key,
+                    extended: component.extended,
+                    startingData: startingData
+                }
+
+                obj.components.push(comp);
+            }
+
+            for (children in object.children) {
+                var child = parseObjectData(children);
+                if(child != null) obj.children.push(child);
+            }
+
+            return obj;
+        }
+
+        trace("OBJECT TYPE PARSER NOT IMPLEMENTED! : "+object.name);
+        return null;
+    }
+
+    public function browseSave() {
+        FileBrowser.callback = onSaveBrowsed;
+        FileBrowser.save("PLACEHOLDER, SOMETHING MAY HAVE GONE WRONG.", name.replace(" ","_")+(name.replace(" ","_").endsWith(".") ? "map" : ".map"));
+    }
+
+    @:access(flixel.input.mouse.FlxMouse)
+    public function onSaveBrowsed() {
+        trace(FileBrowser.latestResult);
+        FlxG.mouse._leftButton.current = RELEASED; //fix deselecting.
+        switch (FileBrowser.latestResult){
+            case SELECT, CANCEL, ERROR: return;
+            case SAVE:
+                LogFile.log("Saving current map...",true);
+                trace(FileBrowser.filePath);
+
+                var finalSaveData = "SOMETHING WENT WRONG, PLEASE CHECK LOGS.";
+
+                try{
+                    finalSaveData = Json.stringify(save(),null," ");
+                }
+                catch(e){
+                    LogFile.error("Error when saving level! : "+e.message);
+                    finalSaveData = "SOMETHING WENT WRONG, PLEASE CHECK LOGS.";
+                }
+
+                File.saveContent(FileBrowser.filePath, finalSaveData);
+        }
     }
 }

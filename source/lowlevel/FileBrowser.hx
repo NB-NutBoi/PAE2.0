@@ -1,5 +1,7 @@
 package lowlevel;
 
+import haxe.io.Path;
+import sys.io.File;
 import utility.LogFile;
 import openfl.Lib;
 import utility.Utils;
@@ -21,7 +23,7 @@ enum FileResult {
 @:access(openfl.net.FileReference)
 class FileBrowser {
 
-    static var _file:FileReference;
+    static var _file:FileReferencePlus;
     static var isUsing:Bool = false;
     static var load:Bool = false; //optional loading (might only need the path idk)
 
@@ -49,7 +51,7 @@ class FileBrowser {
     public static var callback:Void->Void;
 
     static function prepare() {
-        _file = new FileReference();
+        _file = new FileReferencePlus();
         _file.addEventListener(Event.CANCEL, onCancel);
         _file.addEventListener(IOErrorEvent.IO_ERROR, onError);
         isUsing = true;
@@ -67,10 +69,15 @@ class FileBrowser {
         _file.browse(filter);
     }
 
+    /**
+     * [Description]
+     * @param content content to save, null if you want the path.
+     * @param defaultName 
+     */
     public static function save(content:Dynamic, ?defaultName:Null<String>) {
         if(isUsing) { LogFile.warning("cannot use file browser at this time: it is already in use."); return; }
         prepare();
-        _file.addEventListener(Event.COMPLETE, saveFile);
+        _file.addEventListener(Event.SELECT, saveFile);
 
         latestResult = SAVE; //temp for other functions
 
@@ -81,13 +88,12 @@ class FileBrowser {
     //-------------------------------------------------------------------------------------------------
 
     static function saveFile(_) {
-
         latestResult = SAVE;
 
         filePath = Utils.relativePath(_file.__path);
 
         //clean
-        _file.removeEventListener(Event.COMPLETE, saveFile);
+        _file.removeEventListener(Event.SELECT, saveFile);
         _file.removeEventListener(Event.CANCEL, onCancel);
         _file.removeEventListener(IOErrorEvent.IO_ERROR, onError);
         _file = null;
@@ -160,4 +166,29 @@ class FileBrowser {
         callback = null;
         if(thCallback != null) thCallback();
     }
+}
+
+class FileReferencePlus extends FileReference {
+
+    override private function saveFileDialog_onSelect(path:String):Void
+    {
+        #if desktop
+        name = Path.withoutDirectory(path);
+
+        if (__data != null)
+        {
+            File.saveBytes(path, __data);
+
+            __data = null;
+            __path = path; //WHY WAS THIS SO HARD TO HAVE BY DEFAULT!?!?!?!?
+        }
+        else
+        {
+            __path = path; //dont be fooled, you can't save nulls >:(
+        }
+        #end
+
+        dispatchEvent(new Event(Event.SELECT));
+    }
+
 }

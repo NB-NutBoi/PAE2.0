@@ -1,5 +1,6 @@
 package ui.elements;
 
+import ui.elements.ColorPicker.ColorWheel;
 import flixel.FlxG;
 import common.Mouse;
 import flixel.math.FlxPoint;
@@ -66,6 +67,7 @@ class DropdownList extends StackableObject implements ContainerObject {
 	}
 
 	public function updateInputs(elapsed:Float) {
+		if(ColorWheel.instance != null) return;
 		var localMousePos = FlxPoint.get(0,0);
 		localMousePos = Utils.getMousePosInCamera(parent == null ? camera : parent.cam, localMousePos, box);
 
@@ -129,5 +131,6 @@ class DropdownList extends StackableObject implements ContainerObject {
 
 	public function setChoices(choices:Array<String>) {
 		list.setChoices(choices);
+		selected.text = list.choices.members[list.selected].text;
 	}
 }

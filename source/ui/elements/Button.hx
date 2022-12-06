@@ -8,6 +8,7 @@ package ui.elements;
  *///                                                                                                      |
 //---------------------------------------------------------------------------------------------------------|
 
+import ui.elements.ColorPicker.ColorWheel;
 import common.Mouse;
 import flixel.FlxBasic;
 import flixel.FlxG;
@@ -62,6 +63,7 @@ class Button extends StackableObject implements ContainerObject{
 
     public function updateInputs(elapsed:Float) {
         if(disabled) return;
+        if(ColorWheel.instance != null) return;
         var localMousePos = FlxPoint.get(0,0);
         localMousePos = Utils.getMousePosInCamera(parent == null ? camera : parent.cam, localMousePos, box);
 

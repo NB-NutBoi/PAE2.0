@@ -118,6 +118,7 @@ class HierarchyNode extends StackableObject implements ContainerObject{
 
 		if(objectReference == null) { destroy(); return; }
 		if(!objectReference.existsInLevel) { destroy(); return; }
+		if(objectReference.name != label.text) label.text = objectReference.name;
 
 		var i = 0;
 		while (i < children.length) {

@@ -227,7 +227,7 @@ class ItemEditor extends DMenu{
         itemH = new TextField(250,480,60);
         add(itemH);
 
-        itemSizeSafeIndicator = new FlxSprite(270,452,"embed/ui/checkbox.png");
+        itemSizeSafeIndicator = new FlxSprite(270,452,"embed/ui/tick.png");
         itemSizeSafeIndicator.color = FlxColor.GREEN;
         add(itemSizeSafeIndicator);
 
@@ -243,7 +243,7 @@ class ItemEditor extends DMenu{
         maxQuant = new TextField(260,520,50);
         add(maxQuant);
 
-        quantSafeIndicator = new FlxSprite(220,520,"embed/ui/checkbox.png");
+        quantSafeIndicator = new FlxSprite(220,520,"embed/ui/tick.png");
         quantSafeIndicator.color = FlxColor.GREEN;
         add(quantSafeIndicator);
 
@@ -257,7 +257,7 @@ class ItemEditor extends DMenu{
         defAmmount = new TextField(260,560,50);
         add(defAmmount);
 
-        ammountSafeIndicator = new FlxSprite(220,560,"embed/ui/checkbox.png");
+        ammountSafeIndicator = new FlxSprite(220,560,"embed/ui/tick.png");
         ammountSafeIndicator.color = FlxColor.GREEN;
         add(ammountSafeIndicator);
 

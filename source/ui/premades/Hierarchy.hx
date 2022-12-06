@@ -55,6 +55,7 @@ class Hierarchy extends Container {
     override public function new() {
         super(0,0,400,600);
 
+        bg.alpha = 0.85;
         instance = this;
 
         var mover:ContainerMover = new ContainerMover();
@@ -183,7 +184,7 @@ class Hierarchy extends Container {
 
         //--------------------------------------------------------
 
-        if(LevelEditor.tempCurEdited == null){
+        if(FlxG.mouse.justPressed && LevelEditor.tempCurEdited == null){
             LevelEditor.curEditedObject = null;
             LevelEditor.tempCurEdited = null;
         }
@@ -274,6 +275,7 @@ class Hierarchy extends Container {
         if(LevelEditor.instance.curLayer == 0) return;
         var layers:Array<String> = [];
 
+        LevelEditor.instance.layers.members[LevelEditor.instance.curLayer].selected = false;
         LevelEditor.instance.layers.members[LevelEditor.instance.curLayer].destroy();
         LevelEditor.instance.layers.remove(LevelEditor.instance.layers.members[LevelEditor.instance.curLayer],true);
 
@@ -282,7 +284,8 @@ class Hierarchy extends Container {
         }
 
         if(LevelEditor.instance.curLayer >= LevelEditor.instance.layers.length) LevelEditor.instance.curLayer = LevelEditor.instance.layers.length-1;
-        changeToLayer(LevelEditor.instance.curLayer);
+        LevelEditor.instance.layers.members[LevelEditor.instance.curLayer].selected = true;
+        switchLayerTo(LevelEditor.instance.layers.members[LevelEditor.instance.curLayer]);
 
         curLayer.setChoices(layers);
     }
@@ -459,12 +462,15 @@ class Hierarchy extends Container {
             }
             else{
                 nodes.remove(node,true);
+                LevelEditor.instance.layers.members[LevelEditor.instance.curLayer].remove(node.objectReference,true);
             }
 
             switch (type){
                 case 1:
                     if(theNodeToAddendum.hierarchyParent == null){
-                        nodes.insert(nodes.members.indexOf(theNodeToAddendum)+1,node);
+                        var idx = nodes.members.indexOf(theNodeToAddendum)+1;
+                        nodes.insert(idx,node);
+                        LevelEditor.instance.layers.members[LevelEditor.instance.curLayer].insert(idx,node.objectReference);
                     }
                     else{
                         final idx = theNodeToAddendum.hierarchyParent.children.indexOf(theNodeToAddendum)+1;
@@ -474,7 +480,9 @@ class Hierarchy extends Container {
                     }
                 case -1:
                     if(theNodeToAddendum.hierarchyParent == null){
-                        nodes.insert(nodes.members.indexOf(theNodeToAddendum),node);
+                        var idx = nodes.members.indexOf(theNodeToAddendum);
+                        nodes.insert(idx,node);
+                        LevelEditor.instance.layers.members[LevelEditor.instance.curLayer].insert(idx,node.objectReference);
                     }
                     else{
                         final idx = theNodeToAddendum.hierarchyParent.children.indexOf(theNodeToAddendum);
@@ -493,6 +501,7 @@ class Hierarchy extends Container {
             }
             else{
                 nodes.remove(node,true);
+                LevelEditor.instance.layers.members[LevelEditor.instance.curLayer].remove(node.objectReference,true);
             }
             theNodeToAddendum.objectReference.children.add(node.objectReference);
             theNodeToAddendum.children.push(node);

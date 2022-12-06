@@ -35,7 +35,7 @@ typedef ComponentClass = {
     public var key:String;
     public var icon:Null<String>; //optional
     public var editableVars:Null<DynamicAccess<String>>;
-    public var defaultVars:Null<DynamicAccess<Dynamic>>;
+    public var defaultVars:Null<Array<Array<Dynamic>>>;
     public var specialOverrideClass:Null<Class<Component>>;
     public var specialOverrideArgs:Null<Array<Dynamic>>;
     public var script:String; // path because editing this in-json would be a pain in the ass.
@@ -43,6 +43,7 @@ typedef ComponentClass = {
 }
 
 typedef ComponentInstance = {
+    public var extended:Bool; //editor data
     public var component:String; //key of the component class
     public var startingData:Null<Dynamic>; //make sure it's an anonymous structure.
 }
@@ -146,6 +147,36 @@ class Component extends FlxBasic {
         return component;
     }
 
+    public static function getArray(key:String, array:Array<Array<Dynamic>>):Dynamic {
+        var value:Dynamic = null;
+        var i = 0;
+        while (i < array.length) {
+            if(key == array[i][0]) { value = array[i][1]; break; }
+            i++;
+        }
+
+        return value;
+    }
+
+    public static function exsistsArray(key:String, array:Array<Array<Dynamic>>):Bool {
+        var exists = false;
+        var i = 0;
+        while (i < array.length) {
+            if(key == array[i][0]) { exists = true; break; }
+            i++;
+        }
+
+        return exists;
+    }
+
+    public static function setArray(key:String, value:Dynamic, array:Array<Array<Dynamic>>) {
+        var i = 0;
+        while (i < array.length) {
+            if(key == array[i][0]) { array[i][1] = value; break; }
+            i++;
+        }
+    }
+
     override public function new(comp:ComponentInstanciator, ?_owner:Object) {
         super();
 
@@ -155,7 +186,7 @@ class Component extends FlxBasic {
 
         var instance:ComponentInstance = null;
         if(Std.isOfType(comp, {component:String})) instance = comp;
-        else instance = {component: Std.string(comp), startingData: null};
+        else instance = {component: Std.string(comp), startingData: null, extended: true};
 
         if(instance == null) return;
 
@@ -175,6 +206,7 @@ class Component extends FlxBasic {
         parser.preprocesorValues.set("desktop", #if desktop true #else false #end);
         parser.preprocesorValues.set("telemetry", #if telemetry true #else false #end);
         parser.preprocesorValues.set("linux", #if linux true #else false #end);
+        parser.preprocesorValues.set("debug", Main.DEBUG);
 
 		interpreter = new hscript.Interp();
 
@@ -190,8 +222,8 @@ class Component extends FlxBasic {
                 var value = null;
                 if(Reflect.hasField(instance.startingData, eVar))
                     value = Reflect.field(instance.startingData, eVar);
-                else if(thisClass.defaultVars.exists(eVar))
-                    value = thisClass.defaultVars.get(eVar);
+                else if(exsistsArray(eVar, thisClass.defaultVars))
+                    value = getArray(eVar, thisClass.defaultVars);
                 else continue;
 
                 setScriptVar(eVar, value);
@@ -204,6 +236,8 @@ class Component extends FlxBasic {
 
         parser = null; //i don't think we need the parser at all anymore?
     }
+
+    
 
 
     //------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -571,11 +605,21 @@ class Component extends FlxBasic {
     public static function registerStandardComponents() {
 
         final spriteEditables = new DynamicAccess();
-        spriteEditables.set("texture", "string");
+        spriteEditables.set("texture", "filepath");
+        spriteEditables.set("tint", "color");
         spriteEditables.set("offsetX", "float");
         spriteEditables.set("offsetY", "float");
         spriteEditables.set("width", "int");
         spriteEditables.set("height", "int");
+
+        final spriteDefaults:Array<Array<Dynamic>> = [
+            ["texture", "assets/images/Testbox1.asset"],
+            ["tint", 0xFFFFFFFF],
+            ["offsetX", 0],
+            ["offsetY", 0],
+            ["width", 128],
+            ["height", 128]
+        ];
 
         componentClasses.set("Sprite", {
             name: "Sprite",
@@ -583,7 +627,7 @@ class Component extends FlxBasic {
             icon: "embed/components/Sprite.png",
             script: "",
             editableVars: spriteEditables,
-            defaultVars: null,
+            defaultVars: spriteDefaults,
             specialOverrideClass: SpriteComponent,
             specialOverrideArgs: [],
             static_vars: null
@@ -591,10 +635,20 @@ class Component extends FlxBasic {
 
         final textEditables = new DynamicAccess();
         textEditables.set("text", "string");
-        textEditables.set("font", "string");
+        textEditables.set("font", "filepath");
+        textEditables.set("color", "color");
         textEditables.set("size", "int");
         textEditables.set("offsetX", "float");
         textEditables.set("offsetY", "float");
+
+        final textDefaults:Array<Array<Dynamic>> = [
+            ["text", "lorem ipsum"],
+            ["color", 0xFFFFFFFF],
+            ["font", "vcr"],
+            ["size", 16],
+            ["offsetX", 0],
+            ["offsetY", 0]
+        ];
 
         componentClasses.set("Text", {
             name: "Text",
@@ -602,7 +656,7 @@ class Component extends FlxBasic {
             icon: "embed/components/Text.png",
             script: "",
             editableVars: textEditables,
-            defaultVars: null,
+            defaultVars: textDefaults,
             specialOverrideClass: TextComponent,
             specialOverrideArgs: [],
             static_vars: null
@@ -652,8 +706,9 @@ class Component extends FlxBasic {
         final saveDataEditables = new DynamicAccess();
         saveDataEditables.set("uniqueKey", "string");
 
-        final saveDataDefaults = new DynamicAccess();
-        saveDataDefaults.set("uniqueKey", "PLEASE CREATE THIS PROPERLY");
+        final saveDataDefaults = [
+            ["uniqueKey", "PLEASE CREATE THIS PROPERLY"]
+        ];
 
         componentClasses.set("SaveData", {
             name: "SaveData",

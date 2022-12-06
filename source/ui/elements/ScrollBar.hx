@@ -1,5 +1,6 @@
 package ui.elements;
 
+import ui.elements.ColorPicker;
 import common.Mouse;
 import flixel.FlxG;
 import flixel.FlxObject;
@@ -61,6 +62,7 @@ class ScrollBar extends StackableObject implements ContainerObject {
     }
 
 	public function updateInputs(elapsed:Float) {
+        if(ColorWheel.instance != null) return;
         var localMousePos = FlxPoint.get(0,0);
         localMousePos = Utils.getMousePosInCamera(parent == null ? camera : parent.cam, localMousePos, box);
 
