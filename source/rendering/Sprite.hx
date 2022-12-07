@@ -33,9 +33,9 @@ class Sprite extends FlxSprite{
     }
 
     public function setAsset(a:ImageAsset) {
+        a.users++;
         if(assets != null) removeAssets();
         assets = [a];
-        a.users++;
 
         forceNoAA = a.forceNoAA;
         

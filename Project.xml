@@ -26,15 +26,21 @@
 
 	<!-- _____________________________ Path Settings ____________________________ -->
 
-	<set name="BUILD_DIR" value="export" />
-
 	<source path="source" />
 
 	<assets path="embed" embed="true" />
 	<assets path="embed/fonts" embed="true" />
 
-	<assets path="assets" embed="false" />
-	<assets path="config" embed="false" />
+	<!-- _____________________________ STANDARD PATHS ____________________________ -->
+	<assets path="assets" embed="false" unless="aun"/>
+	<assets path="config" embed="false" unless="aun"/>
+
+	<!-- _____________________________ AUN PATHS ____________________________ -->
+	<assets path=".Games/AUN/assets" rename="assets" embed="false" if="aun"/>
+	<assets path=".Games/AUN/config" rename="config" embed="false" if="aun"/>
+
+	<set name="BUILD_DIR" value="export" unless="aun"/>
+	<set name="BUILD_DIR" value=".Games/AUN/export" if="aun"/>
 
 	<!-- _______________________________ Libraries ______________________________ -->
 

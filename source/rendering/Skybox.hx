@@ -33,8 +33,9 @@ class Skybox extends FlxSprite {
     }
 
     public function setAsset(a:ImageAsset) {
+        a.users++;
+        if(asset != null) removeAsset();
         asset = a;
-        asset.users++;
 
         forceNoAA = a.forceNoAA;
         
@@ -55,6 +56,16 @@ class Skybox extends FlxSprite {
         updateHitbox();
 
         antialiasing = (!forceNoAA && ClientPreferences.globalAA);
+    }
+
+    public function removeAsset() {
+        if(asset != null){
+            asset.users--;
+            if(!asset.important && asset.users <= 0)
+                asset.destroy();
+
+            asset = null;
+        }
     }
 
     public function playAnimation(name:String, ?force:Bool = false) {
@@ -120,13 +131,7 @@ class Skybox extends FlxSprite {
         if(animOffsets != null) animOffsets.clear();
         animOffsets = null;
 
-        if(asset != null){
-            if(!asset.important && asset.users <= 0)
-                asset.destroy();
-            else asset.users--;
-
-            asset = null;
-        }
+        removeAsset();
 
         scroll.destroy();
 
