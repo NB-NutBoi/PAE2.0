@@ -54,10 +54,6 @@ class NumberField extends NodeField {
         super.destroy();
     }
 
-    override function checkUpdated() {
-        
-    }
-
     override function update(elapsed:Float) {
         super.update(elapsed);
 

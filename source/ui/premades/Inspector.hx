@@ -1,5 +1,8 @@
 package ui.premades;
 
+import ui.elements.Button;
+import FlxGamePlus;
+import oop.Component.ComponentClass;
 import flixel.math.FlxPoint;
 import utility.Utils;
 import ui.premades.inspector.TransformField;
@@ -20,6 +23,7 @@ import leveleditor.ObjectVisualizer;
 //SPECIAL CASE!!!
 //no need to optimize beyond standard, it's only ever gonna be used in the level editor
 class Inspector extends Container {
+    public static var instance:Inspector = null;
     public static final BG:Int = 0xFF1D1D1D;
 
     static final nodesBaseY:Float = 100;
@@ -33,11 +37,18 @@ class Inspector extends Container {
 
     public var nodes:FlxTypedGroup<InspectorComponentNode>;
     public var stack:StackableObject;
+    public var addButton:Button;
+
+
+    public var browser:InspectorComponentBrowser;
+
 
     var type:Int = -1;
 
     override public function new() {
         super(FlxG.width-250,10,250,700);
+
+        instance = this;
 
         flap = Utils.makeRamFriendlyRect(0,0,250,Std.int(nodesBaseY),BG);
         flap.scrollFactor.set();
@@ -59,6 +70,18 @@ class Inspector extends Container {
 
         var mover:ContainerMover = new ContainerMover();
         super.mover = mover;
+
+        browser = new InspectorComponentBrowser();
+
+        addButton = new Button(0,0,250,30,"Add Component...",openComponentBrowser);
+        add(addButton);
+    }
+
+    override function destroy() {
+
+        instance = null;
+
+        super.destroy();
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -100,14 +123,6 @@ class Inspector extends Container {
         }
 
         localMousePos.put();
-
-
-        if(FlxG.mouse.justPressedRight){
-            Context.create([
-                new BasicContextOption("Add test component", addTestComponent),
-                new BasicContextOption("Add test2 component", addTestComponent2)
-            ]);
-        }
     }
 
     override function postUpdate(elapsed:Float) {
@@ -116,6 +131,8 @@ class Inspector extends Container {
         for (node in nodes) {
             node.postUpdate(elapsed);
         }
+
+        addButton.setPosition(0,nodesBaseY+stack.combinedHeight);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -134,6 +151,13 @@ class Inspector extends Container {
             mover.draw();
         if(closer != null)
             closer.draw();
+    }
+
+    public function openComponentBrowser() {
+        if(browser.opened) return;
+        UIPlugin.addContainer(browser);
+        browser.opened = true;
+        browser.setObject(cast LevelEditor.curEditedObject);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -172,9 +196,14 @@ class Inspector extends Container {
             type = 1;
             var obj:ObjectVisualizer = cast LevelEditor.curEditedObject;
 
+            addButton.disabled = false;
+
             for (component in obj.components) {
                 addNodeFor(component);
             }
+        }
+        else{
+            addButton.disabled = true;
         }
     }
 
@@ -182,6 +211,8 @@ class Inspector extends Container {
         stack.combinedHeight = 0;
         nodes.destroy();
         nodes = new FlxTypedGroup();
+
+        if(browser.opened) browser.close();
     }
 
     public function addNodeFor(component:ComponentVisualizer) {
@@ -195,6 +226,16 @@ class Inspector extends Container {
         node.update(0);
         node.extended = old;
         //complicated update order because cring
+    }
+    
+    public function addComponent(cClass:ComponentClass) {
+        if(LevelEditor.curEditedObject == null) return;
+        if(!Std.isOfType(LevelEditor.curEditedObject, ObjectVisualizer)) return;
+        var obj:ObjectVisualizer = cast LevelEditor.curEditedObject;
+
+        var comp = ComponentVisualizer.make(cClass.key, obj);
+
+        addNodeFor(comp);
     }
 
     function addTestComponent() {

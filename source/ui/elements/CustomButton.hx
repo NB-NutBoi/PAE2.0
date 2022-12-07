@@ -27,6 +27,7 @@ class CustomButton extends StackableObject implements ContainerObject{
     static final DISABLED:Int = 0xFF141414;
 
     var box:FlxSprite;
+    public var destroyContent:Bool = false;
     public var content:Array<FlxObject> = [];
     var callback:Void->Void;
 	public var parent:Null<Container> = null;
@@ -109,6 +110,9 @@ class CustomButton extends StackableObject implements ContainerObject{
 
     override function destroy() {
         box.destroy();
+        if(destroyContent) for (object in content) {
+            object.destroy();
+        }
         content.resize(0);
         content = null;
         super.destroy();

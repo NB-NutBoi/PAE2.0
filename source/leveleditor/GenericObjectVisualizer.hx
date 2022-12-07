@@ -1,5 +1,6 @@
 package leveleditor;
 
+import utility.LogFile;
 import flixel.math.FlxPoint;
 import flixel.FlxBasic;
 import flixel.group.FlxGroup;
@@ -26,6 +27,21 @@ class GenericObjectVisualizer extends FlxBasic {
 
     public var extended:Bool = false; //hierarchy temp data
     public var usesSize:Bool = false;
+
+    public static function makefromJson(json:Dynamic):GenericObjectVisualizer {
+        switch (json._TYPE){
+            case "FULL":
+                //full object
+                return ObjectVisualizer.fromJson(json);
+            case "STATIC_SPRITE":
+                //static sprite object
+                trace("TODO");
+            default:
+                LogFile.error("Unidentified object type found!, RETURNING NULL!");
+        }
+
+        return null;
+    }
 
     override public function new() {
         super();

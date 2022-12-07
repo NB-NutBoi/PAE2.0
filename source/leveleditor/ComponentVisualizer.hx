@@ -19,6 +19,12 @@ class ComponentVisualizer extends FlxBasic {
     public var extended:Bool = true; //hierarchy temp data
     public var UPDATE_VARIABLES:Bool = false; //hierarchy temp data
 
+    public function copyJson(json:ComponentInstance) {
+        for (field in Reflect.fields(json.startingData)) {
+            Component.setArray(field,Reflect.field(json.startingData,field),variables);
+        }
+    }
+
     public static function make(type:String, owner:ObjectVisualizer):ComponentVisualizer {
         var component:ComponentVisualizer = null;
         switch (type){

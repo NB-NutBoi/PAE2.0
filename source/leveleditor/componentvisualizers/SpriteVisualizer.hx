@@ -12,6 +12,13 @@ class SpriteVisualizer extends ComponentVisualizer {
     
     public var sprite:Sprite;
 
+    override function copyJson(json:ComponentInstance) {
+        super.copyJson(json);
+        changeVariable("texture");
+        changeVariable("width");
+        changeVariable("tint");
+    }
+
     override public function new(type:ComponentClass, parent:ObjectVisualizer) {
         super(type,parent);
 

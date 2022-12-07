@@ -38,6 +38,7 @@ typedef LevelFile = {
     public var levelName:String;
     public var curLayer:Int;
     public var gridSize:Float;
+    public var snapping:Bool;
 
     //precache data
     public var bitmaps:Array<String>;

@@ -135,7 +135,7 @@ class FileBrowser {
 
         //clean
         if(latestResult == SELECT) _file.removeEventListener(Event.SELECT, selectFile);
-        else if(latestResult == SAVE) _file.removeEventListener(Event.COMPLETE, saveFile);
+        else if(latestResult == SAVE) _file.removeEventListener(Event.SELECT, saveFile);
         _file.removeEventListener(Event.CANCEL, onCancel);
         _file.removeEventListener(IOErrorEvent.IO_ERROR, onError);
         _file = null;
@@ -153,7 +153,7 @@ class FileBrowser {
 
         //clean
         if(latestResult == SELECT) _file.removeEventListener(Event.SELECT, selectFile);
-        else if(latestResult == SAVE) _file.removeEventListener(Event.COMPLETE, saveFile);
+        else if(latestResult == SAVE) _file.removeEventListener(Event.SELECT, saveFile);
         _file.removeEventListener(Event.CANCEL, onCancel);
         _file.removeEventListener(IOErrorEvent.IO_ERROR, onError);
         _file = null;

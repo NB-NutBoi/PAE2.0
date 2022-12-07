@@ -13,6 +13,14 @@ class TextVisualizer extends ComponentVisualizer {
     
     public var text:FlxText;
 
+    override function copyJson(json:ComponentInstance) {
+        super.copyJson(json);
+        changeVariable("text");
+        changeVariable("font");
+        changeVariable("color");
+        changeVariable("size");
+    }
+
     override public function new(type:ComponentClass, parent:ObjectVisualizer) {
         super(type,parent);
 

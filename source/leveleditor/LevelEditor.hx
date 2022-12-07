@@ -1,5 +1,8 @@
 package leveleditor;
 
+import openfl.net.FileFilter;
+import oop.GenericObject;
+import flixel.util.FlxColor;
 import utility.LogFile;
 import haxe.Json;
 import sys.io.File;
@@ -102,6 +105,10 @@ class LevelEditor extends CoreState {
         public var MagnetSetting50:FlxSprite;
         public var MagnetSetting25:FlxSprite;
 
+        public var SaveText:FlxText;
+        public var LoadText:FlxText;
+        public var NewText:FlxText;
+
         //------------------------------------
 
     //------------------------------------
@@ -196,6 +203,29 @@ class LevelEditor extends CoreState {
         TaskbarGroup.add(MagnetSetting50);
         TaskbarGroup.add(MagnetSetting100);
         TaskbarGroup.add(MagnetIcon);
+
+
+        SaveText = new FlxText(1800,Taskbar.y+2,0,"SAVE",18);
+        SaveText.font = "vcr";
+        SaveText.antialiasing = true;
+        SaveText.camera = FlxGamePlus.OverlayCam;
+        SaveText.color = Taskbar_Off;
+
+        LoadText = new FlxText(SaveText.x,SaveText.y+SaveText.height+2,0,"LOAD",18);
+        LoadText.font = "vcr";
+        LoadText.antialiasing = true;
+        LoadText.camera = FlxGamePlus.OverlayCam;
+        LoadText.color = Taskbar_Off;
+
+        NewText = new FlxText(SaveText.x,LoadText.y+LoadText.height+2,0,"NEW",18);
+        NewText.font = "vcr";
+        NewText.antialiasing = true;
+        NewText.camera = FlxGamePlus.OverlayCam;
+        NewText.color = Taskbar_Off;
+
+        TaskbarGroup.add(SaveText);
+        TaskbarGroup.add(LoadText);
+        TaskbarGroup.add(NewText);
 
         //------------------------------------
 
@@ -347,7 +377,8 @@ class LevelEditor extends CoreState {
         if(FlxG.mouse.justPressed){
             var overlapsMain = true;
 
-            if(inspector.overlapped || hierarchy.overlapped || properties.overlapped) overlapsMain = false;
+            if(inspector.overlapped || hierarchy.overlapped || properties.overlapped || inspector.browser.overlapped) overlapsMain = false;
+            if(inspector.browser.closedThisFrame) { inspector.browser.closedThisFrame = false; overlapsMain = false; }
             if(overlaps != -1) overlapsMain = false;
             if(Container.contextActive) overlapsMain = false;
             if(axle.overlap != -1) overlapsMain = false;
@@ -370,13 +401,6 @@ class LevelEditor extends CoreState {
                 localMousePos.put();
             }
         }
-
-
-        //TEMP
-        if(FlxG.keys.justPressed.F5){
-            browseSave();
-        }
-
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -420,6 +444,10 @@ class LevelEditor extends CoreState {
         var localMousePos = FlxPoint.get(0,0);
         localMousePos = Utils.getMousePosInCamera(FlxGamePlus.OverlayCam, localMousePos, HierarchyButton);
 
+        SaveText.color = Taskbar_Off;
+        LoadText.color = Taskbar_Off;
+        NewText.color = Taskbar_Off;
+
         overlaps = -1;
         if(Taskbar.overlapsPoint(localMousePos)) overlaps = -2;
         if(Utils.overlapsSprite(HierarchyButton,localMousePos)) overlaps = 0;
@@ -430,6 +458,9 @@ class LevelEditor extends CoreState {
         if(Utils.overlapsSprite(MagnetSetting25,localMousePos)) overlaps = 5;
         if(Utils.overlapsSprite(PropertiesButton,localMousePos)) overlaps = 6;
         if(Utils.overlapsSprite(CameraIcon,localMousePos)) overlaps = 7;
+        if(SaveText.overlapsPoint(localMousePos)) { overlaps = 8; SaveText.color = Taskbar_On; }
+        if(LoadText.overlapsPoint(localMousePos)) { overlaps = 9; LoadText.color = Taskbar_On; }
+        if(NewText.overlapsPoint(localMousePos)) { overlaps = 10; NewText.color = Taskbar_On; }
 
         if(inspector.overlapped || hierarchy.overlapped || properties.overlapped || Container.contextActive) overlaps = -2;
 
@@ -443,6 +474,9 @@ class LevelEditor extends CoreState {
                 case 5: snapping = 25;
                 case 6: propertiesOpen ? close_Properties() : open_Properties();
                 case 7: FlxG.camera.scroll.set();
+                case 8: browseSave();
+                case 9: browseLoad();
+                case 10: deloadCurrentScene();
             }
         }
 
@@ -675,8 +709,9 @@ class LevelEditor extends CoreState {
             levelName: name,
             curLayer: curLayer,
             gridSize: snapping,
+            snapping: snappingEnabled,
 
-            bitmaps: [],
+            bitmaps: staticAssets,
 
             layers: [],
             skybox: skybox,
@@ -763,7 +798,6 @@ class LevelEditor extends CoreState {
 
     @:access(flixel.input.mouse.FlxMouse)
     public function onSaveBrowsed() {
-        trace(FileBrowser.latestResult);
         FlxG.mouse._leftButton.current = RELEASED; //fix deselecting.
         switch (FileBrowser.latestResult){
             case SELECT, CANCEL, ERROR: return;
@@ -782,6 +816,142 @@ class LevelEditor extends CoreState {
                 }
 
                 File.saveContent(FileBrowser.filePath, finalSaveData);
+        }
+    }
+
+    public function deloadCurrentScene() {
+        curEditedObject = null;
+        setLevelName("Unnamed map.");
+        properties.levelName.textField.text = "Unnamed map.";
+        properties.levelName.caret = properties.levelName.textField.text.length;
+        properties.levelName.onUpdateText();
+
+        script = properties.script.textField.text = "";
+        properties.script.caret = properties.script.textField.text.length;
+        properties.script.onUpdateText();
+
+        setSkybox("");
+        properties.skyboxVisible.checked = skyboxVisible = true;
+        properties.skybox.textField.text = "";
+        properties.skybox.caret = properties.skybox.textField.text.length;
+        properties.skybox.onUpdateText();
+
+        staticAssets = [];
+
+        FlxG.camera.bgColor = FlxColor.BLACK;
+        properties.bgColor.color = FlxColor.BLACK;
+
+        snapping = 25;
+        snappingEnabled = false;
+        MagnetIcon.color = snappingEnabled ? Taskbar_On : Taskbar_Off;
+
+
+        curLayer = 0;
+        layers.destroy();
+        layers = new FlxTypedGroup();
+        //create default layer 0
+        layers.add(new LayerVisualizer());
+        layers.members[0].selected = true;
+
+        hierarchy.curLayer.setChoices(["0"]);
+
+        hierarchy.layerEnabled.checked = layers.members[0].enabledByDefault;
+        hierarchy.layerVisible.checked = layers.members[0].visible;
+    }
+
+    public function load(level:LevelFile) {
+        deloadCurrentScene(); //buh bye
+
+        setLevelName(properties.levelName.textField.text = level.levelName);
+        properties.levelName.caret = properties.levelName.textField.text.length;
+        properties.levelName.onUpdateText();
+
+        script = properties.script.textField.text = level.script;
+        properties.script.caret = properties.script.textField.text.length;
+        properties.script.onUpdateText();
+
+        setSkybox(properties.skybox.textField.text = level.skybox);
+        properties.skybox.caret = properties.skybox.textField.text.length;
+        properties.skybox.onUpdateText();
+
+        properties.skyboxVisible.checked = skyboxVisible = level.skyboxVisible;
+
+        staticAssets = level.bitmaps;
+
+        FlxG.camera.bgColor = properties.bgColor.color = FlxColor.fromRGB(
+            level.backgroundColor.R,
+            level.backgroundColor.G,
+            level.backgroundColor.B,
+            level.backgroundColor.A);
+
+        snapping = level.gridSize;
+        snappingEnabled = level.snapping;
+        MagnetIcon.color = snappingEnabled ? Taskbar_On : Taskbar_Off;
+
+        //--------------------------------------------------------------------------------------------
+
+        curLayer = level.curLayer;
+        var hLayers:Array<String> = [];
+
+        layers.destroy();
+        layers = new FlxTypedGroup();
+
+        for (layerStructure in level.layers) {
+            hLayers.push(Std.string(layers.length));
+            var layer = new LayerVisualizer();
+
+            layer.enabledByDefault = layerStructure.enabledByDefault;
+
+            layer.visible = layerStructure.visible;
+
+            for (json in layerStructure.objects) {
+                var o = GenericObjectVisualizer.makefromJson(json);
+                if(o != null) layer.add(o);
+            }
+
+            layers.add(layer);
+            layer.selected = false;
+        }
+
+        layers.members[curLayer].selected = true;
+
+        hierarchy.curLayer.setChoices(hLayers);
+        hierarchy.curLayer.list.selected = curLayer;
+        hierarchy.curLayer.selected.text = Std.string(curLayer);
+
+        hierarchy.layerEnabled.checked = layers.members[curLayer].enabledByDefault;
+        hierarchy.layerVisible.checked = layers.members[curLayer].visible;
+
+        hierarchy.switchLayerTo(layers.members[curLayer]);
+    }
+
+    public function browseLoad() {
+        FileBrowser.callback = onLoadBrowsed;
+        FileBrowser.browse([new FileFilter("Map files","*.map")],false);
+    }
+
+    @:access(flixel.input.mouse.FlxMouse)
+    public function onLoadBrowsed() {
+        FlxG.mouse._leftButton.current = RELEASED; //fix deselecting.
+        switch (FileBrowser.latestResult){
+            case SAVE, CANCEL, ERROR: return;
+            case SELECT:
+                trace(FileBrowser.filePath);
+
+                if(!FileBrowser.filePath.endsWith(".map")) return;
+                LogFile.log("LOADING NEW MAP...",true);
+                
+                var error = false;
+                var level:LevelFile = null;
+                try{
+                    level = cast Json.parse(File.getContent(FileBrowser.filePath));
+                }
+                catch(e){
+                    LogFile.error("Error when saving level! : "+e.message);
+                    error = true;
+                }
+
+                if(!error) { load(level); LogFile.log("LOADED NEW MAP.",true); }
         }
     }
 }

@@ -32,7 +32,8 @@
   ],
   "bitmaps": [],
   "curLayer": 0,
-  "gridSize": 20,
+  "gridSize": 25,
+  "snapping": false,
   "skybox": "",
   "script": "assets/levels/test/testLevel.hx",
   "backgroundColor": {

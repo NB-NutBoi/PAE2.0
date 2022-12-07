@@ -172,7 +172,15 @@ class InspectorComponentNode extends StackableObject implements ContainerObject 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	static var icons:Map<String,FlxGraphic> = new Map();
+	public static var icons:Map<String,FlxGraphic> = new Map();
+
+	public static function makeIconFor(component:ComponentClass) {
+		if(icons.exists(component.key)) return icons.get(component.key);
+		var g = FlxGraphic.fromBitmapData(AssetCache.getImageCache(component.icon),false,"EDITOR_ICON_"+component.key);
+		g.destroyOnNoUse = false;
+		icons.set(component.key,g);
+		return g;
+	}
 
 	function makeIcon():FlxGraphic {
 		if(icons.exists(component.component.key)) return icons.get(component.component.key);
@@ -278,10 +286,6 @@ class NodeField extends FlxTypedGroup<FlxBasic> {
 		component = null;
 
 		super.destroy();
-	}
-
-	public function checkUpdated() {
-		
 	}
 
 	public function updateInputs(elapsed:Float) {
