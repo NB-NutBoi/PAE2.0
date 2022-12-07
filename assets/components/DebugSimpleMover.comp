@@ -1,7 +1,12 @@
 {
  "name": "DebugMover",
  "key": "DebugMover",
- "icon": null,
- "editableVars": null,
- "script": "assets/components/DebugSimpleMover.hx"
+ "icon": "assets/components/assets/DefaultIcon.png",
+ "script": "assets/components/script/DebugSimpleMover.hx",
+ "editableVars": {
+	"speed": "float"
+ },
+ "defaultVars": [
+	["speed", 100]
+ ]
 }

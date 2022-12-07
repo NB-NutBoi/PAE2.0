@@ -24,39 +24,29 @@ class SpriteComponent extends Component {
         sprite = new Sprite(0,0,null);
         sprite.cameras = owner.cameras; //default
 
-        ready = true;
-
-        generateFrontend();
-
         var instance:ComponentInstance = null;
         if(instancer.component != null) instance = instancer;
 
         if(instance == null) return;
 
-        if(instance.startingData.texture != null)
-            texture = instance.startingData.texture;
+        texture = instance.startingData.texture;
 
-        if(instance.startingData.offsetX != null)
-            offsetX = instance.startingData.offsetX;
+        offsetX = instance.startingData.offsetX;
+        offsetY = instance.startingData.offsetY;
 
-        if(instance.startingData.offsetY != null)
-            offsetY = instance.startingData.offsetY;
+        var w = Std.int(sprite.width);
+        var h = Std.int(sprite.height);
 
-            var w = Std.int(sprite.width);
-            var h = Std.int(sprite.height);
-            var changeScale = false;
-        if(instance.startingData.width != null){
+        if(instance.startingData.width != w || instance.startingData.height != h){
             w = instance.startingData.width;
-            changeScale = true;
-        }
-
-        if(instance.startingData.height != null){
             h = instance.startingData.height;
-            changeScale = true;
+
+            setSize(w,h);
         }
 
-        if(changeScale) setSize(w,h);
+        ready = true;
 
+        generateFrontend();
     }
 
     override private function generateFrontend() {

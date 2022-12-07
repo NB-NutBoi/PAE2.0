@@ -1,8 +1,0 @@
-{
- "flags": ["LOCALFILES"],
- "isPlayableSong": false,
- "bpm": 88,
- "instrumental": "test_wind.ogg",
- "voiceTracks": [],
- "loop": true
-}

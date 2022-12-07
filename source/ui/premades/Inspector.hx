@@ -81,6 +81,10 @@ class Inspector extends Container {
 
         instance = null;
 
+        if(browser.open) browser.close();
+        browser.destroy();
+        browser = null;
+
         super.destroy();
     }
 

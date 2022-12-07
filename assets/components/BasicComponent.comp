@@ -1,7 +1,8 @@
 {
  "name": "Empty Component",
  "key": "EmptyComponent",
- "icon": null,
- "editableVars": null,
- "script": "assets/components/BasicComponent.hx"
+ "icon": "assets/components/assets/DefaultIcon.png",
+ "script": "assets/components/script/BasicComponent.hx",
+ "editableVars": {},
+ "defaultVars": []
 }

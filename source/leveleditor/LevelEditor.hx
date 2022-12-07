@@ -267,12 +267,15 @@ class LevelEditor extends CoreState {
         axle.destroy();
         axle = null;
 
+        if(hierarchy.open) hierarchy.close();
         hierarchy.destroy();
         hierarchy = null;
 
+        if(properties.open) hierarchy.close();
         inspector.destroy();
         inspector = null;
 
+        if(properties.open) hierarchy.close();
         properties.destroy();
         properties = null;
 

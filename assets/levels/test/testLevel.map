@@ -8,8 +8,8 @@
 				"extended": true,
 				"name": "test",
 				"transform": {
-					"X": 20,
-					"Y": 30,
+					"X": 0,
+					"Y": 0,
 					"Z": 0,
 					"A": 0
 				},
@@ -18,7 +18,12 @@
 						"component": "Sprite",
 						"extended": true,
 						"startingData": {
-							"texture": "assets/images/JennTest.asset"
+							"texture": "assets/images/Testbox1.asset",
+							"tint": -1,
+							"offsetX": 0,
+							"offsetY": 0,
+							"width": 128,
+							"height": 128
 						}
 					}
 				],

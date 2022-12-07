@@ -185,8 +185,8 @@ class Component extends FlxBasic {
         if(comp == null) return;
 
         var instance:ComponentInstance = null;
-        if(Std.isOfType(comp, {component:String})) instance = comp;
-        else instance = {component: Std.string(comp), startingData: null, extended: true};
+        if(Std.isOfType(comp, String)) instance = {component: Std.string(comp), startingData: null, extended: true};
+        else instance = comp;
 
         if(instance == null) return;
 
@@ -214,8 +214,8 @@ class Component extends FlxBasic {
         compile(AssetCache.getDataCache(thisClass.script));
 
         if(!ready) return;
-
         
+
         if(instance.startingData != null && thisClass.editableVars != null){
 
             for (eVar in thisClass.editableVars.keys()) {
@@ -665,13 +665,17 @@ class Component extends FlxBasic {
         final aListenerEditables = new DynamicAccess();
         aListenerEditables.set("volume", "float");
 
+        final aListenerDefaults:Array<Array<Dynamic>> = [
+            ["volume", 0]
+        ];
+
         componentClasses.set("AudioListener", {
             name: "AudioListener",
             key: "AudioListener",
             icon: "embed/components/AudioListener.png",
             script: "",
             editableVars: aListenerEditables,
-            defaultVars: null,
+            defaultVars: aListenerDefaults,
             specialOverrideClass: AudioListenerComponent,
             specialOverrideArgs: [],
             static_vars: null
@@ -679,7 +683,7 @@ class Component extends FlxBasic {
 
         final aSourceEditables = new DynamicAccess();
         aSourceEditables.set("clip", "filepath");
-        aSourceEditables.set("panning", "range(-1,1,0)");
+        aSourceEditables.set("panning", "range(-1,1)");
 
         aSourceEditables.set("usingProximity", "bool");
         aSourceEditables.set("usingProximityPanning", "bool");
@@ -690,13 +694,24 @@ class Component extends FlxBasic {
 
         aSourceEditables.set("important", "bool"); //only used if clip is set by default. (might need CSD file support for this after all)
 
+        final aListenerDefaults:Array<Array<Dynamic>> = [
+            ["clip", ""],
+            ["panning", 0],
+            ["usingProximity", false],
+            ["usingProximityPanning", false],
+            ["radius", 100],
+            ["offsetX", 0],
+            ["offsetY", 0],
+            ["important", false],
+        ];
+
         componentClasses.set("AudioSource", {
             name: "AudioSource",
             key: "AudioSource",
             icon: "embed/components/AudioSource.png",
             script: "",
             editableVars: aSourceEditables,
-            defaultVars: null,
+            defaultVars: aListenerDefaults,
             specialOverrideClass: AudioSourceComponent,
             specialOverrideArgs: [],
             static_vars: null

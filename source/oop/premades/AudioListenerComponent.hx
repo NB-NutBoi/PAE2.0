@@ -23,7 +23,7 @@ class AudioListenerComponent extends Component {
     //debug
     private var listenerSprite:FlxSprite;
 
-    override public function new(instancer:ComponentInstanciator, owner:Object) {
+    override public function new(instancer:Dynamic, owner:Object) {
         super(null,owner);
 
         if(listener != null){
@@ -43,6 +43,13 @@ class AudioListenerComponent extends Component {
         ready = true;
 
         generateFrontend();
+
+        var instance:ComponentInstance = null;
+        if(instancer.component != null) instance = instancer;
+
+        if(instance == null) return;
+
+        FlxG.sound.volume = instance.startingData.volume;
     }
 
     override private function generateFrontend() {

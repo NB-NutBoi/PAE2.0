@@ -21,11 +21,24 @@ class TextComponent extends Component {
     public var offsetX:Float = 0;
     public var offsetY:Float = 0;
 
-    override public function new(instancer:ComponentInstanciator, owner:Object) {
+    override public function new(instancer:Dynamic, owner:Object) {
         super(null,owner);
 
         _text = new Text(0,0,0,"");
         _text.cameras = owner.cameras; //default
+
+        var instance:ComponentInstance = null;
+        if(instancer.component != null) instance = instancer;
+
+        if(instance == null) return;
+
+        _text.text = instance.startingData.text;
+        _text.font = instance.startingData.font;
+        _text.size = instance.startingData.size;
+        _text.color = instance.startingData.color;
+        
+        offsetX = instance.startingData.offsetX;
+        offsetY = instance.startingData.offsetY;
 
         ready = true;
 

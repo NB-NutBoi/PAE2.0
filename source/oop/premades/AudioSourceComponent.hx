@@ -46,8 +46,15 @@ class AudioSourceComponent extends Component {
     private var _debugSprite_icon:Null<FlxSprite> = null;
     private var _debugText:Null<FlxText> = null;
 
-    override public function new(instancer:ComponentInstanciator, owner:Object) {
+    override public function new(instancer:Dynamic, owner:Object) {
         super(null,owner);
+
+        var instance:ComponentInstance = null;
+        if(instancer.component != null) instance = instancer;
+
+        if(instance == null) return;
+
+        //TODO - idk how to handle audio source start data due to the many use cases of this component
 
         ready = true;
 
