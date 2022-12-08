@@ -1,5 +1,6 @@
 package ui.premades;
 
+import leveleditor.StaticObjectVisualizer;
 import ui.elements.Button;
 import FlxGamePlus;
 import oop.Component.ComponentClass;
@@ -208,6 +209,12 @@ class Inspector extends Container {
         }
         else{
             addButton.disabled = true;
+        }
+
+        if(Std.isOfType(LevelEditor.curEditedObject, StaticObjectVisualizer)){
+            type = 2;
+
+            //TODO
         }
     }
 

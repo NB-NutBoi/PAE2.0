@@ -15,6 +15,10 @@ typedef StaticSpriteDataStructure = {
     public var active:Bool;
     //-----------------------------------------------------------
 
+    public var drawOrder:Int;//0: OBJECT_FIRST, 1: CHILDREN_FIRST
+    public var children:Array<Dynamic>;
+
+    //-----------------------------------------------------------
 
     public var transform:JSONTransform;
     public var scale:JSONScale;
@@ -33,7 +37,7 @@ typedef FullObjectDataStructure = {
     public var transform:JSONTransform;
 
     public var components:Array<ComponentInstance>;
-    public var children:Array<FullObjectDataStructure>;
+    public var children:Array<Dynamic>;
 
     public var drawOrder:Int;//0: OBJECT_FIRST, 1: CHILDREN_FIRST
     public var Static:Bool;
@@ -60,6 +64,7 @@ class Object extends GenericObject {
 
         object.drawOrder = instance.drawOrder == 0 ? OBJECT_FIRST : CHILDREN_FIRST;
         
+        object.active = instance.active;
 
         for (compInst in instance.components) {
             final comp = Component.instanceComponent(compInst, object);

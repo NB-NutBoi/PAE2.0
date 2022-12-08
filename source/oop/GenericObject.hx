@@ -21,7 +21,7 @@ class GenericObject extends FlxBasic {
      * 
      * An object cannot be static if it is a child of a non-static object, however, a child of a static object can be non-static.
      */
-    @:isVar public var Static(get,set):Bool;
+    public var Static(default,set):Bool;
 
     public var drawOrder:ObjectDrawOrder = OBJECT_FIRST;
 
@@ -34,7 +34,7 @@ class GenericObject extends FlxBasic {
                 return Object.fromJson(json);
             case "STATIC_SPRITE":
                 //static sprite object
-                trace("TODO");
+                return StaticObject.fromJson(json);
             default:
                 LogFile.error("Unidentified object type found!, RETURNING NULL!");
         }
@@ -96,6 +96,14 @@ class GenericObject extends FlxBasic {
             children.update(elapsed);
         }
         else{
+            //manually update transform with the least ammount of information possible.
+            transform.internalPosition.set(transform.position.x,transform.position.y);
+            transform.internalAngle = transform.angle;
+            if(parent != null){
+                transform.internalPosition.add(parent.transform.internalPosition.x,parent.transform.internalPosition.y);
+                transform.internalAngle += parent.transform.internalAngle;
+            }
+
             children.update(elapsed);
         }
     }
@@ -164,10 +172,6 @@ class GenericObject extends FlxBasic {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    function get_Static():Bool {
-		return Static;
-	}
 
     //children can be either static or dynamic but parent must be static or null
 	function set_Static(value:Bool):Bool {

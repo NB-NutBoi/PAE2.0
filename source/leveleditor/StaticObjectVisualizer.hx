@@ -1,16 +1,31 @@
 package leveleditor;
 
-import oop.Object.FullObjectDataStructure;
+import oop.Object.StaticSpriteDataStructure;
+import sys.FileSystem;
+import oop.StaticObject;
+import assets.ImageAsset;
+import utility.Utils;
 import flixel.math.FlxPoint;
-import flixel.group.FlxGroup.FlxTypedGroup;
-import flixel.FlxBasic;
+import flixel.util.FlxColor;
+import flixel.util.FlxDestroyUtil;
+import flixel.FlxSprite;
+import rendering.Sprite;
 
-class ObjectVisualizer extends GenericObjectVisualizer {
+using StringTools;
 
-    public var components:FlxTypedGroup<ComponentVisualizer>;
+class StaticObjectVisualizer extends GenericObjectVisualizer {
 
-    public static function fromJson(json:FullObjectDataStructure):GenericObjectVisualizer {
-        var o:ObjectVisualizer = new ObjectVisualizer();
+    //is a purely visual static sprite
+    //TODO better integration with leveleditor
+
+    public var spritePath:String;
+    public var sprite:FlxSprite;
+
+    public var width:Int = 0;
+    public var height:Int = 0;
+
+    public static function fromJson(json:StaticSpriteDataStructure):GenericObjectVisualizer {
+        var o = new StaticObjectVisualizer();
 
         o.name = json.name;
 
@@ -18,19 +33,15 @@ class ObjectVisualizer extends GenericObjectVisualizer {
         o.transform.y = json.transform.Y;
         o.transform.z = json.transform.Z; //Deprecated
         o.transform.angle = json.transform.A;
-
+    
         o.extended = json.extended;
         o.drawOrder = json.drawOrder;
         o.visible = json.active;
-        o.isStatic = json.Static;
 
-        for (instance in json.components) {
-            var c = ComponentVisualizer.make(instance.component,o);
-            c.extended = instance.extended;
-            c.copyJson(instance);
+        o.width = json.scale.W;
+        o.height = json.scale.H;
 
-            o.components.add(c);
-        }
+        o.setSprite(LevelEditor.instance.staticAssets[json.bitmapIndex]);
 
         for (childInstance in json.children) {
             var child = GenericObjectVisualizer.makefromJson(childInstance);
@@ -40,17 +51,21 @@ class ObjectVisualizer extends GenericObjectVisualizer {
 
         return o;
     }
-
+    
     override public function new() {
         super();
 
-        components = new FlxTypedGroup();
+        isStatic = true;
+
+        usesSize = true;
+
+        sprite = new FlxSprite(transform.internalX,transform.internalY);
+        setSprite("assets/images/Testbox3.png");
     }
 
     override function destroy() {
 
-        components.destroy();
-        components = null;
+        sprite = FlxDestroyUtil.destroy(sprite);
 
         super.destroy();
     }
@@ -61,12 +76,13 @@ class ObjectVisualizer extends GenericObjectVisualizer {
     
     override function update(elapsed:Float) {
         transform.update(elapsed);
-        components.update(elapsed);
+        sprite.setPosition(transform.internalX,transform.internalY);
+        sprite.update(elapsed);
         children.update(elapsed);
     }
 
     override function drawObject() {
-        components.draw();
+        sprite.draw();
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -74,41 +90,54 @@ class ObjectVisualizer extends GenericObjectVisualizer {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     override public function onActiveLayerChange(to:Bool) {
-        for (component in components) {
-            component.onActiveLayerChange(to);
-        }
+        sprite.color = to ? FlxColor.WHITE : FlxColor.GRAY;
 
         super.onActiveLayerChange(to);
     }
 
-    override function duplicate(copy:GenericObjectVisualizer):GenericObjectVisualizer {
-        for (visualizer in components) {
-            var c = ComponentVisualizer.make(visualizer.component.key,cast copy);
-            c.extended = extended;
-            visualizer.clone(c);
-
-            cast(copy, ObjectVisualizer).components.add(c);
-        }
-        
-        return super.duplicate(copy);
-    }
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
     override public function checkIsHit(mousePos:FlxPoint):GenericObjectVisualizer {
-        for (component in components) {
-            if(component.checkCollides(mousePos)) return this;
-        }
+        if(Utils.overlapsSprite(sprite,mousePos,true)) return this;
         
         return super.checkIsHit(mousePos);
     }
 
     override function handleScaling(axis:Int) {
-        for (component in components) {
-            component.handleScaling(axis);
+        switch(axis){
+            case 0:
+                //X
+                width += Std.int(FlxGamePlus.mouseMove[0]);
+            case 1:
+                //Y
+                height += Std.int(FlxGamePlus.mouseMove[1]);
+            case 2:
+                //BOTH
+                width += Std.int(FlxGamePlus.mouseMove[0]);
+                height += Std.int(FlxGamePlus.mouseMove[1]);
         }
+        updateSize();
     }
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public function setSprite(to:String) {
+        if(!to.endsWith(".png")) return;
+        spritePath = to;
+        var g = StaticObject.getAsset(to);
+        sprite.loadGraphic(g);
+
+        if(width <= 0 || height <= 0){
+            width = g.width;
+            height = g.height;
+        }
+
+        updateSize();
+    }
+
+    function updateSize() {
+        sprite.setGraphicSize(width,height);
+        sprite.updateHitbox();
+    }
+    
 }

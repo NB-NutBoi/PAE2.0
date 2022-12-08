@@ -1,5 +1,6 @@
 package levels;
 
+import oop.StaticObject;
 import oop.GenericObject;
 import gameside.dialogue.DialogueState;
 import gameside.inventory.ItemContainer;
@@ -195,6 +196,8 @@ class Level {
             bitmaps = levelFile.bitmaps;
             //layers = levelFile.layers;
 
+            StaticObject.setAssets(bitmaps);
+
             if(levelFile.backgroundColor != null)
                 FlxG.camera.bgColor = FlxColor.fromRGB(levelFile.backgroundColor.R,levelFile.backgroundColor.G,levelFile.backgroundColor.B,levelFile.backgroundColor.A);
 
@@ -327,6 +330,8 @@ class Level {
 
         layers.destroy();
         layers = null;
+
+        StaticObject.clearAssets();
     }
 
     //-------------------------------------------------------------------------------------------------------------

@@ -1,5 +1,7 @@
 package leveleditor;
 
+import oop.Object.StaticSpriteDataStructure;
+import oop.StaticObject;
 import openfl.net.FileFilter;
 import oop.GenericObject;
 import flixel.util.FlxColor;
@@ -246,6 +248,8 @@ class LevelEditor extends CoreState {
 
         //------------------------------------
 
+        FlxG.camera.bgColor = FlxColor.BLACK;
+
         layers = new FlxTypedGroup();
         //create default layer 0
         layers.add(new LayerVisualizer());
@@ -295,6 +299,8 @@ class LevelEditor extends CoreState {
         staticAssets.resize(0);
         staticAssets = null;
 
+        StaticObject.clearAssets();
+
         //reset to default
         Application.current.window.setIcon(Main._getWindowIcon(Main.SetupConfig.getConfig("WindowIcon", "string", "embed/defaults/icon32.png")));
 		Application.current.window.title = Main.SetupConfig.getConfig("WindowName", "string", "PAE 2.0");
@@ -340,7 +346,9 @@ class LevelEditor extends CoreState {
 
         switch (key){
             case W: if(curEditedObject != null) axle.state = MOVE;
-            case S: if(curEditedObject != null && curEditedObject.usesSize) axle.state = SCALE;
+            case S:
+                if(Keyboard.control) browseSave();
+                else if(curEditedObject != null && curEditedObject.usesSize) axle.state = SCALE;
             case R: if(curEditedObject != null) axle.state = ROTATE;
             case DELETE: if(curEditedObject != null) deleteObject(curEditedObject);
             default:
@@ -390,7 +398,7 @@ class LevelEditor extends CoreState {
                 var localMousePos = FlxPoint.get(0,0);
                 localMousePos = Utils.getMousePosInCamera(FlxG.camera, localMousePos);
 
-                var result:ObjectVisualizer = null;
+                var result:GenericObjectVisualizer = null;
 
                 var i = layers.members[curLayer].length;
                 while (i-- > 0) {
@@ -607,6 +615,23 @@ class LevelEditor extends CoreState {
         hierarchy.addNodeFor(o);
     }
 
+    public function createStaticObject(?parent:GenericObjectVisualizer) {
+        var o = new StaticObjectVisualizer();
+
+        o.name = "unnamed "+FlxG.random.int(0,20); //TODO this is temporary.
+
+        if(parent == null){
+            o.transform.x = FlxG.width*0.5 + FlxG.camera.scroll.x;
+            o.transform.y = FlxG.height*0.5 + FlxG.camera.scroll.y;
+        }
+        
+
+        if(parent == null) layers.members[curLayer].add(o);
+        else parent.children.add(o);
+
+        hierarchy.addNodeFor(o);
+    }
+
     public function deleteObject(obj:GenericObjectVisualizer) {
         if(obj == null) return;
         obj.existsInLevel = false;
@@ -705,16 +730,23 @@ class LevelEditor extends CoreState {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    //staticObjects
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
     //SAVES
 
     public function save():LevelFile {
+        staticAssets = [];
         var data:LevelFile = {
             levelName: name,
             curLayer: curLayer,
             gridSize: snapping,
             snapping: snappingEnabled,
 
-            bitmaps: staticAssets,
+            bitmaps: null,
 
             layers: [],
             skybox: skybox,
@@ -743,6 +775,8 @@ class LevelEditor extends CoreState {
 
             data.layers.push(l);
         }
+
+        data.bitmaps = staticAssets;
 
         return data;
     }
@@ -780,6 +814,40 @@ class LevelEditor extends CoreState {
                 }
 
                 obj.components.push(comp);
+            }
+
+            for (children in object.children) {
+                var child = parseObjectData(children);
+                if(child != null) obj.children.push(child);
+            }
+
+            return obj;
+        }
+
+        if(Std.isOfType(object, StaticObjectVisualizer)){
+            var object:StaticObjectVisualizer = cast object;
+
+            var idx:Int = staticAssets.indexOf(object.spritePath);
+            if(idx == -1) { staticAssets.push(object.spritePath); idx = staticAssets.length-1; }
+
+            var obj:StaticSpriteDataStructure = {
+                _TYPE: "STATIC_SPRITE",
+                name: object.name,
+                extended: object.extended,
+                active: object.visible,
+                drawOrder: object.drawOrder,
+                children: [],
+                transform: {
+                    X: object.transform.x,
+                    Y: object.transform.y,
+                    Z: object.transform.z,
+                    A: object.transform.angle
+                },
+                scale: {
+                    W: object.width,
+                    H: object.height
+                },
+                bitmapIndex: idx
             }
 
             for (children in object.children) {
@@ -898,6 +966,8 @@ class LevelEditor extends CoreState {
 
         layers.destroy();
         layers = new FlxTypedGroup();
+    
+        StaticObject.setAssets(staticAssets);
 
         for (layerStructure in level.layers) {
             hLayers.push(Std.string(layers.length));

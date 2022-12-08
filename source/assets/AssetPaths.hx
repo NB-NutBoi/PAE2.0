@@ -182,8 +182,9 @@ class AssetPaths
 			}
 		}
 
+		//whos idea was this
 		if(returnables.length == 0){
-			returnables = ["FILE NOT FOUND"];
+			//returnables = ["FILE NOT FOUND"];
 		}
 		
 		return returnables;

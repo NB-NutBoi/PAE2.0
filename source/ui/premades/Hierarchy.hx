@@ -1,5 +1,6 @@
 package ui.premades;
 
+import leveleditor.StaticObjectVisualizer;
 import ui.elements.Checkbox;
 import flixel.FlxCamera;
 import leveleditor.GenericObjectVisualizer;
@@ -190,14 +191,23 @@ class Hierarchy extends Container {
         }
 
         if(FlxG.mouse.justPressedRight){
-            var options:Array<ContextOption> = [
-                new BasicContextOption("Create blank object", blankObject)
-            ];
+            var options:Array<ContextOption> = [];
 
             if(LevelEditor.curEditedObject != null) {
+                
+                
+                options.push(new BasicContextOption("Create blank object", blankObject));
+                if(!Std.isOfType(LevelEditor.curEditedObject, ObjectVisualizer)){
+                    options.push(new BasicContextOption("Create static object", staticObject));
+                }
+
                 options.push(new BasicContextOption("Duplicate Object", duplicateObject));
                 options.push(new BasicContextOption("Delete", deleteObject));
-            } 
+            }
+            else{
+                options.push(new BasicContextOption("Create blank object", blankObject));
+                options.push(new BasicContextOption("Create static object", staticObject));
+            }
 
             Context.create(options);
         }
@@ -256,6 +266,10 @@ class Hierarchy extends Container {
 
     function blankObject() {
         LevelEditor.instance.createBlankObject(LevelEditor.curEditedObject);
+    }
+
+    function staticObject() {
+        LevelEditor.instance.createStaticObject(LevelEditor.curEditedObject);
     }
 
     function deleteObject() {
@@ -339,6 +353,12 @@ class Hierarchy extends Container {
         node.label.y = node.y+1;
         node.rotateSymbol.x = node.x+2.5;
         node.rotateSymbol.y = node.y+2.5;
+
+        if(Std.isOfType(object, StaticObjectVisualizer)){
+            node.icons.push(GenericObjectVisualizer.staticIcon);
+        }
+        
+        node.icons.push(GenericObjectVisualizer.inactiveIcon);
 
         return node;
     }
@@ -454,25 +474,23 @@ class Hierarchy extends Container {
             if(leeway >= 17) type = 1; //below
             if(leeway <= 3) type = -1; //above
 
-            if(node.hierarchyParent != null){
-                node.objectReference.parent.children.remove(node.objectReference,true);
-                node.objectReference.parent = null;
-                node.hierarchyParent.children.remove(node);
-                node.hierarchyParent = null;
-            }
-            else{
-                nodes.remove(node,true);
-                LevelEditor.instance.layers.members[LevelEditor.instance.curLayer].remove(node.objectReference,true);
-            }
 
             switch (type){
                 case 1:
                     if(theNodeToAddendum.hierarchyParent == null){
+
+                        deparentNode(node);
+
                         var idx = nodes.members.indexOf(theNodeToAddendum)+1;
                         nodes.insert(idx,node);
                         LevelEditor.instance.layers.members[LevelEditor.instance.curLayer].insert(idx,node.objectReference);
                     }
                     else{
+
+                        if(node.objectReference.isStatic && !theNodeToAddendum.hierarchyParent.objectReference.isStatic) return;
+
+                        deparentNode(node);
+
                         final idx = theNodeToAddendum.hierarchyParent.children.indexOf(theNodeToAddendum)+1;
                         theNodeToAddendum.hierarchyParent.objectReference.children.insert(idx,node.objectReference);
                         theNodeToAddendum.hierarchyParent.children.insert(idx,node);
@@ -480,11 +498,19 @@ class Hierarchy extends Container {
                     }
                 case -1:
                     if(theNodeToAddendum.hierarchyParent == null){
+
+                        deparentNode(node);
+
                         var idx = nodes.members.indexOf(theNodeToAddendum);
                         nodes.insert(idx,node);
                         LevelEditor.instance.layers.members[LevelEditor.instance.curLayer].insert(idx,node.objectReference);
                     }
                     else{
+
+                        if(node.objectReference.isStatic && !theNodeToAddendum.hierarchyParent.objectReference.isStatic) return;
+
+                        deparentNode(node);
+
                         final idx = theNodeToAddendum.hierarchyParent.children.indexOf(theNodeToAddendum);
                         theNodeToAddendum.hierarchyParent.objectReference.children.insert(idx,node.objectReference);
                         theNodeToAddendum.hierarchyParent.children.insert(idx,node);
@@ -493,6 +519,7 @@ class Hierarchy extends Container {
             }
         }
         else{
+            if(node.objectReference.isStatic && !theNodeToAddendum.objectReference.isStatic) return;
             if(node.hierarchyParent != null){
                 node.objectReference.parent.children.remove(node.objectReference,true);
                 node.objectReference.parent = null;
@@ -507,6 +534,19 @@ class Hierarchy extends Container {
             theNodeToAddendum.children.push(node);
             node.hierarchyParent = theNodeToAddendum;
             theNodeToAddendum.extended = theNodeToAddendum.objectReference.extended = true;
+        }
+    }
+
+    function deparentNode(node:HierarchyNode){
+        if(node.hierarchyParent != null){
+            node.objectReference.parent.children.remove(node.objectReference,true);
+            node.objectReference.parent = null;
+            node.hierarchyParent.children.remove(node);
+            node.hierarchyParent = null;
+        }
+        else{
+            nodes.remove(node,true);
+            LevelEditor.instance.layers.members[LevelEditor.instance.curLayer].remove(node.objectReference,true);
         }
     }
     

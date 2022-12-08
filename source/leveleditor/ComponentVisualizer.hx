@@ -40,6 +40,13 @@ class ComponentVisualizer extends FlxBasic {
         return component;
     }
 
+    public function clone(toCopy:ComponentVisualizer) {
+        for (array in variables) {
+            Component.setArray(array[0],array[1],toCopy.variables);
+            toCopy.changeVariable(array[0]);
+        }
+    }
+
     public function new(type:ComponentClass, parent:ObjectVisualizer) {
         super();
 

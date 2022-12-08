@@ -1,11 +1,15 @@
 package leveleditor;
 
+import flixel.FlxSprite;
 import utility.LogFile;
 import flixel.math.FlxPoint;
 import flixel.FlxBasic;
 import flixel.group.FlxGroup;
 
 class GenericObjectVisualizer extends FlxBasic {
+
+    public static var staticIcon:FlxSprite;
+    public static var inactiveIcon:FlxSprite;
 
     public var existsInLevel:Bool = true; //to see if hierarchy or inspector need to remove the node.
 
@@ -35,7 +39,7 @@ class GenericObjectVisualizer extends FlxBasic {
                 return ObjectVisualizer.fromJson(json);
             case "STATIC_SPRITE":
                 //static sprite object
-                trace("TODO");
+                return StaticObjectVisualizer.fromJson(json);
             default:
                 LogFile.error("Unidentified object type found!, RETURNING NULL!");
         }
@@ -52,6 +56,9 @@ class GenericObjectVisualizer extends FlxBasic {
         children = new FlxTypedGroup();
         children.memberAdded.add(onAdd);
         children.memberRemoved.add(onAdd);
+
+        if(staticIcon == null) staticIcon = new FlxSprite(0,0,"embed/ui/leveleditor/staticobject.png");
+        if(inactiveIcon == null) inactiveIcon = new FlxSprite(0,0,"embed/ui/leveleditor/inactive.png");
     }
 
     override function destroy() {
@@ -141,7 +148,7 @@ class GenericObjectVisualizer extends FlxBasic {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     //way this works is it goes down the hierarchy chain until one returns itself, anything other than null is considered a success.
-    public function checkIsHit(mousePos:FlxPoint):ObjectVisualizer {
+    public function checkIsHit(mousePos:FlxPoint):GenericObjectVisualizer {
         
         if(children.length > 0) {
             var result = null;

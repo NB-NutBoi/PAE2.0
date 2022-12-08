@@ -61,8 +61,8 @@ class SpriteVisualizer extends ComponentVisualizer {
 
     function updateSize() {
         sprite.setGraphicSize(
-            Component.getArray("width", variables),
-            Component.getArray("height", variables)
+            Std.int(Component.getArray("width", variables)),
+            Std.int(Component.getArray("height", variables))
         );
         sprite.updateHitbox();
     }

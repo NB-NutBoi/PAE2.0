@@ -153,7 +153,7 @@ class HierarchyNode extends StackableObject implements ContainerObject{
 		rotateSymbol.setPosition(x+2.5,y+2.5);
 
 		for (i in 0...icons.length) {
-			icons[i].setPosition(x+box.width-15-(20*i),y+2.5);
+			if(icons[i].camera != parent.cam) icons[i].camera = parent.cam;
 		}
 
 		if(extended){
@@ -225,8 +225,15 @@ class HierarchyNode extends StackableObject implements ContainerObject{
 		if(objectReference == null) { return; } // why does this get called twice after being destroyed???
 		if(!objectReference.existsInLevel) { return; }
 
+		GenericObjectVisualizer.inactiveIcon.visible = !objectReference.visible;
+
 		box.draw();
 		if(children.length > 0) rotateSymbol.draw();
+		for (i in 0...icons.length) {
+			if(!icons[i].visible) continue;
+			icons[i].setPosition(x+box.width-15-(20*i),y+2.5);
+			icons[i].draw();
+		}
 		label.draw();
 
 		if(extended){

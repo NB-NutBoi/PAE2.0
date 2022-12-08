@@ -105,15 +105,25 @@ class Component extends FlxBasic {
 
         var component:Any = null;
 
+        var instance:ComponentInstance = {
+            extended: true,
+            component: typeof,
+            startingData: {}
+        }
+
+        for (array in _class.defaultVars) {
+            Reflect.setField(instance,array[0],array[1]);
+        }
+
         if(_class.specialOverrideArgs != null){
             var args = _class.specialOverrideArgs.copy();
-            args.push(typeof);
+            args.push(instance);
             args.push(owner); //!!!MAKE SURE OWNER IS ALWAYS THE LAST ARGUMENT!!!
             component = Type.createInstance(thisClass, args);
             args = null;
         }
         else{
-            var args:Array<Dynamic> = [typeof, owner];
+            var args:Array<Dynamic> = [instance, owner];
             component = Type.createInstance(thisClass, args);
             args = null;
         }
@@ -666,7 +676,7 @@ class Component extends FlxBasic {
         aListenerEditables.set("volume", "float");
 
         final aListenerDefaults:Array<Array<Dynamic>> = [
-            ["volume", 0]
+            ["volume", 1]
         ];
 
         componentClasses.set("AudioListener", {
