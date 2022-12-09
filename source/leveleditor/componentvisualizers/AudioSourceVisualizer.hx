@@ -1,0 +1,101 @@
+package leveleditor.componentvisualizers;
+
+import flixel.addons.display.shapes.FlxShapeCircle;
+import flixel.util.FlxColor;
+import flixel.math.FlxPoint;
+import utility.Utils;
+import flixel.util.FlxDestroyUtil;
+import oop.Component;
+import flixel.FlxSprite;
+
+class AudioSourceVisualizer extends ComponentVisualizer {
+    
+    public var rangeSprite:FlxSprite;
+    public var icon:FlxSprite;
+
+    override public function new(type:ComponentClass, parent:ObjectVisualizer) {
+        super(type,parent);
+
+        icon = new FlxSprite(
+            parent.transform.internalX+Component.getArray("offsetX", variables),
+            parent.transform.internalY+Component.getArray("offsetY", variables)
+            ,"embed/components/AudioSource.png");
+
+        icon.x -= (icon.width * 0.5);
+        icon.y -= (icon.height * 0.5);
+    }
+
+    override function destroy() {
+        if(rangeSprite != null) rangeSprite = FlxDestroyUtil.destroy(rangeSprite);
+        icon = FlxDestroyUtil.destroy(icon);
+        super.destroy();
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    override function changeVariable(key:String) {
+        switch(key){
+            case "usingProximity", "radius":
+                updateRange();
+        }
+    }
+    
+    public function updateRange() {
+        var enabled:Bool = Component.getArray("usingProximity", variables);
+
+        if(rangeSprite != null) rangeSprite = FlxDestroyUtil.destroy(rangeSprite);
+        if(!enabled) return;
+
+        var range:Float = Component.getArray("radius", variables);
+        rangeSprite = new FlxShapeCircle(0,0, range, {thickness: 0,color: 0x10FFA600},0x10FFA600);
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    override function onActiveLayerChange(to:Bool) {
+        icon.color = to ? FlxColor.WHITE : FlxColor.GRAY;
+        if(rangeSprite != null) rangeSprite.color = to ? FlxColor.WHITE : FlxColor.GRAY;
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    override function checkCollides(mousePos:FlxPoint):Bool {
+        return Utils.overlapsSprite(icon, mousePos, false);
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    override function update(elapsed:Float) {
+        super.update(elapsed);
+
+        icon.setPosition(
+            owner.transform.internalX+Component.getArray("offsetX", variables),
+            owner.transform.internalY+Component.getArray("offsetY", variables));
+
+        icon.x -= (icon.width * 0.5);
+        icon.y -= (icon.height * 0.5);
+
+        if(rangeSprite != null){
+            rangeSprite.setPosition(
+                owner.transform.internalX+Component.getArray("offsetX", variables),
+                owner.transform.internalY+Component.getArray("offsetY", variables));
+    
+            rangeSprite.x -= (rangeSprite.width * 0.5);
+            rangeSprite.y -= (rangeSprite.height * 0.5);
+        }
+    }
+
+    override function draw() {
+        if(rangeSprite != null) rangeSprite.draw();
+        icon.draw();
+    }
+
+}

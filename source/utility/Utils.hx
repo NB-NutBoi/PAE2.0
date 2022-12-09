@@ -121,7 +121,7 @@ class Utils {
         return point;
     }
     
-    public static function overlapsSprite(spr:FlxSprite, mousePos:FlxPoint, ?pixelAccurate:Bool = false) {
+    public static function overlapsSprite(spr:FlxSprite, mousePos:FlxPoint, ?pixelAccurate:Bool = false, ?useDivision:Bool = true) {
         if(spr == null) return false;
 		if(mousePos == null) return false;
 
@@ -150,10 +150,16 @@ class Utils {
 		}
 
         var frameData:BitmapData = spr.updateFramePixels();
-        mousePos.rotate(spr.getGraphicMidpoint(FlxPoint.weak()), spr.angle == 0 ? 0 : -spr.angle);
+        mousePos.rotate(spr.getGraphicMidpoint(FlxPoint.weak()),-spr.angle);
         var rotatedPos:Array<Int> = [
-            /*x*/Std.int((mousePos.x - spr.x - spr.offset.x) * spr.scale.x),
-            /*y*/Std.int((mousePos.y - spr.y - spr.offset.y) * spr.scale.y)
+            /*x*/Math.round(useDivision ? 
+				(mousePos.x - (spr.x*spr.scrollFactor.x)) * (1 / spr.scale.x) :
+				(mousePos.x - (spr.x*spr.scrollFactor.x)) + (spr.offset.x*2) //this will apparently work if its a simple scale offset (do not use by default)
+				),
+            /*y*/Math.round(useDivision ? 
+				(mousePos.y - (spr.y*spr.scrollFactor.y)) * (1 / spr.scale.y) :
+				(mousePos.y - (spr.y*spr.scrollFactor.y)) * (spr.offset.y*2)
+				)
         ];
 
 		mousePos.x = ogX;

@@ -77,6 +77,7 @@ class StaticObjectVisualizer extends GenericObjectVisualizer {
     override function update(elapsed:Float) {
         transform.update(elapsed);
         sprite.setPosition(transform.internalX,transform.internalY);
+        sprite.angle = transform.internalAngle;
         sprite.update(elapsed);
         children.update(elapsed);
     }
@@ -96,9 +97,20 @@ class StaticObjectVisualizer extends GenericObjectVisualizer {
     }
 
     override public function checkIsHit(mousePos:FlxPoint):GenericObjectVisualizer {
-        if(Utils.overlapsSprite(sprite,mousePos,true)) return this;
-        
-        return super.checkIsHit(mousePos);
+        switch (drawOrder){
+            default: //also known as 0
+                var initResult = super.checkIsHit(mousePos);
+                if(initResult != null) return initResult;
+
+                if(Utils.overlapsSprite(sprite,mousePos,true)) return this;
+            case 1:
+                if(Utils.overlapsSprite(sprite,mousePos,true)) return this;
+
+                var initResult = super.checkIsHit(mousePos);
+                if(initResult != null) return initResult;
+        }
+
+        return null;
     }
 
     override function handleScaling(axis:Int) {

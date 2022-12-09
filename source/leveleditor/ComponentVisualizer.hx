@@ -1,5 +1,7 @@
 package leveleditor;
 
+import leveleditor.componentvisualizers.AudioListenerVisualizer;
+import leveleditor.componentvisualizers.AudioSourceVisualizer;
 import leveleditor.componentvisualizers.TextVisualizer;
 import leveleditor.componentvisualizers.SpriteVisualizer;
 import oop.Component;
@@ -32,6 +34,10 @@ class ComponentVisualizer extends FlxBasic {
                 component = new SpriteVisualizer(Component.componentClasses.get(type),owner);
             case "Text":
                 component = new TextVisualizer(Component.componentClasses.get(type),owner);
+            case "AudioSource":
+                component = new AudioSourceVisualizer(Component.componentClasses.get(type),owner);
+            case "AudioListener":
+                component = new AudioListenerVisualizer(Component.componentClasses.get(type),owner);
             default:
                 component = new ComponentVisualizer(Component.componentClasses.get(type),owner);
         }

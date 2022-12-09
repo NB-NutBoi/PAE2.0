@@ -693,7 +693,7 @@ class Component extends FlxBasic {
 
         final aSourceEditables = new DynamicAccess();
         aSourceEditables.set("clip", "filepath");
-        aSourceEditables.set("panning", "range(-1,1)");
+        aSourceEditables.set("panning", "range(-1,1,0,true)");
 
         aSourceEditables.set("usingProximity", "bool");
         aSourceEditables.set("usingProximityPanning", "bool");
@@ -704,7 +704,7 @@ class Component extends FlxBasic {
 
         aSourceEditables.set("important", "bool"); //only used if clip is set by default. (might need CSD file support for this after all)
 
-        final aListenerDefaults:Array<Array<Dynamic>> = [
+        final aSourceDefaults:Array<Array<Dynamic>> = [
             ["clip", ""],
             ["panning", 0],
             ["usingProximity", false],
@@ -721,7 +721,7 @@ class Component extends FlxBasic {
             icon: "embed/components/AudioSource.png",
             script: "",
             editableVars: aSourceEditables,
-            defaultVars: aListenerDefaults,
+            defaultVars: aSourceDefaults,
             specialOverrideClass: AudioSourceComponent,
             specialOverrideArgs: [],
             static_vars: null

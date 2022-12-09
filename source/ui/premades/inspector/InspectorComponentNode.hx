@@ -153,9 +153,28 @@ class InspectorComponentNode extends StackableObject implements ContainerObject 
 
 		if(type.startsWith("range")){
 			//Float but represented as a slider between 2 ranges
-			//TODO
 
-			return null;
+			var ranges = type.substr("range".length).split(",");
+			for (i in 0...ranges.length) {
+				ranges[i] = ranges[i].replace("(","").replace(")","").trim();
+			}
+
+			var invert:Bool = false;
+			var range:Array<Null<Float>> = [];
+			for (s in ranges) {
+				if(Utils.stringTrueFalse(s)) { invert = true; continue; }
+				if(Math.isNaN(Std.parseFloat(s)))continue;
+				range.push(Std.parseFloat(s));
+			}
+
+			var min = range[0] == null ? 0 : range[0];
+			var max = range[1] == null ? 1 : range[1];
+			var step = range[2] == null ? 0 : range[2];
+
+			var rF = new RangeField(key,defaultValue,min,max,step,invert,parent);
+			rF.component = component;
+
+			return rF;
 		}
 
 		if(type.startsWith("enumstring")){

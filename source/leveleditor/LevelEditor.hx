@@ -579,9 +579,11 @@ class LevelEditor extends CoreState {
             LevelEditor.instance.axle.angle = value.transform.internalAngle;
             LevelEditor.instance.axle.visible = true;
 
-            if(LevelEditor.instance.axle.state == SCALE && !curEditedObject.usesSize) LevelEditor.instance.axle.state = MOVE;
+            if(curEditedObject != null) //fix crash
+                if(LevelEditor.instance.axle.state == SCALE && !curEditedObject.usesSize) LevelEditor.instance.axle.state = MOVE;
         }
         else{
+            if(LevelEditor.instance.axle.state == SCALE) LevelEditor.instance.axle.state = MOVE; //prevent just in case.
             LevelEditor.instance.axle.visible = false;
         }
 

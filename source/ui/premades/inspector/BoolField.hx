@@ -23,7 +23,7 @@ class BoolField extends NodeField {
         sepparator = Utils.makeRamFriendlyRect(0,0,240,2);
         add(sepparator);
 
-        stackObject.combinedHeight = stackObject.height = 35;
+        stackObject.combinedHeight = stackObject.height = 38;
     }
 
     override function destroy() {
@@ -44,7 +44,7 @@ class BoolField extends NodeField {
         }
 
         boolField.setPosition(stackObject.x+10,stackObject.y+6);
-        sepparator.setPosition(stackObject.x+5,stackObject.y+32);
+        sepparator.setPosition(stackObject.x+5,stackObject.y+35);
     }
 
     public function check(to:Bool) {

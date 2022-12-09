@@ -2,11 +2,13 @@
   "layers": [
     {
 		"enabledByDefault": true,
+		"visible": true,
 		"objects": [
 			{
 				"_TYPE": "FULL",
 				"extended": true,
 				"name": "test",
+				"active": true,
 				"transform": {
 					"X": 0,
 					"Y": 0,

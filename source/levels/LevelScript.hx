@@ -38,6 +38,8 @@ class LevelScript extends BasicHscript {
     override function AddVariables() {
         super.AddVariables();
 
+        AddGeneral("Log",LogFile);
+
         //SAVEABLE VARS
 
         //initializers

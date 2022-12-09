@@ -179,7 +179,10 @@ class HierarchyNode extends StackableObject implements ContainerObject{
 			if(over != -1) LevelEditor.tempCurEdited = objectReference;
 			if(over == 1) { extended = !extended; objectReference.extended = extended; }
 			if(over == 0) { LevelEditor.curEditedObject = objectReference; held = true; }
+			Drag = false;
 		}
+		
+		if(FlxG.mouse.justReleased) { held = false; Drag = false; }
 
 		if(FlxG.mouse.pressed && held){
 			if(!Drag) {

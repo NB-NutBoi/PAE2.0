@@ -98,10 +98,24 @@ class ObjectVisualizer extends GenericObjectVisualizer {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     override public function checkIsHit(mousePos:FlxPoint):GenericObjectVisualizer {
-        for (component in components) {
-            if(component.checkCollides(mousePos)) return this;
+
+        switch (drawOrder){
+            default: //basically 0
+                var initResult = super.checkIsHit(mousePos);
+                if(initResult != null) return initResult;
+
+                for (component in components) {
+                    if(component.checkCollides(mousePos)) return this;
+                }
+            case 1:
+                for (component in components) {
+                    if(component.checkCollides(mousePos)) return this;
+                }
+
+                var initResult = super.checkIsHit(mousePos);
+                if(initResult != null) return initResult;
         }
-        
+
         return super.checkIsHit(mousePos);
     }
 

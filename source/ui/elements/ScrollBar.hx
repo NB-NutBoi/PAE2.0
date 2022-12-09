@@ -144,8 +144,8 @@ class ScrollBar extends StackableObject implements ContainerObject {
         value = doInvert(((percent * (max - min) / 1) + min));
     }
 
-    function doInvert(f:Float):Float {
-        if(!invertValue) return f;
+    function doInvert(f:Float, ?inInvert:Bool = false):Float {
+        if(invertValue == inInvert) return f;
         
         final middle = (min + max)*0.5;
         final diff = f-middle;
@@ -158,7 +158,7 @@ class ScrollBar extends StackableObject implements ContainerObject {
 
         value = inValue;
 
-        final percentage = ((doInvert(value) - min) * 1) / (max - min);
+        final percentage = ((doInvert(value,true) - min) * 1) / (max - min);
         final usableWidth = (direction == HORIZONTAL ? (bg.width-box.width) : (bg.height-box.height));
 
         if(direction == HORIZONTAL)
@@ -173,4 +173,21 @@ class ScrollBar extends StackableObject implements ContainerObject {
         calcValue();
 		return invertValue;
 	}
+
+    override function setPosition(X:Float = 0, Y:Float = 0) {
+        super.setPosition(X, Y);
+
+        final diffX = X - bg.x;
+        final diffY = Y - bg.y;
+        bg.setPosition(x,y);
+
+        switch (direction){
+            case HORIZONTAL:
+                box.y = bg.y;
+                box.x += diffX;
+            case VERTICAL:
+                box.x = bg.x;
+                box.y += diffY;
+        }
+    }
 }
