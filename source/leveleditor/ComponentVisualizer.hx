@@ -51,6 +51,8 @@ class ComponentVisualizer extends FlxBasic {
             Component.setArray(array[0],array[1],toCopy.variables);
             toCopy.changeVariable(array[0]);
         }
+        
+        toCopy.extended = extended;
     }
 
     public function new(type:ComponentClass, parent:ObjectVisualizer) {

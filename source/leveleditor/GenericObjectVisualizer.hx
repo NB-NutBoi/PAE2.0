@@ -136,6 +136,7 @@ class GenericObjectVisualizer extends FlxBasic {
 
     //ONLY COPY ATTRIBUTES!!! A COPY IS ALREADY MADE!!!
     public function duplicate(copy:GenericObjectVisualizer):GenericObjectVisualizer {
+        copy.extended = extended;
         return copy;
     }
 

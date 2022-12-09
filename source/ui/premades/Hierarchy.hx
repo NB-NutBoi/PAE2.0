@@ -341,6 +341,7 @@ class Hierarchy extends Container {
         for (childObject in object.children) {
             var child = createNode(childObject);
             node.children.push(child);
+            child.hierarchyParent = node; //FUCKING FUCKITTY FUCK i'm a dumbass
         }
 
         //fix wrong positioning
@@ -447,6 +448,8 @@ class Hierarchy extends Container {
                     if(nodes.members[depthIdx[listDepth]] == null) { theNodeToAddendum = theNodeToAddendum.hierarchyParent; continue; }
                     theNodeToAddendum = nodes.members[depthIdx[listDepth]];
                 }
+
+                //should perform a list exit loop until root is reached or more chilren exist, this is causing issues as is.
             }
             else if(listDepth > 0){
                 depthIdx[listDepth]++;
@@ -507,7 +510,7 @@ class Hierarchy extends Container {
                     }
                     else{
 
-                        if(node.objectReference.isStatic && !theNodeToAddendum.hierarchyParent.objectReference.isStatic) return;
+                        if(node.objectReference.isStatic && !theNodeToAddendum.hierarchyParent.objectReference.isStatic)
 
                         deparentNode(node);
 

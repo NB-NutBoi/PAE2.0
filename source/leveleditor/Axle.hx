@@ -98,15 +98,15 @@ class Axle {
 
                 overlap = -1;
 
-                if(moving == 0 || Utils.overlapsSprite(xMoveAxle,mousePos,true)){
+                if(moving == 0 || Utils.overlapsSprite(xMoveAxle,mousePos,true,true)){
                     overlap = 0;
                 }
 
-                if(moving == 1 || Utils.overlapsSprite(yMoveAxle,mousePos,true)){
+                if(moving == 1 || Utils.overlapsSprite(yMoveAxle,mousePos,true,true)){
                     overlap = 1;
                 }
 
-                if(moving == 2 || Utils.overlapsSprite(centerAxle,mousePos,true)){
+                if(moving == 2 || Utils.overlapsSprite(centerAxle,mousePos,true,true)){
                     overlap = 2;
                 }
 
@@ -163,15 +163,15 @@ class Axle {
 
                 overlap = -1;
 
-                if(moving == 0 || Utils.overlapsSprite(xScaleAxle,mousePos,true)){
+                if(moving == 0 || Utils.overlapsSprite(xScaleAxle,mousePos,true,true)){
                     overlap = 0;
                 }
 
-                if(moving == 1 || Utils.overlapsSprite(yScaleAxle,mousePos,true)){
+                if(moving == 1 || Utils.overlapsSprite(yScaleAxle,mousePos,true,true)){
                     overlap = 1;
                 }
 
-                if(moving == 2 || Utils.overlapsSprite(centerAxle,mousePos,true)){
+                if(moving == 2 || Utils.overlapsSprite(centerAxle,mousePos,true,true)){
                     overlap = 2;
                 }
 
@@ -212,7 +212,7 @@ class Axle {
 
                 overlap = -1;
 
-                if(moving == 0 || Utils.overlapsSprite(rotateAxle,mousePos,true)){
+                if(moving == 0 || Utils.overlapsSprite(rotateAxle,mousePos,true,true)){
                     overlap = 0;
                 }
 
@@ -270,5 +270,34 @@ class Axle {
     public function setPosition(X:Float, Y:Float) {
         nonVisualX = x = X;
         nonVisualY = y = Y;
+
+        switch (state){
+            case MOVE:
+                xMoveAxle.y = y - (185*0.5);
+                xMoveAxle.x = x - (185*0.575);
+
+                yMoveAxle.y = y - 185;
+                yMoveAxle.x = x - (32*0.5);
+
+                centerAxle.x = x - (35*0.5);
+                centerAxle.y = y - (35*0.5);
+
+            case SCALE:
+                xScaleAxle.y = y - (185*0.5);
+                xScaleAxle.x = x + (185*0.425);
+
+                yScaleAxle.y = y;
+                yScaleAxle.x = x - (32*0.5);
+
+                centerAxle.x = x - (35*0.5);
+                centerAxle.y = y - (35*0.5);
+
+            case ROTATE:
+                rotateAxle.x = x - (185*0.5);
+                rotateAxle.y = y - (185*0.5);
+
+                rotateDirAxle.x = x - (185*0.5);
+                rotateDirAxle.y = y - (185*0.5);
+        }
     }
 }

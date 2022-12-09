@@ -182,7 +182,7 @@ class HierarchyNode extends StackableObject implements ContainerObject{
 			Drag = false;
 		}
 		
-		if(FlxG.mouse.justReleased) { held = false; Drag = false; }
+		if(FlxG.mouse.justReleased) { held = false; if(Drag) Hierarchy.instance.dropNode(this); Drag = false; }
 
 		if(FlxG.mouse.pressed && held){
 			if(!Drag) {

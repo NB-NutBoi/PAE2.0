@@ -50,7 +50,14 @@ class SpriteVisualizer extends ComponentVisualizer {
     override function changeVariable(key:String) {
         switch(key){
             case "texture":
-                sprite.setAsset(ImageAsset.get(Component.getArray("texture", variables)));
+                var a = ImageAsset.get(Component.getArray("texture", variables));
+                sprite.setAsset(a);
+
+                //change size cause its driving me insane. (sorry if you relied on size not updating)
+                Component.setArray("width", a.defaultWidth, variables);
+                Component.setArray("height", a.defaultHeight, variables);
+                UPDATE_VARIABLES = true;
+
                 updateSize();
             case "width", "height":
                 updateSize();

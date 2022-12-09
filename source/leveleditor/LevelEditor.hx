@@ -351,6 +351,7 @@ class LevelEditor extends CoreState {
                 else if(curEditedObject != null && curEditedObject.usesSize) axle.state = SCALE;
             case R: if(curEditedObject != null) axle.state = ROTATE;
             case DELETE: if(curEditedObject != null) deleteObject(curEditedObject);
+            case D: if(curEditedObject != null && Keyboard.control) duplicateObject(curEditedObject);
             default:
         }
     }
@@ -583,7 +584,6 @@ class LevelEditor extends CoreState {
                 if(LevelEditor.instance.axle.state == SCALE && !curEditedObject.usesSize) LevelEditor.instance.axle.state = MOVE;
         }
         else{
-            if(LevelEditor.instance.axle.state == SCALE) LevelEditor.instance.axle.state = MOVE; //prevent just in case.
             LevelEditor.instance.axle.visible = false;
         }
 
@@ -654,6 +654,8 @@ class LevelEditor extends CoreState {
 
         o.transform.x = obj.transform.x;
         o.transform.y = obj.transform.y;
+        o.transform.internalX = parent == null ? o.transform.x : o.transform.x+parent.transform.internalX;
+        o.transform.internalY = parent == null ? o.transform.y : o.transform.y+parent.transform.internalY;
         o.transform.angle = obj.transform.angle;
 
         o.name = obj.name; //TODO add name engine
@@ -671,6 +673,7 @@ class LevelEditor extends CoreState {
     public function duplicateObject(obj:GenericObjectVisualizer) {
         var o = duplicate(obj, obj.parent);
         hierarchy.addNodeFor(o);
+        curEditedObject = o;
     }
 
     public function setSkybox(to:String) {
