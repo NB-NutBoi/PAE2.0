@@ -27,6 +27,8 @@ class SaveDataComponent extends Component {
 
         if(instance == null) return;
 
+        componentType = "SaveData";
+
         key = instance.startingData.uniqueKey;
 
         ready = true;
@@ -76,6 +78,7 @@ class SaveDataComponent extends Component {
     //override and disable standard functions
 
     override function awake() {}
+    override function start() {}
     override function compile(fullScript:String) {}
     override function requireComponent(typeof:String):Dynamic { return null; }
     override function AddGeneral(name:String, toAdd:Dynamic) {}

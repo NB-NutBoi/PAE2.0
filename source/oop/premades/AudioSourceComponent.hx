@@ -54,6 +54,8 @@ class AudioSourceComponent extends Component {
 
         if(instance == null) return;
 
+        componentType = "AudioSource";
+
         //TODO - idk how to handle audio source start data due to the many use cases of this component
 
         ready = true;
@@ -88,6 +90,7 @@ class AudioSourceComponent extends Component {
     //override and disable standard functions
 
     override function awake() {}
+    override function start() {}
     override function compile(fullScript:String) {}
     override function requireComponent(typeof:String):Dynamic { return null; }
     override function AddGeneral(name:String, toAdd:Dynamic) {}

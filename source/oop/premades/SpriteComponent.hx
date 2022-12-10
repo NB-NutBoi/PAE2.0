@@ -29,6 +29,8 @@ class SpriteComponent extends Component {
 
         if(instance == null) return;
 
+        componentType = "Sprite";
+
         texture = instance.startingData.texture;
 
         offsetX = instance.startingData.offsetX;
@@ -63,6 +65,9 @@ class SpriteComponent extends Component {
         componentFrontend.setVisible = setVisible;
         componentFrontend.isAnimated = isAnimated;
 
+        componentFrontend.setGlowing = setGlowing;
+        componentFrontend.setColorTransform = setColorTransform;
+
         componentFrontend.setTexture = set_texture;
         componentFrontend.getTexture = get_texture;
 
@@ -70,6 +75,8 @@ class SpriteComponent extends Component {
         componentFrontend.playAnimation = playAnimation;
 
         componentFrontend.setSize = setSize;
+        componentFrontend.getWidth = getWidth;
+        componentFrontend.getHeight = getHeight;
         
     }
 
@@ -80,6 +87,7 @@ class SpriteComponent extends Component {
     //override and disable standard functions
 
     override function awake() {}
+    override function start() {}
     override function compile(fullScript:String) {}
     override function requireComponent(typeof:String):Dynamic { return null; }
     override function AddGeneral(name:String, toAdd:Dynamic) {}
@@ -147,7 +155,7 @@ class SpriteComponent extends Component {
     //api for interacting with this through the frontend
 
     public function overlapsMouse(?pixelAccurate:Bool = false) {
-        return Utils.overlapsSprite(sprite, Utils.getMousePosInCamera(cameras[0]), pixelAccurate);
+        return Utils.overlapsSprite(sprite, Utils.getMousePosInCamera(cameras[0]), pixelAccurate, true);
     }
 
     public function setOffset(?x:Float = 0, ?y:Float = 0) {
@@ -169,6 +177,29 @@ class SpriteComponent extends Component {
     public function setSize(w:Int, h:Int, ?updateHitbox:Bool = true) {
         sprite.setGraphicSize(w,h);
         if(updateHitbox) sprite.updateHitbox();
+    }
+
+    public function getWidth():Int {
+        return Std.int(sprite.width);
+    }
+
+    public function getHeight():Int {
+        return Std.int(sprite.height);
+    }
+
+    public var glow:Bool = false;
+    public function setGlowing(to:Bool) {
+        if(glow == to) return;
+        glow = to;
+        if(to)
+            sprite.setColorTransform(1,1,1,1,30,30,30,0);
+        else
+            sprite.setColorTransform(1,1,1,1,0,0,0,0);
+    }
+
+    public function setColorTransform(rm:Float, bm:Float, gm:Float, am:Float, ro:Int, bo:Int, go:Int, ao:Int) {
+        glow = false;
+        sprite.setColorTransform(rm,bm,gm,am,ro,bo,go,ao);
     }
 
     //------------------------------------------------------------------------------------------------------------------------------------------------------------------

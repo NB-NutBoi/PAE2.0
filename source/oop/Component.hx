@@ -1,5 +1,9 @@
 package oop;
 
+import utility.Language.LanguageManager;
+import rendering.Skybox;
+import rendering.Text;
+import rendering.Sprite;
 import flixel.FlxSprite;
 import oop.premades.SaveDataComponent;
 import haxe.ds.ObjectMap;
@@ -453,6 +457,12 @@ class Component extends FlxBasic {
         doFunction("OnAwake");
     }
 
+    public function start() {
+        if(!exists || !ready) return;
+
+        doFunction("OnStart");
+    }
+
     override function update(elapsed:Float) {
         if(!exists || !ready) return;
         super.update(elapsed);
@@ -528,7 +538,7 @@ class Component extends FlxBasic {
     }
 
     public function requireComponent(typeof:String):Dynamic {
-        if (owner == null || !compiling) return null; //make sure this can only be used at compile time (aka outside a function.)
+        if (owner == null) return null;
 
         var c:Dynamic = owner.getComponentBackend(typeof);
 
@@ -543,7 +553,7 @@ class Component extends FlxBasic {
     }
 
     public function requireComponentInstance(instance:ComponentInstance) {
-        if (owner == null || !compiling) return null; //make sure this can only be used at compile time (aka outside a function.)
+        if (owner == null) return null;
         
         var c:Dynamic = owner.getComponentBackend(instance.component);
 
@@ -578,6 +588,8 @@ class Component extends FlxBasic {
         "Input" => ["Keyboard" => Keyboard, "KeyCode" => InputPackageKeyCode, "Mouse" => Mouse],
         "ClientPrefs" => ["ClientPreferences" => ClientPreferences],
         "Maps" => ["StringMap" => StringMap, "IntMap" => IntMap, "ObjectMap" => ObjectMap],
+        "Rendering" => ["Sprite" => Sprite, "Text" => Text, "Skybox" => Skybox],
+        "Language" => ["LanguageManager" => LanguageManager],
     ];
 
     public function importPackage(pack:String) {

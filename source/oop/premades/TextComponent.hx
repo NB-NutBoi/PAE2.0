@@ -32,6 +32,8 @@ class TextComponent extends Component {
 
         if(instance == null) return;
 
+        componentType = "Text";
+
         _text.text = instance.startingData.text;
         _text.font = instance.startingData.font;
         _text.size = instance.startingData.size;
@@ -72,6 +74,7 @@ class TextComponent extends Component {
     //override and disable standard functions
 
     override function awake() {}
+    override function start() {}
     override function compile(fullScript:String) {}
     override function requireComponent(typeof:String):Dynamic { return null; }
     override function AddGeneral(name:String, toAdd:Dynamic) {}

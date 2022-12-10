@@ -76,6 +76,10 @@ class Object extends GenericObject {
             object.addChild(child);
         }
 
+        for (component in object.componets) {
+            component.start();
+        }
+
         return object;
     }
 

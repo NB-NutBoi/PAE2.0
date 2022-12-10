@@ -9,10 +9,6 @@ import sys.io.File;
 
 using StringTools;
 
-typedef LangFile = { //make parsers for this! NOW!!
-    public var language:DynamicAccess<String>;
-}
-
 class LanguageManager {
 
     private static var langFolder:String;
@@ -97,24 +93,24 @@ class LanguageManager {
     //-------------------------------------------------------------------------------------------------------------------------------------------------------------
     //-------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-    static function parseFile(filePath:String):LangFile {
-        var content = File.getContent(filePath);
+    static function parseFile(filePath:String):Dynamic {
+        var ogContent = File.getContent(filePath);
 
-        var parserType = content.substr(0,content.indexOf("\n")).trim();
-        content = content.substr(content.indexOf("\n"));
+        var parserType = ogContent.substr(0,ogContent.indexOf("\n")).trim();
+        var content = ogContent.substr(ogContent.indexOf("\n"));
 
-        var file:LangFile = null;
+        var file:Dynamic = null;
         switch(parserType.toUpperCase().trim()){
             case "JSON": file = tryJsonParse(content);
             default:LogFile.log("Language file type "+parserType+" has no parser associated, trying json!");
-            file = tryJsonParse(content); //try json as last resort since it's guaranteed a safe return.
+            file = tryJsonParse(ogContent); //try json as last resort since it's guaranteed a safe return.
         }
 
         return file;
     }
 
-    static function tryJsonParse(content:String):LangFile {
-        var file:LangFile = null;
+    static function tryJsonParse(content:String):Dynamic {
+        var file:Dynamic = null;
 
         try
         {
@@ -127,16 +123,14 @@ class LanguageManager {
         }
         catch(e){
             LogFile.error("Error parsing json lang file! : "+e.message);
-            file = {
-                language: new DynamicAccess()
-            }
+            file = {}
         }
 
         return file;
     }
 
-    static function tryCustomParse(content:String):LangFile {
-        var file:LangFile = null;
+    static function tryCustomParse(content:String):Dynamic {
+        var file:Dynamic = null;
 
         return file;
     }
@@ -146,10 +140,18 @@ class Language {
     public var prefix:String = "english";
     public var entries:Map<String,String> = new Map();
 
-    public function new(pre:String, file:LangFile) {
+    public function new(pre:String, file:Dynamic) {
         prefix = pre;
-        for (s in file.language.keys()) {
-            entries.set(s,file.language.get(s));
+        parseCategory("",file);
+    }
+
+    function parseCategory(cat:String, category:Dynamic) {
+        final append:String = cat == "" ? "" : ".";
+
+        for (s in Reflect.fields(category)) {
+            var a:Dynamic = Reflect.field(category,s);
+            if(Std.isOfType(a, String)) entries.set(cat+append+s,a);
+            else parseCategory(cat+append+s,a);
         }
     }
 

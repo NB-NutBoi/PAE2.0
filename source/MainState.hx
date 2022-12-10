@@ -21,12 +21,13 @@ class MainState extends CoreState {
 
     override function create() {
         instance = this;
-        super.create();
 
         CoreState.onSave.add(onSave);
         CoreState.onLoad.add(onLoad);
 
         level = new Level(); //standard level instance
+
+        super.create();
     }
 
     override function update(elapsed:Float) {

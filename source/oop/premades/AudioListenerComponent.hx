@@ -40,16 +40,18 @@ class AudioListenerComponent extends Component {
             listenerSprite.cameras = [FlxGamePlus.DebugCam];
         }
 
-        ready = true;
-
-        generateFrontend();
-
         var instance:ComponentInstance = null;
         if(instancer.component != null) instance = instancer;
 
         if(instance == null) return;
 
+        componentType = "AudioSource";
+
         FlxG.sound.volume = instance.startingData.volume;
+
+        ready = true;
+
+        generateFrontend();
     }
 
     override private function generateFrontend() {
@@ -70,6 +72,7 @@ class AudioListenerComponent extends Component {
     //override and disable standard functions
 
     override function awake() {}
+    override function start() {}
     override function compile(fullScript:String) {}
     override function requireComponent(typeof:String):Dynamic { return null; }
     override function AddGeneral(name:String, toAdd:Dynamic) {}

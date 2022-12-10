@@ -188,6 +188,7 @@ class GenericObject extends FlxBasic {
 
     function set_parent(value:GenericObject):GenericObject {
         if(value == parent) return parent;
+        if(value == null) return parent = null;
         
         cameras = value.cameras;
 		if(Static && !value.Static) Static = false;
