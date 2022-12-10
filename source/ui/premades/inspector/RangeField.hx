@@ -77,6 +77,6 @@ class RangeField extends NodeField {
         valueDisplay.text = Std.string(value);
 
         Component.setArray(key, value, component.variables);
-		component.changeVariable(key);
+		component.changeVariable(key,true);
     }
 }

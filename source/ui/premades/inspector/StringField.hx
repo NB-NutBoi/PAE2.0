@@ -68,7 +68,7 @@ class StringField extends NodeField {
 
     public function onEnter(_) {
         Component.setArray(key, stringField.textField.text, component.variables);
-		component.changeVariable(key);
+		component.changeVariable(key,true);
     }
 
 }

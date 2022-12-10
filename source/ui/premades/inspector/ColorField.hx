@@ -66,7 +66,7 @@ class ColorField extends NodeField {
         value = colorField.color;
 
         Component.setArray(key, value, component.variables);
-        component.changeVariable(key);
+        component.changeVariable(key,true);
     }
 
 }

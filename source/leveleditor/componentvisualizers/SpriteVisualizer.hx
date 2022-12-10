@@ -47,16 +47,18 @@ class SpriteVisualizer extends ComponentVisualizer {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    override function changeVariable(key:String) {
+    override function changeVariable(key:String, ?inEditor:Bool = false) {
         switch(key){
             case "texture":
                 var a = ImageAsset.get(Component.getArray("texture", variables));
                 sprite.setAsset(a);
 
-                //change size cause its driving me insane. (sorry if you relied on size not updating)
-                Component.setArray("width", a.defaultWidth, variables);
-                Component.setArray("height", a.defaultHeight, variables);
-                UPDATE_VARIABLES = true;
+                if(inEditor){
+                    //change size cause its driving me insane. (sorry if you relied on size not updating)
+                    Component.setArray("width", a.defaultWidth, variables);
+                    Component.setArray("height", a.defaultHeight, variables);
+                    UPDATE_VARIABLES = true;
+                }
 
                 updateSize();
             case "width", "height":

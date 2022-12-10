@@ -97,7 +97,7 @@ class NumberField extends NodeField {
         numberField.onUpdateText();
 
         Component.setArray(key, isInt ? Std.int(value) : value, component.variables);
-		component.changeVariable(key);
+		component.changeVariable(key,true);
     }
 
 }

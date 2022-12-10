@@ -49,7 +49,7 @@ class BoolField extends NodeField {
 
     public function check(to:Bool) {
         Component.setArray(key,boolField.checked, component.variables);
-        component.changeVariable(key);
+        component.changeVariable(key,true);
     }
 
 }

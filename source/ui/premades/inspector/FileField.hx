@@ -96,7 +96,7 @@ class FileField extends NodeField {
 
     public function onEnter(_) {
         Component.setArray(key, fileField.textField.text, component.variables);
-		component.changeVariable(key);
+		component.changeVariable(key,true);
     }
 
 }
