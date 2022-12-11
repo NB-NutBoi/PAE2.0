@@ -1,5 +1,6 @@
 package oop;
 
+import Discord.DiscordClient;
 import utility.Language.LanguageManager;
 import rendering.Skybox;
 import rendering.Text;
@@ -590,6 +591,7 @@ class Component extends FlxBasic {
         "Maps" => ["StringMap" => StringMap, "IntMap" => IntMap, "ObjectMap" => ObjectMap],
         "Rendering" => ["Sprite" => Sprite, "Text" => Text, "Skybox" => Skybox],
         "Language" => ["LanguageManager" => LanguageManager],
+        "Discord" => ["DiscordRPC" => #if windows DiscordClient #else HscriptMissingDiscord #end ],
     ];
 
     public function importPackage(pack:String) {

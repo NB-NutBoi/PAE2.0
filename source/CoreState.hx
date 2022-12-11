@@ -171,6 +171,10 @@ class CoreState extends FlxState {
         plugins.set(name,plugin);
     }
 
+    public static function DestroyCore() {
+        mainScript.destroy();
+    }
+
     //------------------------------------------------------------------------------------------------------------------------------
 
     public static final onSave:Event<String->Void> = new Event<String->Void>();

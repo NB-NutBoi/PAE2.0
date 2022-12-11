@@ -218,6 +218,7 @@ class BasicHscript extends FlxBasic implements HScriptable {
     public function AddVariables() {
 		//BASICS
         AddGeneral("trace", _trace);
+        AddGeneral("cast", HscriptCast.Cast);
 
 
         //GLOBALS
@@ -421,4 +422,34 @@ interface HScriptable {
     var parser:Parser;
 	var program:Expr;
 	var interpreter:Interp;
+
+    public function AddGeneral(name:String,toAdd:Dynamic):Void;
+    public function doFunction(func:String, ?args:Array<Dynamic>):Dynamic;
+    public function getFunction(func:String):Dynamic;
+
+}
+
+
+//does this work?
+class HscriptCast {
+	public static function Cast<T>(casted:Dynamic):T {
+		return cast casted;
+	}
+}
+
+class HscriptMissingDiscord {
+	public static function changePresence(state:Null<String>, details:String,  ?icon:String = 'icon', ?smallImageKey : String = '')
+	{
+		LogFile.error("Discord is not available for this game version!");
+	}
+
+	public static function initialize()
+	{
+		LogFile.error("Discord is not available for this game version!");
+	}
+
+	public static function shutdown()
+	{
+		LogFile.error("Discord is not available for this game version!");
+	}
 }

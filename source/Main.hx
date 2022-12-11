@@ -1,5 +1,6 @@
 package;
 
+import common.BasicHscript.HscriptCast;
 import Discord;
 import FlxGamePlus;
 import assets.AssetPaths;
@@ -321,6 +322,9 @@ class Main extends Sprite
 
 	public static function CloseGame() {
 		PreCloseGame();
+		
+		FlxG.state.destroy();
+		CoreState.DestroyCore();
 
 		trace("Closed game successfully.");
 		Application.current.window.close();

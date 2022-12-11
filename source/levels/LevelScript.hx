@@ -1,5 +1,6 @@
 package levels;
 
+import Discord.DiscordClient;
 import saving.SaveManager;
 import utility.LogFile;
 import common.BasicHscript;
@@ -39,6 +40,7 @@ class LevelScript extends BasicHscript {
         super.AddVariables();
 
         AddGeneral("Log",LogFile);
+        AddGeneral("DiscordRPC", #if windows DiscordClient #else HscriptMissingDiscord #end );
 
         //SAVEABLE VARS
 

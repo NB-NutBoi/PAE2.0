@@ -1,5 +1,6 @@
 package ui;
 
+import common.BasicHscript.HScriptable;
 import hscript.Expr;
 import hscript.Interp;
 import hscript.Parser;
@@ -7,7 +8,7 @@ import sys.io.File;
 import utility.LogFile;
 import utility.Utils;
 
-class DMenuScript {
+class DMenuScript implements HScriptable {
 
     public var owner:DMenu;
 
@@ -15,9 +16,9 @@ class DMenuScript {
     public var ready:Bool;
     public var compiling:Bool = false;
 
-    var parser:Parser;
-	var program:Expr;
-	var interpreter:Interp;
+    public var parser:Parser;
+	public var program:Expr;
+	public var interpreter:Interp;
     
     public function new(file:String, owner:DMenu) {
         if(owner == null) return;
