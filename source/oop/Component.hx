@@ -630,6 +630,8 @@ class Component extends FlxBasic {
 
         final spriteEditables = new DynamicAccess();
         spriteEditables.set("texture", "filepath");
+        spriteEditables.set("flipX", "bool");
+        spriteEditables.set("flipY", "bool");
         spriteEditables.set("tint", "color");
         spriteEditables.set("offsetX", "float");
         spriteEditables.set("offsetY", "float");
@@ -638,6 +640,8 @@ class Component extends FlxBasic {
 
         final spriteDefaults:Array<Array<Dynamic>> = [
             ["texture", "assets/images/Testbox1.asset"],
+            ["flipX", false],
+            ["flipY", false],
             ["tint", 0xFFFFFFFF],
             ["offsetX", 0],
             ["offsetY", 0],

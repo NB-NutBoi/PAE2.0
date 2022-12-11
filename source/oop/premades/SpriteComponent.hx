@@ -46,6 +46,9 @@ class SpriteComponent extends Component {
             setSize(w,h);
         }
 
+        sprite.flipX = instance.startingData.flipX;
+        sprite.flipY = instance.startingData.flipY;
+
         ready = true;
 
         generateFrontend();

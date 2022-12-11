@@ -17,6 +17,7 @@ class SpriteVisualizer extends ComponentVisualizer {
         changeVariable("texture");
         changeVariable("width");
         changeVariable("tint");
+        changeVariable("flipX");
     }
 
     override public function new(type:ComponentClass, parent:ObjectVisualizer) {
@@ -65,6 +66,9 @@ class SpriteVisualizer extends ComponentVisualizer {
                 updateSize();
             case "tint":
                 sprite.color = Component.getArray("tint", variables);
+            case "flipX", "flipY":
+                sprite.flipX = Component.getArray("flipX", variables);
+                sprite.flipY = Component.getArray("flipY", variables);
         }
     }
 

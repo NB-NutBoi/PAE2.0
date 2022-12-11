@@ -162,6 +162,20 @@ class Utils {
 				)
         ];
 
+		if(spr.flipX == true){
+			//flip X coords
+			final middle = frameData.width*0.5;
+        	final diff = rotatedPos[0]-middle;
+        	rotatedPos[0] = Math.round(middle-diff);
+		}
+
+		if(spr.flipY == true){
+			//flip y coords
+			final middle = frameData.height*0.5;
+        	final diff = rotatedPos[1]-middle;
+        	rotatedPos[1] = Math.round(middle-diff);
+		}
+
 		mousePos.x = ogX;
 		mousePos.y = ogY;
         mousePos.putWeak();
