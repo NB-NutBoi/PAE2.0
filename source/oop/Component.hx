@@ -600,6 +600,8 @@ class Component extends FlxBasic {
                 AddGeneral("importClassByName", importClassByName);
             case "Saves":
                 usingSavesPackage = true;
+            case "Main":
+                AddGeneral("MainScript", CoreState.mainScript);
             default:
                 if(!packages.exists(pack)) { LogFile.error("No Package exists with the name "+pack+" for import."); return;}
 

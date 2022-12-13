@@ -158,7 +158,7 @@ class Utils {
 				),
             /*y*/Math.round(useDivision ? 
 				(mousePos.y - (spr.y*spr.scrollFactor.y)) * (1 / spr.scale.y) :
-				(mousePos.y - (spr.y*spr.scrollFactor.y)) * (spr.offset.y*2)
+				(mousePos.y - (spr.y*spr.scrollFactor.y)) + (spr.offset.y*2) //this math is broken btw idk what i was smoking when i thought this up
 				)
         ];
 

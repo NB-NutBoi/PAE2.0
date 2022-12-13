@@ -140,6 +140,8 @@ class CoreState extends FlxState {
         for (plugin in plugins) {
             plugin.start();
         }
+
+        mainScript.gameStart();
     }
 
     public static function updateCore(elapsed:Float) {
@@ -168,6 +170,7 @@ class CoreState extends FlxState {
 
     static function loadPlugin(path:String, name:String) {
         final plugin = new CorePlugin(path,name);
+        plugin.AddGeneral("MainScript",mainScript);
         plugins.set(name,plugin);
     }
 

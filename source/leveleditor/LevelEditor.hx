@@ -1,5 +1,7 @@
 package leveleditor;
 
+import flixel.FlxState;
+import assets.AssetCache;
 import oop.Object.StaticSpriteDataStructure;
 import oop.StaticObject;
 import openfl.net.FileFilter;
@@ -119,6 +121,8 @@ class LevelEditor extends CoreState {
         super.create();
 
         instance = this;
+        
+        LogFile.log("\nOpened Level Editor\n\n",true);
 
         //map-icon
         Application.current.window.setIcon(Assets.getImage("embed/defaults/leveleditor/icon512.png"));
@@ -259,11 +263,10 @@ class LevelEditor extends CoreState {
     @:access(Main)
     override function destroy() {
 
+        instance = null;
+
         curEditedObject = null;
         tempCurEdited = null;
-
-        
-        instance = null;
 
         Keyboard.onUiKeyDown.remove(OnKeyDown);
 	    Keyboard.onUiKeyUp.remove(OnKeyUp);
@@ -271,17 +274,7 @@ class LevelEditor extends CoreState {
         axle.destroy();
         axle = null;
 
-        if(hierarchy.open) hierarchy.close();
-        hierarchy.destroy();
-        hierarchy = null;
-
-        if(properties.open) hierarchy.close();
-        inspector.destroy();
-        inspector = null;
-
-        if(properties.open) hierarchy.close();
-        properties.destroy();
-        properties = null;
+        cleanCams();
 
         Taskbar.destroy();
         Taskbar = null;
@@ -308,6 +301,29 @@ class LevelEditor extends CoreState {
         if(CoreState.watermark != null) CoreState.watermark.visible = true;
 
         super.destroy();
+    }
+
+    override function switchTo(nextState:FlxState):Bool {
+        cleanCams();
+        return super.switchTo(nextState);
+    }
+
+    var camsClean = false;
+    public function cleanCams() {
+        if(camsClean) return;
+        camsClean = true;
+
+        if(hierarchy.open) hierarchy.close();
+        hierarchy.destroy();
+        hierarchy = null;
+
+        if(inspector.open) inspector.close();
+        inspector.destroy();
+        inspector = null;
+
+        if(properties.open) properties.close();
+        properties.destroy();
+        properties = null;
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -575,6 +591,7 @@ class LevelEditor extends CoreState {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	static function set_curEditedObject(value:GenericObjectVisualizer):GenericObjectVisualizer {
+        if(instance == null) return curEditedObject = null;
         if(value != null) {
             LevelEditor.instance.axle.setPosition(value.transform.internalX, value.transform.internalY);
             LevelEditor.instance.axle.angle = value.transform.internalAngle;
@@ -688,10 +705,6 @@ class LevelEditor extends CoreState {
         if(!FileSystem.exists(to) || !to.endsWith(".asset")) return;
 
         if(curSkybox == null) curSkybox = new Skybox(0,0,null);
-        else {
-            curSkybox.destroy();
-            curSkybox = null;
-        }
 
         curSkybox.setAsset(ImageAsset.get(to));
 
@@ -892,6 +905,7 @@ class LevelEditor extends CoreState {
                 }
 
                 File.saveContent(FileBrowser.filePath, finalSaveData);
+                AssetCache.removeDataCache(FileBrowser.filePath);
         }
     }
 
