@@ -51,7 +51,7 @@ class DropdownList extends StackableObject implements ContainerObject {
 	override function update(elapsed:Float) {
 		super.update(elapsed);
 
-		if(requestClose) { extended = false; parent.exclusiveInputs = null; requestClose = false; }
+		if(requestClose) { parent.remove(list); extended = false; parent.exclusiveInputs = null; requestClose = false; list.isExtended = false; Container.dropdownActive = false;}
 
 		box.setPosition(x,y);
 		selected.setPosition(x+1,y);
@@ -62,19 +62,21 @@ class DropdownList extends StackableObject implements ContainerObject {
 		box.update(elapsed);
 		selected.update(elapsed);
 
-		if(extended) { list.update(elapsed); combinedHeight += list.combinedHeight; }
+		if(extended) {	combinedHeight += list.combinedHeight; }
 		else over = false;
 	}
 
 	public function updateInputs(elapsed:Float) {
 		if(ColorWheel.instance != null) return;
+		if(Container.contextActive) return;
+		if(Container.dropdownActive && parent.exclusiveInputs != this) return;
 		var localMousePos = FlxPoint.get(0,0);
 		localMousePos = Utils.getMousePosInCamera(parent == null ? camera : parent.cam, localMousePos, box);
 
 		if(!extended){
 			over = box.overlapsPoint(localMousePos);
 	
-			if(over && FlxG.mouse.justPressed) { list.parent = parent; extended = true; parent.exclusiveInputs = this; }
+			if(over && FlxG.mouse.justPressed) { parent.add(list); extended = true; parent.exclusiveInputs = this; list.isExtended = true; Container.dropdownActive = true; }
 		}
 		else{
 			if(!list.box.overlapsPoint(localMousePos) && !box.overlapsPoint(localMousePos)) requestClose = true;
@@ -86,8 +88,8 @@ class DropdownList extends StackableObject implements ContainerObject {
 	}
 
 	public function postUpdate(elapsed:Float) {
-		if(extended) list.postUpdate(elapsed);
-		else{
+		if(!extended) 
+		{
 			if(over){
 				Mouse.setAs(BUTTON);
 				box.color = HOVER;
@@ -103,7 +105,6 @@ class DropdownList extends StackableObject implements ContainerObject {
 
 		box.draw();
 		selected.draw();
-		if(extended) list.draw();
 	}
 
 	override function setScrollFactor(x:Float = 0, y:Float = 0) {
@@ -111,6 +112,12 @@ class DropdownList extends StackableObject implements ContainerObject {
 		box.scrollFactor.set(x,y);
 		selected.scrollFactor.set(x,y);
 		list.setScrollFactor(x,y);
+	}
+
+	override function setPosition(X:Float = 0, Y:Float = 0) {
+		box.x = X;
+		box.y = Y;
+		super.setPosition(X, Y);
 	}
 
 	//-------------------------------------------------------------------------------------------------------
@@ -132,5 +139,13 @@ class DropdownList extends StackableObject implements ContainerObject {
 	public function setChoices(choices:Array<String>) {
 		list.setChoices(choices);
 		selected.text = list.choices.members[list.selected].text;
+	}
+
+	public function setChoice(choice:String) {
+		selected.text = list.choices.members[list.setChoice(choice)].text;
+	}
+
+	public function choiceExists(s:String):Bool {
+		return list.choiceExists(s);
 	}
 }

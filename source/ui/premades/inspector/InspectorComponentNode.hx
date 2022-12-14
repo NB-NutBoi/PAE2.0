@@ -179,9 +179,17 @@ class InspectorComponentNode extends StackableObject implements ContainerObject 
 
 		if(type.startsWith("enumstring")){
 			//String but represented as a list of choices
-			//TODO
+			final caseType = component.component.editableVars.get(key);
 
-			return null;
+			var enums = caseType.substr("enumstring".length).split(",");
+			for (i in 0...enums.length) {
+				enums[i] = enums[i].replace("(","").replace(")","").trim();
+			}
+
+			var eF = new StringEnumField(key,enums,defaultValue,parent);
+			eF.component = component;
+
+			return eF;
 		}
 
 		return null;
@@ -194,7 +202,14 @@ class InspectorComponentNode extends StackableObject implements ContainerObject 
 	public static var icons:Map<String,FlxGraphic> = new Map();
 
 	public static function makeIconFor(component:ComponentClass) {
-		if(icons.exists(component.key)) return icons.get(component.key);
+		if(icons.exists(component.key)){
+			var g = icons.get(component.key);
+			if(g.bitmap.image == null){
+				g.bitmap = AssetCache.getImageCache(component.icon);
+			}
+
+			return g;
+		}
 		var g = FlxGraphic.fromBitmapData(AssetCache.getImageCache(component.icon),false,"EDITOR_ICON_"+component.key);
 		g.destroyOnNoUse = false;
 		icons.set(component.key,g);

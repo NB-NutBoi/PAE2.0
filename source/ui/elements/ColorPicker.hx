@@ -63,6 +63,7 @@ class ColorPicker extends StackableObject implements ContainerObject {
 
 	public function updateInputs(elapsed:Float) {
         if(extended) return;
+        if(Container.contextActive || Container.dropdownActive) return;
         var localMousePos = FlxPoint.get(0,0);
         localMousePos = Utils.getMousePosInCamera(parent == null ? camera : parent.cam, localMousePos, box);
 

@@ -63,7 +63,7 @@ class Button extends StackableObject implements ContainerObject{
 
     public function updateInputs(elapsed:Float) {
         if(disabled) return;
-        if(ColorWheel.instance != null) return;
+        if(ColorWheel.instance != null || Container.dropdownActive) return;
         var localMousePos = FlxPoint.get(0,0);
         localMousePos = Utils.getMousePosInCamera(parent == null ? camera : parent.cam, localMousePos, box);
 

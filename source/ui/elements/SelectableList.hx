@@ -30,6 +30,8 @@ class SelectableList extends StackableObject implements ContainerObject {
     public var over:Bool = false;
     var hovering:Int = 0;
 
+    public var isExtended:Bool = false;
+
     public var onSelect:Int->Void;
 
     override public function new(x:Float, y:Float, defaultChoices:Array<String>, width:Int) {
@@ -62,12 +64,15 @@ class SelectableList extends StackableObject implements ContainerObject {
         choices.update(elapsed);
 
         selectedBox.y = box.y + (21*selected);
+        selectedBox.x = box.x;
 
         over = false;
     }
 
 	public function updateInputs(elapsed:Float) {
         if(ColorWheel.instance != null) return;
+        if(Container.contextActive) return;
+        if(Container.dropdownActive && !isExtended) return;
         var localMousePos = FlxPoint.get(0,0);
         localMousePos = Utils.getMousePosInCamera(parent == null ? camera : parent.cam, localMousePos, box);
 
@@ -88,6 +93,7 @@ class SelectableList extends StackableObject implements ContainerObject {
         if(over){
             Mouse.setAs(BUTTON);
             selectorBox.y = box.y + (21*hovering);
+            selectorBox.x = box.x;
         }
     }
 
@@ -109,6 +115,19 @@ class SelectableList extends StackableObject implements ContainerObject {
             text.scrollFactor.set(x,y);
         }
     }
+
+    override function setPosition(X:Float = 0, Y:Float = 0) {
+		box.x = X;
+		box.y = Y;
+        selectedBox.y = box.y + (21*selected);
+        selectedBox.x = box.x;
+        selectorBox.y = box.y + (21*hovering);
+        selectorBox.x = box.x;
+        for (i in 0...choices.length) {
+            choices.members[i].setPosition(box.x+1, box.y + (21*i));
+        }
+		super.setPosition(X, Y);
+	}
 
     //-------------------------------------------------------------------------------------------------------
 
@@ -175,5 +194,33 @@ class SelectableList extends StackableObject implements ContainerObject {
         if(choices.members[i] == null) return "";
         return choices.members[i].text;
     }
+
+    public function setChoice(s:String):Int {
+        if(!choiceExists(s)) return selected;
+        var i = 0;
+        while (i < choices.members.length) {
+            if(choices.members[i] == null) { choices.remove(choices.members[i], true); i--; }
+            else if(choices.members[i].text == s){
+                selected = i;
+                break;
+            }
+            i++;
+        }
+
+        return i;
+    }
     
+    public function choiceExists(s:String):Bool {
+        var i = 0;
+        while (i < choices.members.length) {
+            if(choices.members[i] == null) { choices.remove(choices.members[i], true); i--; }
+            else if(choices.members[i].text == s){
+                return true;
+            }
+            i++;
+        }
+
+        return false;
+    }
+
 }

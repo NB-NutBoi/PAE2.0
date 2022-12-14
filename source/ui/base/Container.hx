@@ -19,6 +19,7 @@ import utility.Utils;
 class Container extends FlxBasic {
 
     public static var contextActive:Bool = false;
+    public static var dropdownActive:Bool = false;
 
     public var bg:FlxSprite;
     public var stuffs:FlxTypedGroup<FlxBasic>;

@@ -893,6 +893,8 @@ class LevelEditor extends CoreState {
             case SAVE:
                 LogFile.log("Saving current map...",true);
                 trace(FileBrowser.filePath);
+                var finalPath = FileBrowser.filePath;
+                if(!finalPath.endsWith(".map")) finalPath += ".map";
 
                 var finalSaveData = "SOMETHING WENT WRONG, PLEASE CHECK LOGS.";
 
@@ -904,8 +906,8 @@ class LevelEditor extends CoreState {
                     finalSaveData = "SOMETHING WENT WRONG, PLEASE CHECK LOGS.";
                 }
 
-                File.saveContent(FileBrowser.filePath, finalSaveData);
-                AssetCache.removeDataCache(FileBrowser.filePath);
+                File.saveContent(finalPath, finalSaveData);
+                AssetCache.removeDataCache(finalPath);
         }
     }
 
