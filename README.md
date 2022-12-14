@@ -35,6 +35,9 @@ Fully built in development tools
 **Q: Why 2.0? What happened to the older versions of the engine?**<br>
 **A:** The older versions of the engine didn't turn out how i wanted, so i scrapped them (i lost count of how many times i've recoded the engine)
 
+**Q: Where is the documentation?**<br>
+**A:** There is no documentation at the moment, i'll write some in the future but you have to know the insides of the engine fairly well to do anything right now.
+
 # Other resources
 
 [HOW TO BUILD](https://github.com/NB-NutBoi/PAE2.0/blob/main/_BuildAssets/BUILDGUIDE.md)
