@@ -15,6 +15,9 @@ This engine is based off the [flixel](https://github.com/HaxeFlixel/flixel) fram
 
 # FEATURES
 
+#### DISCLAIMER! This engine has a lot of issues and is constantly being develeoped, there is no stable release for now.
+
+
 Full game re-coding without recompiling
 - Although perhaps not the most performant, with the use of plugins, the main script, custom components, and the level editor, you can re-assmble the game to be completely different without the need to recompile the executable, sadly this means, by deafult, the engine has virtually nothing to offer from the ground up with just the barebones requirements, with most of the gameside source code being boilerplate and templates that need to be implemented sepparately via plugins
 
