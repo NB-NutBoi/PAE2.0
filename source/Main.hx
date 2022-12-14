@@ -39,7 +39,7 @@ class Main extends Sprite
 	public static final buildType:BuildType = #if debug INDEV; #else INDEV; #end
 	public static var instance:Main;						//modify the second one.
 
-	public static final defaultFunctions:Array<String> = ["OnAwake", "OnUpdate", "OnDraw", "OnDestroy", "OnStart", "OnUpdateInputs", "OnPostUpdate"];
+	public static final defaultFunctions:Array<String> = ["OnAwake", "OnUpdate", "OnDraw", "OnDestroy", "OnStart", "OnUpdateInputs", "OnPostUpdate", "OnLateUpdate"];
 	public static final GameVersion:String = "2.0";
 	public static var discordRPC_id:String = "897169048599666718";
 

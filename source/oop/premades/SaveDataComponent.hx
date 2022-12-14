@@ -60,10 +60,10 @@ class SaveDataComponent extends Component {
         componentFrontend.getVarBool = getVarBool;
         componentFrontend.getVarBoolUnsafe = getVarBoolUnsafe;
 
-        componentFrontend.initVarBool = initVarString;
-        componentFrontend.saveVarBool = saveVarString;
-        componentFrontend.getVarBool = getVarString;
-        componentFrontend.getVarBoolUnsafe = getVarStringUnsafe;
+        componentFrontend.initVarString = initVarString;
+        componentFrontend.saveVarString = saveVarString;
+        componentFrontend.getVarString = getVarString;
+        componentFrontend.getVarStringUnsafe = getVarStringUnsafe;
 
         //DANGEROUS!!! MAKE SURE YOU KNOW WHAT YOU'RE DOING!!!
         componentFrontend.initVarUnsafe = initVarUnsafe;

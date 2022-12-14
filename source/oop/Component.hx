@@ -1,5 +1,6 @@
 package oop;
 
+import saving.SaveManager;
 import Discord.DiscordClient;
 import utility.Language.LanguageManager;
 import rendering.Skybox;
@@ -289,6 +290,26 @@ class Component extends FlxBasic {
 
         //script workaround
         AddGeneral("__this",this);
+
+        //GLOBALS
+
+        //initializers
+        AddGeneral("initializeGlobalString",initializeGlobalString);
+        AddGeneral("initializeGlobalInt",initializeGlobalInt);
+        AddGeneral("initializeGlobalFloat",initializeGlobalFloat);
+        AddGeneral("initializeGlobalBool",initializeGlobalBool);
+
+        //getters
+        AddGeneral("getGlobalString",getGlobalString);
+        AddGeneral("getGlobalInt",getGlobalInt);
+        AddGeneral("getGlobalFloat",getGlobalFloat);
+        AddGeneral("getGlobalBool",getGlobalBool);
+
+        //setters
+        AddGeneral("setGlobalBool",setGlobalBool);
+        AddGeneral("setGlobalFloat",setGlobalFloat);
+        AddGeneral("setGlobalInt",setGlobalInt);
+        AddGeneral("setGlobalString",setGlobalString);
     }
 
 	public function AddGeneral(name:String,toAdd:Dynamic)
@@ -305,6 +326,110 @@ class Component extends FlxBasic {
         trace(interpreter.locals);
         trace(interpreter.declared);
         trace(interpreter.variables);
+    }
+
+    //------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    //------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    //------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+    public function initializeGlobalString(name:String, value:String):Null<String> {
+        var s = SaveManager.curSaveData.globals.scriptSaveables.get(name);
+        if(s == null){
+            SaveManager.curSaveData.globals.scriptSaveables.set(name,value);
+        }
+
+        return SaveManager.curSaveData.globals.scriptSaveables.get(name);
+    }
+
+    public function initializeGlobalInt(name:String, value:Int):Null<Int> {
+        var i = SaveManager.curSaveData.globals.scriptSaveables.get(name);
+        if(i == null){
+            SaveManager.curSaveData.globals.scriptSaveables.set(name,value);
+        }
+
+        return SaveManager.curSaveData.globals.scriptSaveables.get(name);
+    }
+
+    public function initializeGlobalFloat(name:String, value:Float):Null<Float> {
+        var f = SaveManager.curSaveData.globals.scriptSaveables.get(name);
+        if(f == null){
+            SaveManager.curSaveData.globals.scriptSaveables.set(name,value);
+        }
+
+        return SaveManager.curSaveData.globals.scriptSaveables.get(name);
+    }
+
+    public function initializeGlobalBool(name:String, value:Bool):Null<Bool> {
+        var b = SaveManager.curSaveData.globals.scriptSaveables.get(name);
+        if(b == null){
+            SaveManager.curSaveData.globals.scriptSaveables.set(name,value);
+        }
+
+        return SaveManager.curSaveData.globals.scriptSaveables.get(name);
+    }
+
+    public function getGlobalString(name:String):Null<String> {
+        var s = SaveManager.curSaveData.globals.scriptSaveables.get(name);
+        if(s != null){
+            if(Std.isOfType(s,String)){
+                return s;
+            }
+        }
+
+        LogFile.error("Global STRING "+name+" Doesn't exist or is not a STRING type!");
+        return null;
+    }
+
+    public function getGlobalInt(name:String):Null<Int> {
+        var i = SaveManager.curSaveData.globals.scriptSaveables.get(name);
+        if(i != null){
+            if(Std.isOfType(i,Int)){
+                return i;
+            }
+        }
+
+        LogFile.error("Global INT "+name+" Doesn't exist or is not an INT type!");
+        return null;
+    }
+
+    public function getGlobalFloat(name:String):Null<Float> {
+        var f = SaveManager.curSaveData.globals.scriptSaveables.get(name);
+        if(f != null){
+            if(Std.isOfType(f,Float)){
+                return f;
+            }
+        }
+
+        LogFile.error("Global FLOAT "+name+" Doesn't exist or is not a FLOAT type!");
+        return null;
+    }
+
+    public function getGlobalBool(name:String):Null<Bool> {
+        var b = SaveManager.curSaveData.globals.scriptSaveables.get(name);
+        if(b != null){
+            if(Std.isOfType(b,Bool)){
+                return b;
+            }
+        }
+
+        LogFile.error("Global BOOL "+name+" Doesn't exist or is not a BOOL type!");
+        return null;
+    }
+
+    public function setGlobalBool(name:String,b:Bool):Null<Bool> {
+        return SaveManager.curSaveData.globals.scriptSaveables.set(name,b);
+    }
+
+    public function setGlobalFloat(name:String,f:Float):Null<Float> {
+        return SaveManager.curSaveData.globals.scriptSaveables.set(name,f);
+    }
+
+    public function setGlobalInt(name:String,i:Int):Null<Int> {
+        return SaveManager.curSaveData.globals.scriptSaveables.set(name,i);
+    }
+
+    public function setGlobalString(name:String,s:String):Null<String> {
+        return SaveManager.curSaveData.globals.scriptSaveables.set(name,s);
     }
 
     //------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -470,6 +595,12 @@ class Component extends FlxBasic {
 
         //do update idk
         doFunction("OnUpdate", [elapsed]);
+    }
+
+    public function lateUpdate(elapsed:Float) {
+        if(!exists || !ready) return;
+
+        doFunction("OnLateUpdate", [elapsed]);
     }
 
     override function draw() {

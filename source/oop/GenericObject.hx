@@ -108,6 +108,12 @@ class GenericObject extends FlxBasic {
         }
     }
 
+    public function lateUpdate(elapsed:Float) {
+        for (object in children) {
+            object.lateUpdate(elapsed);
+        }
+    }
+
     //gonna have to abstract it a lil
     override public function draw() {
         super.draw();

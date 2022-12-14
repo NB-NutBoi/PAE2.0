@@ -96,6 +96,13 @@ class Object extends GenericObject {
         componets.update(elapsed);
     }
 
+    override function lateUpdate(elapsed:Float) {
+        for (component in componets) {
+            component.lateUpdate(elapsed);
+        }
+        super.lateUpdate(elapsed);
+    }
+
     override function drawObject() {
         componets.draw();
     }

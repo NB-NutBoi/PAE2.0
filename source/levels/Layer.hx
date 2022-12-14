@@ -46,6 +46,12 @@ class Layer extends FlxTypedGroup<FlxBasic> {
         rails.update(elapsed);
     }
 
+    public function lateUpdate(elapsed:Float) {
+        for (basic in members) {
+            if(Std.isOfType(basic, GenericObject)) cast(basic, GenericObject).lateUpdate(elapsed);
+        }
+    }
+
     override function draw() {
         if(!enabled) return;
         super.draw();

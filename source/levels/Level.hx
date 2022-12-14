@@ -314,6 +314,9 @@ class Level {
 
         if(curSkybox != null) curSkybox.update(elapsed);
         layers.update(elapsed);
+        for (layer in layers) {
+            layer.lateUpdate(elapsed);
+        }
 
         if(script != null){
             script.update(elapsed);
@@ -339,7 +342,7 @@ class Level {
     //-------------------------------------------------------------------------------------------------------------
 
     public function onSave() {
-        script.save();
+        if(script != null) script.save();
 
         SaveManager.curSaveData.mapSaveables.set(this.path,saveables);
     }
