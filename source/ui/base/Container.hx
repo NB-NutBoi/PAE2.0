@@ -199,6 +199,7 @@ class Container extends FlxBasic {
     }
 
     override function destroy() {
+        if(open) close();
         super.destroy();
 		bg.destroy();
 		stuffs.destroy();

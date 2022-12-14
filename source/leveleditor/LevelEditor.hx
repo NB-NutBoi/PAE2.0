@@ -1,5 +1,6 @@
 package leveleditor;
 
+import flixel.util.FlxDestroyUtil;
 import flixel.FlxState;
 import assets.AssetCache;
 import oop.Object.StaticSpriteDataStructure;
@@ -86,6 +87,7 @@ class LevelEditor extends CoreState {
     public var Taskbar:FlxSprite;
     public var TaskbarFps:FlxText;
     var doFps:Bool = false;
+    var fpsVis:Bool = false;
 
     public var TaskbarGroup:FlxTypedGroup<FlxObject>;
 
@@ -137,6 +139,7 @@ class LevelEditor extends CoreState {
         //------------------------------------
 
         if(!Main.instance.nofps){
+            fpsVis = Main.fps.visible;
             Main.fps.visible = false;
             doFps = true;
         }
@@ -300,6 +303,10 @@ class LevelEditor extends CoreState {
 
         if(CoreState.watermark != null) CoreState.watermark.visible = true;
 
+        if(doFps){
+            Main.fps.visible = fpsVis;
+        }
+
         super.destroy();
     }
 
@@ -313,17 +320,9 @@ class LevelEditor extends CoreState {
         if(camsClean) return;
         camsClean = true;
 
-        if(hierarchy.open) hierarchy.close();
-        hierarchy.destroy();
-        hierarchy = null;
-
-        if(inspector.open) inspector.close();
-        inspector.destroy();
-        inspector = null;
-
-        if(properties.open) properties.close();
-        properties.destroy();
-        properties = null;
+        hierarchy = FlxDestroyUtil.destroy(hierarchy);
+        inspector = FlxDestroyUtil.destroy(inspector);
+        properties = FlxDestroyUtil.destroy(properties);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -435,10 +435,16 @@ class UIPlugin extends FlxBasic {
 
         for (container in containers) {
             FlxG.cameras.remove(container.cam,false);
+            if(container.cam == null) continue; //prevent crash
             addingCams = true;
             FlxG.cameras.add(container.cam,false);
             addingCams = false;
         }       //keep cams on front at all times if a non-ui cam is added.
+
+        var i = containers.length;
+        while (i-- > 0) { //remove containers with null cams
+            if(containers.members[i].cam == null) { containers.remove(containers.members[i],true); i++; }
+        }
 
         //its the overlay, duh.
         addingCams = true;
