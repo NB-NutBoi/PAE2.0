@@ -65,7 +65,7 @@ class BasicHscript extends FlxBasic implements HScriptable {
         //Parse and compile
 		try
         {
-            program = parser.parseString(preprocessString(fullScript));
+            program = parser.parseString(fullScript = preprocessString(fullScript));
             interpreter.execute(program);
 
             ready = true;
@@ -74,8 +74,10 @@ class BasicHscript extends FlxBasic implements HScriptable {
         {
             // All exceptions will be caught here
             LogFile.error("Script error! |[ " + e.message + " ]| :" + parser.line+"\n",true);
+            LogFile.log("Script:\n"+fullScript,true);
         }
 
+        fullScript = null;
         dynamicImports = null;
     }
     
@@ -88,16 +90,27 @@ class BasicHscript extends FlxBasic implements HScriptable {
         var finalString:String = script;
 		var lines = script.split("\n");
 
-        for (i in 0...lines.length) {
+        var cut = 0;
+
+        var i = 0;
+        while (i < lines.length) {
             var line = lines[i].trim();
+            final pos = i;
+            i++;
 
             //optimization
+            if(cut > 0) {
+                cut--;
+                if(line.length == 0 || line == "") continue;
+                finalString = finalString.replace(lines[pos]+"\n", "");
+                continue; 
+            }
             if(line.length == 0 || line == "") continue;
 			if(line.startsWith("//")) continue;
 
             //early stop (optimization)
 			if(line.startsWith("#FLAG_STOP_PREPROCESS")){
-				finalString = finalString.replace(lines[i],"");
+				finalString = finalString.replace(lines[pos]+"\n","");
 
 				break;
 			}
@@ -108,7 +121,7 @@ class BasicHscript extends FlxBasic implements HScriptable {
 				
 
 				if (dynamicImports.contains(imp)){
-                    finalString = finalString.replace(lines[i],"");
+                    finalString = finalString.replace(lines[pos]+"\n","");
                     continue;
                 }
 					
@@ -116,11 +129,11 @@ class BasicHscript extends FlxBasic implements HScriptable {
 				dynamicImports.push(imp);
 
 				if (!FileSystem.exists(imp) || !imp.endsWith(".hx")){
-                    finalString = finalString.replace(lines[i],"");
+                    finalString = finalString.replace(lines[pos]+"\n","");
                     continue;
                 }
 					
-                finalString = finalString.replace(lines[i],preprocessString(File.getContent(imp).toString(),false));
+                finalString = finalString.replace(lines[pos],preprocessString(File.getContent(imp).toString(),false));
 				continue;
             }
 
@@ -129,7 +142,7 @@ class BasicHscript extends FlxBasic implements HScriptable {
 				var dNd = getDefineAndDefined(line);
 
                 // remove to avoid crash
-				finalString = finalString.replace(lines[i], "");
+				finalString = finalString.replace(lines[pos]+"\n", "");
 
                 if(dNd.length != 2) continue;
 
@@ -142,10 +155,10 @@ class BasicHscript extends FlxBasic implements HScriptable {
 			}
 
             //defines properties
-            if (line.startsWith("#property")){
+            if(line.startsWith("#property")){
 
                 // remove to avoid crash
-				finalString = finalString.replace(lines[i], "");
+				finalString = finalString.replace(lines[pos]+"\n", "");
 
                 if(!og) continue;
 
@@ -156,6 +169,34 @@ class BasicHscript extends FlxBasic implements HScriptable {
 				properties.set(property,value);
 
 				continue;
+            }
+
+            //skips the compiler to a set line
+            if(line.startsWith("#goto")){
+
+                // remove to avoid crash
+				finalString = finalString.replace(lines[pos]+"\n", "");
+
+                final values = line.split(" ");
+                var line:Int = Std.parseInt(values[1])-1;
+
+                i = line;
+                continue;
+            }
+
+            //removes all content from line called to line declared
+            if(line.startsWith("#cutto")){
+
+                // remove to avoid crash
+				finalString = finalString.replace(lines[pos]+"\n", "");
+
+                final values = line.split(" ");
+                var line:Int = Std.parseInt(values[1])-1;
+
+                if(line <= pos) continue;
+
+                cut = (line) - (pos)-1;
+                continue;
             }
         }
 
@@ -207,7 +248,7 @@ class BasicHscript extends FlxBasic implements HScriptable {
 		else{
             //make sure the console isn't getting flooded because timmy forgot to add the OnUpdate function to his code, all of these are potentially unneeded.
             if(!Utils.matchesAny(func, Main.defaultFunctions))
-                Console.logWarning("tried calling non-existing function "+ func+" of dmenu script!");
+                Console.logWarning("WARNING: tried calling non-existing function "+ func+" of script!");
 		}
 
 		return null;
