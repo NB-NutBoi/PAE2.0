@@ -29,7 +29,7 @@ class SaveDataComponent extends Component {
 
         componentType = "SaveData";
 
-        key = instance.startingData.uniqueKey;
+        key = owner.name+"."+instance.startingData.uniqueKey;
 
         ready = true;
 

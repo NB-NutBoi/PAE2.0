@@ -1,5 +1,6 @@
 package leveleditor;
 
+import utility.NameUtils;
 import flixel.util.FlxDestroyUtil;
 import flixel.FlxState;
 import assets.AssetCache;
@@ -619,7 +620,7 @@ class LevelEditor extends CoreState {
     public function createBlankObject(?parent:GenericObjectVisualizer) { //creates a dynamic object, for other types, make/use a designated function.
         var o = new ObjectVisualizer();
 
-        o.name = "unnamed "+FlxG.random.int(0,20); //TODO this is temporary.
+        o.name = makeUnnamedNew();
 
         if(parent == null){
             o.transform.x = FlxG.width*0.5 + FlxG.camera.scroll.x;
@@ -636,7 +637,7 @@ class LevelEditor extends CoreState {
     public function createStaticObject(?parent:GenericObjectVisualizer) {
         var o = new StaticObjectVisualizer();
 
-        o.name = "unnamed "+FlxG.random.int(0,20); //TODO this is temporary.
+        o.name = makeUnnamedNew();
 
         if(parent == null){
             o.transform.x = FlxG.width*0.5 + FlxG.camera.scroll.x;
@@ -674,7 +675,7 @@ class LevelEditor extends CoreState {
         o.transform.internalY = parent == null ? o.transform.y : o.transform.y+parent.transform.internalY;
         o.transform.angle = obj.transform.angle;
 
-        o.name = obj.name; //TODO add name engine
+        o.name = getLowestValidName(obj.name);
 
         obj.duplicate(o);
 
@@ -718,22 +719,69 @@ class LevelEditor extends CoreState {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    //names
+    //name engine
 
     public function checkNameValid(name:String):Bool {
-        return false;
+        return !getObjectExists(name);
     }
 
     public function makeUnnamedNew():String {
-        return "";
+        if(checkNameValid("unnamed")) return "unnamed";
+        return getLowestValidName("unnamed");
     }
 
     public function getLowestValidName(name:String):String {
-        return "";
+        name = NameUtils.removeFormattedNumber(name);
+        var samenamelist:Array<String> = [];
+
+        for (layer in layers) {
+            for (generic in layer) {
+                samenamelist = samenamelist.concat(recursiveNames(name, generic));
+            }
+        }
+
+        trace(samenamelist);
+
+        var highestNumber:Int = 0;
+
+        for (equalname in samenamelist) {
+            if(NameUtils.endsInFormattedNumerics(equalname)){
+                var n = NameUtils.getNumber(equalname);
+
+                if(n > highestNumber)
+                    highestNumber = n;
+            }
+        }
+
+        samenamelist = null;
+        return (name+"_"+(highestNumber+1));
     }
 
-    public function getObjectByName(name:String):ObjectVisualizer {
-        return null;
+    public function recursiveNames(ogName:String, generic:GenericObjectVisualizer):Array<String> {
+        var samenamelist:Array<String> = [];
+        if(NameUtils.removeFormattedNumber(generic.name) == ogName){
+            samenamelist.push(generic.name);
+        }
+
+        for (object in generic.children) {
+            samenamelist = samenamelist.concat(recursiveNames(ogName, object));
+        }
+
+        return samenamelist;
+    }
+
+    public function getObjectExists(name:String):Bool {
+        var samenamelist:Array<String> = [];
+        for (layer in layers) {
+            for (generic in layer) {
+                samenamelist = samenamelist.concat(recursiveNames(name, generic));
+            }
+        }
+
+        if(samenamelist.contains(name)) return true;
+
+        samenamelist = null;
+        return false;
     }
 
     //technically not nameEngine but still a name

@@ -176,6 +176,15 @@ class Inspector extends Container {
     }
 
     public function setName(_) {
+        LevelEditor.curEditedObject.name = _; //temp for checks
+        
+        if(LevelEditor.instance.checkNameValid(_)){
+            _ = LevelEditor.instance.getLowestValidName(_);
+            name.textField.text = _;
+            name.caret = name.textField.text.length;
+            name.onUpdateText();
+        }
+
         LevelEditor.curEditedObject.name = _;
     }
 

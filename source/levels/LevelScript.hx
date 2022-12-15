@@ -62,6 +62,13 @@ class LevelScript extends BasicHscript {
         AddGeneral("setLocalInt",setLocalInt);
         AddGeneral("setLocalString",setLocalString);
 
+        //standard functions
+
+        AddGeneral("getObjectByName",level.getObjectByName);
+        AddGeneral("getObjectInLayerByName",level.getObjectInLayerByName);
+        AddGeneral("getRailByName",level.getRailByName);
+        AddGeneral("getRailInLayerByName",level.getRailInLayerByName);
+
         for (pack in levelImports) {
             for (imp in pack) {
                 AddGeneral(imp.name,imp.value);

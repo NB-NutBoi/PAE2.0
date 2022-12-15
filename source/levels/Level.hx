@@ -420,4 +420,14 @@ class Level {
         LogFile.log("No rail exists in scene layer "+layer+" with the name "+name);
         return null;
     }
+
+    //-------------------------------------------------------------------------------------------------------------
+    //------------------------------------------------LEVEL_SCRIPT-------------------------------------------------
+    //-------------------------------------------------------------------------------------------------------------
+
+    public function doLevelCallback(name:String, ?args:Array<Dynamic> = null) {
+        if(script == null) return;
+
+        script.doFunction(name,args);
+    }
 }

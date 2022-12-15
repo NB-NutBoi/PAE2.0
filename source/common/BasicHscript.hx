@@ -1,5 +1,6 @@
 package common;
 
+import Discord.DiscordClient;
 import saving.SaveManager;
 import sys.io.File;
 import sys.FileSystem;
@@ -44,6 +45,7 @@ class BasicHscript extends FlxBasic implements HScriptable {
         parser.preprocesorValues.set("telemetry", #if telemetry true #else false #end);
         parser.preprocesorValues.set("linux", #if linux true #else false #end);
         parser.preprocesorValues.set("debug", Main.DEBUG);
+        parser.preprocesorValues.set("discord", #if windows DiscordClient.active #else false #end);
 
 		interpreter = new hscript.Interp();
 

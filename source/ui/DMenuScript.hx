@@ -1,5 +1,6 @@
 package ui;
 
+import Discord.DiscordClient;
 import common.BasicHscript.HScriptable;
 import hscript.Expr;
 import hscript.Interp;
@@ -37,6 +38,7 @@ class DMenuScript implements HScriptable {
         parser.preprocesorValues.set("desktop", #if desktop true #else false #end);
         parser.preprocesorValues.set("telemetry", #if telemetry true #else false #end);
         parser.preprocesorValues.set("linux", #if linux true #else false #end);
+        parser.preprocesorValues.set("discord", #if windows DiscordClient.active #else false #end);
 
 		interpreter = new hscript.Interp();
 
