@@ -1,5 +1,7 @@
 package utility;
 
+import openfl.net.FileFilter;
+import lowlevel.FileBrowser;
 import leveleditor.LevelEditor;
 import flixel.FlxG;
 import saving.SaveManager;
@@ -103,8 +105,12 @@ class ConsoleCommands {
 
     static function openWindow(args:Array<String>) {
         if(args[0] == null){
-            Console.log(("No window argument given!").toFunctionReply(), Console.FUNCTION_REPLY_ERROR);
+            Console.log(("No dmenu argument given!").toFunctionReply(), Console.FUNCTION_REPLY_ERROR);
             return;
+        }
+
+        switch (args[0].toLowerCase()){//special cases
+            case "level": loadLevel(); return; //no level dmenu can exist
         }
 
 
@@ -147,6 +153,18 @@ class ConsoleCommands {
         }
 
         return null;
+    }
+
+    static function loadLevel() {
+        FileBrowser.callback = loadLevelSelect;
+        FileBrowser.browse([new FileFilter("Map files", "*.map")], false);
+    }
+
+    static function loadLevelSelect() {
+        switch (FileBrowser.latestResult){
+            case SAVE, CANCEL, ERROR: return;
+            case SELECT: if(MainState.instance != null) MainState.instance.level.loadLevel(FileBrowser.filePath); 
+        }
     }
 
     static function closeGame(args:Array<String>) {

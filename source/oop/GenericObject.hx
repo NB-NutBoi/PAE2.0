@@ -1,5 +1,6 @@
 package oop;
 
+import levels.Level;
 import utility.LogFile;
 import flixel.FlxCamera;
 import common.ClientPreferences;
@@ -9,6 +10,8 @@ import flixel.FlxBasic;
 
 //Base class for all types of objects.
 class GenericObject extends FlxBasic {
+
+    public var level:Null<Level> = null;
     
     public var name:String;
     public var transform:Transform;
@@ -27,14 +30,14 @@ class GenericObject extends FlxBasic {
 
     //-----------------------------------------------------------------
 
-    public static function fromJson(json:Dynamic):GenericObject {
+    public static function fromJson(json:Dynamic, level:Level):GenericObject {
         switch (json._TYPE){
             case "FULL":
                 //full object
-                return Object.fromJson(json);
+                return Object.fromJson(json, level);
             case "STATIC_SPRITE":
                 //static sprite object
-                return StaticObject.fromJson(json);
+                return StaticObject.fromJson(json, level);
             default:
                 LogFile.error("Unidentified object type found!, RETURNING NULL!");
         }
@@ -55,6 +58,7 @@ class GenericObject extends FlxBasic {
     }
 
     override public function destroy() {
+        level = null;
         if(parent != null){
             parent.removeChild(this);
         }

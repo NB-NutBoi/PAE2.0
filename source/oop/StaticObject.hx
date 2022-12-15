@@ -63,8 +63,9 @@ class StaticObject extends GenericObject {
     public var sprite:FlxSprite;
     public var index:Int = 0;
 
-    public static function fromJson(json:StaticSpriteDataStructure) {
+    public static function fromJson(json:StaticSpriteDataStructure, level:Level) {
         var so = new StaticObject(json.transform.X,json.transform.Y);
+        so.level = level;
         so.transform.z = json.transform.Z;
 
         so.transform.angle = json.transform.A;
@@ -78,7 +79,7 @@ class StaticObject extends GenericObject {
         so.active = json.active;
 
         for (cInstance in json.children) {
-            final child = GenericObject.fromJson(cInstance);
+            final child = GenericObject.fromJson(cInstance, level);
             so.addChild(child);
         }
 
@@ -100,7 +101,7 @@ class StaticObject extends GenericObject {
     }
 
     public function setSprite(idx:Int) {
-        sprite.loadGraphic(getAsset(MainState.instance.level.bitmaps[idx])); //no better way ig
+        sprite.loadGraphic(getAsset(level.bitmaps[idx]));
         index = idx;
     }
 

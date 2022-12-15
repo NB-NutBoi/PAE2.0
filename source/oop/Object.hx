@@ -1,6 +1,7 @@
 package oop;
 
 //don't bother on FlxObject, it's got too much functionality, i can write most of what i need myself, specialized for this.
+import levels.Level;
 import JsonDefinitions;
 import oop.Component.ComponentInstance;
 import common.ClientPreferences;
@@ -53,8 +54,9 @@ class Object extends GenericObject {
     //logic stuff
     public var componets:FlxTypedGroup<Component>;
 
-    public static function fromJson(instance:FullObjectDataStructure):Object {
+    public static function fromJson(instance:FullObjectDataStructure, level:Level):Object {
         final object = new Object(instance.transform.X, instance.transform.Y);
+        object.level = level;
         object.transform.z = instance.transform.Z;
 
         object.name = instance.name;
@@ -72,7 +74,7 @@ class Object extends GenericObject {
         }
 
         for (childInst in instance.children) {
-            final child = GenericObject.fromJson(childInst);
+            final child = GenericObject.fromJson(childInst, level);
             object.addChild(child);
         }
 

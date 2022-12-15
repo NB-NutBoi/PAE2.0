@@ -226,7 +226,7 @@ class Level {
 
             //make the new objects
             for (layer in levelFile.layers) {
-                layers.add(Layer.load(layer));
+                layers.add(Layer.load(layer,this));
             }
 
             if(levelFile.skybox != "" && levelFile.skybox != null){

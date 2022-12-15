@@ -97,15 +97,9 @@ class SaveDataComponent extends Component {
 
     //overrides
 
-    override function update(elapsed:Float) {
-        if(!exists || !ready) return;
+    override function update(elapsed:Float) {}
 
-        
-    }
-
-    override function draw() {
-        
-    }
+    override function draw() {}
 
     override function destroy() {
         if(!exists) return;
@@ -138,10 +132,10 @@ class SaveDataComponent extends Component {
         //maybe find a better way to do this?
         //otherwise just refactor this.
 
-        if(!MainState.instance.level.saveables.saveDataComponents.exists(key))
-            MainState.instance.level.saveables.saveDataComponents.set(key, new DynamicAccess());
+        if(!owner.level.saveables.saveDataComponents.exists(key))
+            owner.level.saveables.saveDataComponents.set(key, new DynamicAccess());
 
-        return MainState.instance.level.saveables.saveDataComponents.get(key);
+        return owner.level.saveables.saveDataComponents.get(key);
     }
 
     //INT

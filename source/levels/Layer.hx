@@ -16,11 +16,11 @@ class Layer extends FlxTypedGroup<FlxBasic> {
 
     public var rails:FlxTypedGroup<Rail>;
     
-    public static function load(json:LayerStructure):Layer {
+    public static function load(json:LayerStructure, level:Level):Layer {
         final layer:Layer = new Layer();
 
         for (objInst in json.objects) {
-            final result = GenericObject.fromJson(objInst);
+            final result = GenericObject.fromJson(objInst, level);
             if(result == null) continue;
             layer.add(result);
         }
