@@ -41,8 +41,21 @@ class SaveDataComponent extends Component {
 
         componentFrontend = {};
 
-        //i think its more efficient to add them like this for premades?
+        componentFrontend.camera = camera;
+        componentFrontend.cameras = cameras;
+
+        //owner
         componentFrontend.transform = owner.transform;
+        componentFrontend.getComponent = owner.getComponent;
+
+        //children
+        componentFrontend.getNumberOfChildren = owner.getNumberOfChildren;
+        componentFrontend.getChildAt = owner.getChildAt;
+
+        componentFrontend.Level = owner.level;
+
+        //key
+        componentFrontend.setKey = setKey;
 
         //variables
         componentFrontend.initVarInt = initVarInt;
@@ -127,6 +140,10 @@ class SaveDataComponent extends Component {
     //------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
     //api for interacting with this through the frontend
+
+    function setKey(to:String) {
+        key = owner.name+"."+to;
+    }
 
     function getSaveData() {
         //maybe find a better way to do this?

@@ -740,8 +740,6 @@ class LevelEditor extends CoreState {
             }
         }
 
-        trace(samenamelist);
-
         var highestNumber:Int = 0;
 
         for (equalname in samenamelist) {

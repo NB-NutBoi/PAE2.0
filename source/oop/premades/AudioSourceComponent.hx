@@ -68,8 +68,20 @@ class AudioSourceComponent extends Component {
 
         componentFrontend = {};
 
-        //i think its more efficient to add them like this for premades?
+        componentFrontend.camera = camera;
+        componentFrontend.cameras = cameras;
+
+        //owner
         componentFrontend.transform = owner.transform;
+        componentFrontend.getComponent = owner.getComponent;
+
+        //children
+        componentFrontend.getNumberOfChildren = owner.getNumberOfChildren;
+        componentFrontend.getChildAt = owner.getChildAt;
+
+        componentFrontend.Level = owner.level;
+
+        
         componentFrontend.setOffset = setOffset;
         componentFrontend.setImportant = setImportant;
 
