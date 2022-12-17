@@ -152,9 +152,7 @@ class Object extends GenericObject {
 
     public function getComponent(type:String):Dynamic {
         for (component in componets.members) {
-            if(component.componentType == type){
-                return component.componentFrontend;
-            }
+            if(component.componentType == type) return component.componentFrontend;
         }
         
         return null;
@@ -162,12 +160,18 @@ class Object extends GenericObject {
 
     public function getComponentBackend(type:String):Component {
         for (component in componets.members) {
-            if(component.componentType == type){
-                return component;
-            }
+            if(component.componentType == type) return component;
         }
         
         return null;
+    }
+
+    public function hasComponent(type:String):Bool {
+        for (component in componets.members) {
+            if(component.componentType == type) return true;
+        }
+        
+        return false;
     }
 
     //------------------------------------------------------------------------------------------------------------------------------------------------------

@@ -1,5 +1,6 @@
 package oop.premades;
 
+import common.HscriptTimer;
 import haxe.DynamicAccess;
 import oop.Component;
 import assets.ImageAsset;
@@ -107,6 +108,8 @@ class SaveDataComponent extends Component {
     override function getScriptVar(name:String):Dynamic { return null; }
     override function setScriptVar(name:String, to:Dynamic) {}
     override function importClassByName(name:String) {}
+    override function getTimers() { return null; }
+    override function loadTimers(from:Array<HscriptTimerSave>) {}
 
     //overrides
 
@@ -141,7 +144,7 @@ class SaveDataComponent extends Component {
 
     //api for interacting with this through the frontend
 
-    function setKey(to:String) {
+    public function setKey(to:String) {
         key = owner.name+"."+to;
     }
 
@@ -156,88 +159,88 @@ class SaveDataComponent extends Component {
     }
 
     //INT
-    function initVarInt(name:String, defaultValue:Int) {
+    public function initVarInt(name:String, defaultValue:Int) {
         final data = getSaveData();
         if(!data.exists(name)) data.set(name, defaultValue);
     }
 
-    function saveVarInt(name:String, value:Int) {
+    public function saveVarInt(name:String, value:Int) {
         getSaveData().set(name,value);
     }
 
-    function getVarInt(name:String):Int {
+    public function getVarInt(name:String):Int {
         final value = getSaveData().get(name);
         if(value == null) return 0;
         if(!Std.isOfType(value, Int)) return 0;
         return value;
     }
 
-    function getVarIntUnsafe(name:String):Int {
+    public function getVarIntUnsafe(name:String):Int {
         return cast getSaveData().get(name);
     }
 
     //-------------------------------------------------------------------------
 
     //FLOAT
-    function initVarFloat(name:String, defaultValue:Float) {
+    public function initVarFloat(name:String, defaultValue:Float) {
         final data = getSaveData();
         if(!data.exists(name)) data.set(name, defaultValue);
     }
 
-    function saveVarFloat(name:String, value:Float) {
+    public function saveVarFloat(name:String, value:Float) {
         getSaveData().set(name,value);
     }
 
-    function getVarFloat(name:String):Float {
+    public function getVarFloat(name:String):Float {
         final value = getSaveData().get(name);
         if(value == null) return 0;
         if(!Std.isOfType(value, Float)) return 0;
         return value;
     }
 
-    function getVarFloatUnsafe(name:String):Float {
+    public function getVarFloatUnsafe(name:String):Float {
         return cast getSaveData().get(name);
     }
 
     //-------------------------------------------------------------------------
 
     //BOOL
-    function initVarBool(name:String, defaultValue:Bool) {
+    public function initVarBool(name:String, defaultValue:Bool) {
         final data = getSaveData();
         if(!data.exists(name)) data.set(name, defaultValue);
     }
 
-    function saveVarBool(name:String, value:Bool) {
+    public function saveVarBool(name:String, value:Bool) {
         getSaveData().set(name,value);
     }
 
-    function getVarBool(name:String):Bool {
+    public function getVarBool(name:String):Bool {
         final value = getSaveData().get(name);
         if(value == true) return true;
         return false;
     }
 
-    function getVarBoolUnsafe(name:String):Bool {
+    public function getVarBoolUnsafe(name:String):Bool {
         return cast getSaveData().get(name);
     }
 
     //-------------------------------------------------------------------------
 
     //STRING
-    function initVarString(name:String, defaultValue:Dynamic) {
+    public function initVarString(name:String, defaultValue:Dynamic) {
         final data = getSaveData();
         if(!data.exists(name)) data.set(name, Std.string(defaultValue));
     }
 
-    function saveVarString(name:String, value:Dynamic) {
+    public function saveVarString(name:String, value:Dynamic) {
         getSaveData().set(name,Std.string(value));
     }
 
-    function getVarString(name:String):String {
+    public function getVarString(name:String):String {
         return Std.string(getSaveData().get(name));
     }
 
-    function getVarStringUnsafe(name:String):String {
+    public function getVarStringUnsafe(name:String):String {
         return getVarString(name);
     }
 
@@ -245,17 +248,27 @@ class SaveDataComponent extends Component {
 
     //these are dangerous, you could potentially brick a save with this.
     //UNSAFE
-    function initVarUnsafe(name:String, defaultValue:Dynamic) {
+    public function initVarUnsafe(name:String, defaultValue:Dynamic) {
         final data = getSaveData();
         if(!data.exists(name)) data.set(name, defaultValue);
     }
 
-    function saveVarUnsafe(name:String, value:Dynamic) {
+    public function saveVarUnsafe(name:String, value:Dynamic) {
         getSaveData().set(name,value);
     }
 
-    function getVarUnsafe(name:String):Dynamic {
+    public function getVarUnsafe(name:String):Dynamic {
         return getSaveData().get(name);
+    }
+
+    public function existsVarUnsafe(name:String):Bool {
+        return getSaveData().exists(name);
+    }
+
+    public function existsVarType(name:String, type:Dynamic):Bool {
+        final data = getSaveData();
+        if(!data.exists(name)) return false;
+        return Std.isOfType(data.get(name), type);
     }
 
     //------------------------------------------------------------------------------------------------------------------------------------------------------------------

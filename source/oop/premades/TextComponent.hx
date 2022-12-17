@@ -1,5 +1,6 @@
 package oop.premades;
 
+import common.HscriptTimer;
 import oop.Component;
 import assets.ImageAsset;
 import flixel.FlxCamera;
@@ -58,6 +59,7 @@ class TextComponent extends Component {
         //owner
         componentFrontend.transform = owner.transform;
         componentFrontend.getComponent = owner.getComponent;
+        componentFrontend.hasComponent = owner.hasComponent;
 
         //children
         componentFrontend.getNumberOfChildren = owner.getNumberOfChildren;
@@ -102,6 +104,8 @@ class TextComponent extends Component {
     override function importClassByName(name:String) {}
     override function load() {}
     override function save() {}
+    override function getTimers() { return null; }
+    override function loadTimers(from:Array<HscriptTimerSave>) {}
 
     //overrides
 

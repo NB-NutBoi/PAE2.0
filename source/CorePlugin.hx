@@ -1,5 +1,6 @@
 package;
 
+import common.HscriptTimer;
 import saving.SaveManager;
 import JsonDefinitions;
 import assets.AssetCache;
@@ -15,6 +16,8 @@ import utility.Utils;
 
 typedef PluginSavedata = {
     public var scriptSaveables:DynamicAccess<ScriptVariable>;
+
+    public var timers:Array<HscriptTimerSave>;
 }
 
 class CorePlugin extends BasicHscript {
@@ -23,9 +26,13 @@ class CorePlugin extends BasicHscript {
 
     public var name:String;
 
+    public var saveTimers:Bool = false;
+
     override public function new(scriptPath:String, id:String) {
         savedata = {
-            scriptSaveables: new DynamicAccess()
+            scriptSaveables: new DynamicAccess(),
+
+            timers: null
         }
 
         name = id;
@@ -60,6 +67,8 @@ class CorePlugin extends BasicHscript {
         
         doFunction("OnSave");
 
+        if(saveTimers && timers != null) savedata.timers = timers.saveTimers();
+
         SaveManager.curSaveData.pluginSavedata.set(name, savedata);
     }
 
@@ -69,6 +78,8 @@ class CorePlugin extends BasicHscript {
         //load custom savedata from cur save data
         if(SaveManager.curSaveData.pluginSavedata.exists(name))
         savedata = SaveManager.curSaveData.pluginSavedata.get(name);
+
+        if(saveTimers && savedata.timers != null) loadTimers(savedata.timers);
 
         doFunction("OnLoad");
     }

@@ -1,5 +1,6 @@
 package common;
 
+import common.HscriptTimer;
 import Discord.DiscordClient;
 import saving.SaveManager;
 import sys.io.File;
@@ -29,6 +30,8 @@ class BasicHscript extends FlxBasic implements HScriptable {
     //scriptdef
 
     public var properties:Map<String,String>;
+
+    public var timers:HscriptTimerManager;
 
     override public function new(scriptPath:String) {
         super();
@@ -263,6 +266,8 @@ class BasicHscript extends FlxBasic implements HScriptable {
         AddGeneral("trace", _trace);
         AddGeneral("cast", HscriptCast.Cast);
 
+        AddGeneral("getTimers", getTimers);
+
 
         //GLOBALS
 
@@ -304,6 +309,8 @@ class BasicHscript extends FlxBasic implements HScriptable {
 
     override function update(elapsed:Float) {
         if(!exists || !ready) return;
+        
+        if(timers != null) timers.update(elapsed);
 
         doFunction("OnUpdate", [elapsed]);
     }
@@ -336,6 +343,18 @@ class BasicHscript extends FlxBasic implements HScriptable {
         if(!exists || !ready) return;
 
         doFunction("OnDestroy");
+
+        ready = false;
+
+        if(timers != null) timers.destroy();
+
+        interpreter.variables.clear();
+
+        parser = null;
+		interpreter = null;
+		program = null;
+
+        super.destroy();
     }
 
     public function save() {
@@ -353,6 +372,18 @@ class BasicHscript extends FlxBasic implements HScriptable {
     //------------------------------------------------------------------------------------------------------------------------------------------------------------------
     //------------------------------------------------------------------------------------------------------------------------------------------------------------------
     //------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+    //timers
+
+    public function getTimers():HscriptTimerManager {
+        if(timers == null) timers = new HscriptTimerManager(this);
+        return timers;
+    }
+
+    public function loadTimers(from:Array<HscriptTimerSave>) {
+        if(timers != null) timers.destroy();
+        timers = HscriptTimerManager.load(from,this);
+    }
 
     //------------------------------------------------------------------------------------------------------------------------------------------------------------------
     //------------------------------------------------------------------------------------------------------------------------------------------------------------------

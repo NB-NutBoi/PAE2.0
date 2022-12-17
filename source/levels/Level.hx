@@ -1,5 +1,6 @@
 package levels;
 
+import common.HscriptTimer.HscriptTimerSave;
 import oop.StaticObject;
 import oop.GenericObject;
 import gameside.dialogue.DialogueState;
@@ -84,6 +85,8 @@ typedef LevelSaveables = {
 
     public var containers:DynamicAccess<ItemContainerCache>;
     public var dialogues:DynamicAccess<DialogueCache>;
+
+    public var timers:Array<HscriptTimerSave>;
 }
 
 typedef Callback = {
@@ -165,7 +168,9 @@ class Level {
                     saveDataComponents: new DynamicAccess(),
 
                     dialogues: new DynamicAccess(),
-                    containers: new DynamicAccess()
+                    containers: new DynamicAccess(),
+
+                    timers: null
                 }
             }
 
@@ -258,7 +263,7 @@ class Level {
                     LogFile.log({ message: "Loading Script "+levelFile.script+".\n", caller: "Level", id: 32},false);
                     
                     script = new LevelScript(this,levelFile.script);
-
+                    if(saveables.timers != null) script.loadTimers(saveables.timers);
                     
                     if(saveables.firstTime){
                         saveables.firstTime = false;
@@ -277,8 +282,6 @@ class Level {
                 LogFile.warning({ message: "Level Script '"+levelFile.script+"' could not be loaded.\n", caller: "Level", id: 34});
 
             //--------------------------------------------------------------------------------------------------------------------------------
-
-            //loadSavedEntities();
 
             LogFile.log({ message: "Finished loading map.\n\n", caller: "Level", id: 38});
 
@@ -342,7 +345,10 @@ class Level {
     //-------------------------------------------------------------------------------------------------------------
 
     public function onSave() {
-        if(script != null) script.save();
+        if(script != null) {
+            script.save();
+            if(script.timers != null) saveables.timers = script.timers.saveTimers();
+        }
 
         SaveManager.curSaveData.mapSaveables.set(this.path,saveables);
     }

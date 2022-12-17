@@ -1,5 +1,6 @@
 package oop.premades;
 
+import common.HscriptTimer;
 import oop.Component;
 import assets.SoundAsset;
 import common.ClientPreferences;
@@ -74,6 +75,7 @@ class AudioSourceComponent extends Component {
         //owner
         componentFrontend.transform = owner.transform;
         componentFrontend.getComponent = owner.getComponent;
+        componentFrontend.hasComponent = owner.hasComponent;
 
         //children
         componentFrontend.getNumberOfChildren = owner.getNumberOfChildren;
@@ -120,6 +122,8 @@ class AudioSourceComponent extends Component {
     override function importClassByName(name:String) {}
     override function load() {}
     override function save() {}
+    override function getTimers() { return null; }
+    override function loadTimers(from:Array<HscriptTimerSave>) {}
 
     //overrides
 

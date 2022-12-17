@@ -1,5 +1,7 @@
 package oop;
 
+import common.HscriptTimer;
+import common.BasicHscript.HScriptable;
 import saving.SaveManager;
 import Discord.DiscordClient;
 import utility.Language.LanguageManager;
@@ -55,7 +57,12 @@ typedef ComponentInstance = {
 }
 typedef ComponentInstanciator = OneOfTwo<String, ComponentInstance>;
 
-class Component extends FlxBasic {
+typedef ComponentTimers = {
+    public var usesTimers:Bool;
+    public var timers:Array<HscriptTimerSave>;
+}
+
+class Component extends FlxBasic implements HScriptable {
 
     //REMEMBER TO REGISTER CLASSES!
     public static var componentClasses(default,never):Map<String,ComponentClass> = new Map();
@@ -88,9 +95,11 @@ class Component extends FlxBasic {
     public var componentType:String;
     var thisClass:ComponentClass;
 
-    var parser:Parser;
-	var program:Expr;
-	var interpreter:Interp;
+    public var parser:Parser;
+	public var program:Expr;
+	public var interpreter:Interp;
+
+    public var timers:HscriptTimerManager;
 
     public var componentFrontend:Dynamic;
     public var owner:Object;
@@ -277,9 +286,12 @@ class Component extends FlxBasic {
         AddGeneral("setStaticVar", setStaticVar);
         AddGeneral("getStaticVar", getStaticVar);
 
+        AddGeneral("getTimers", getTimers);
+
         //owner
         AddGeneral("transform", owner.transform);
         AddGeneral("getComponent", owner.getComponent);
+        AddGeneral("hasComponent", owner.hasComponent);
 
         //children
         AddGeneral("getNumberOfChildren", owner.getNumberOfChildren);
@@ -331,6 +343,22 @@ class Component extends FlxBasic {
         trace(interpreter.locals);
         trace(interpreter.declared);
         trace(interpreter.variables);
+    }
+
+    //------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    //------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    //------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+    //timers
+
+    public function getTimers():HscriptTimerManager {
+        if(timers == null) timers = new HscriptTimerManager(this);
+        return timers;
+    }
+
+    public function loadTimers(from:Array<HscriptTimerSave>) {
+        if(timers != null) timers.destroy();
+        timers = HscriptTimerManager.load(from,this);
     }
 
     //------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -591,12 +619,30 @@ class Component extends FlxBasic {
     public function start() {
         if(!exists || !ready) return;
 
+        if(owner.hasComponent("SaveData")){
+            final sd:SaveDataComponent = cast owner.getComponentBackend("SaveData");
+
+            var timers:ComponentTimers = {
+                usesTimers: false,
+                timers: null
+            }
+
+            if(sd.existsVarUnsafe("timers")){
+                var t = sd.getVarUnsafe("timers");
+
+                if(t.usesTimers != null) timers = cast t;
+                if(timers.usesTimers && timers.timers != null) loadTimers(timers.timers);
+            }
+        }
+
         doFunction("OnStart");
     }
 
     override function update(elapsed:Float) {
         if(!exists || !ready) return;
         super.update(elapsed);
+
+        if(timers != null) timers.update(elapsed);
 
         //do update idk
         doFunction("OnUpdate", [elapsed]);
@@ -637,6 +683,16 @@ class Component extends FlxBasic {
     
     public function save() {
         if(!exists || !ready || !usingSavesPackage) return;
+
+        if(owner.hasComponent("SaveData")){
+            final sd:SaveDataComponent = cast owner.getComponentBackend("SaveData");
+            var timers:ComponentTimers = {
+                usesTimers: (timers != null),
+                timers: (timers != null) ? timers.saveTimers() : null
+            }
+
+            sd.saveVarUnsafe("timers",timers);
+        }
 
         doFunction("OnSave");
     }
