@@ -156,6 +156,9 @@ class HscriptTimerManager extends FlxBasic {
 			_timers.set(s,FlxDestroyUtil.destroy(_timers.get(s)));
 		}
 
+        _timers.clear();
+        _timers = null;
+
         super.destroy();
     }
 
