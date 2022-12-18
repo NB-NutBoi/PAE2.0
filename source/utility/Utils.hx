@@ -120,10 +120,20 @@ class Utils {
 
         return point;
     }
+
+	public static var currentCollisonLevel:Int = 0; //0 is world/everything by default
     
-    public static function overlapsSprite(spr:FlxSprite, mousePos:FlxPoint, ?pixelAccurate:Bool = false, ?useDivision:Bool = true) {
+    public static function overlapsSprite(spr:FlxSprite, mouse:Any, ?pixelAccurate:Bool = false, ?collisionPriority:Int = 0) {
         if(spr == null) return false;
-		if(mousePos == null) return false;
+		if(collisionPriority < currentCollisonLevel) return false;
+		
+		var mousePos:FlxPoint = null;
+		if(mouse == null) mousePos = getMousePosInCamera(spr.camera,null,spr);
+		switch (Type.getClass(mouse)){ //abstracted mouse to not be so strict!
+			case FlxCamera: mousePos = getMousePosInCamera(cast mouse,null,spr);
+			case FlxPoint: mousePos = cast mouse;
+			default: return false;
+		}
 
 		//i forgot this function kinda fucks up the point lol
 		final ogX = mousePos.x;
@@ -152,14 +162,8 @@ class Utils {
         var frameData:BitmapData = spr.updateFramePixels();
         mousePos.rotate(spr.getGraphicMidpoint(FlxPoint.weak()),-spr.angle);
         var rotatedPos:Array<Int> = [
-            /*x*/Math.round(useDivision ? 
-				(mousePos.x - (spr.x*spr.scrollFactor.x)) * (1 / spr.scale.x) :
-				(mousePos.x - (spr.x*spr.scrollFactor.x)) + (spr.offset.x*2) //this will apparently work if its a simple scale offset (do not use by default)
-				),
-            /*y*/Math.round(useDivision ? 
-				(mousePos.y - (spr.y*spr.scrollFactor.y)) * (1 / spr.scale.y) :
-				(mousePos.y - (spr.y*spr.scrollFactor.y)) + (spr.offset.y*2) //this math is broken btw idk what i was smoking when i thought this up
-				)
+            /*x*/Math.round((mousePos.x - (spr.x*spr.scrollFactor.x)) * (1 / spr.scale.x)),
+            /*y*/Math.round((mousePos.y - (spr.y*spr.scrollFactor.y)) * (1 / spr.scale.y))
         ];
 
 		if(spr.flipX == true){

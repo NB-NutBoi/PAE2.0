@@ -208,6 +208,15 @@ class AssetCache {
 		System.gc();
 	}
 
+	///////////////////////////////////////////////////////////////////
+	//----------------------------HELPERS-----------------------------
+	///////////////////////////////////////////////////////////////////
+
+	public static function cachePlainAsset(pathNoExt:String) {
+		cacheData(pathNoExt+".asset");
+		cacheImage(pathNoExt+".png");
+	}
+
 
 	//NOT TOUCHED SINCE 2021, NEEDS A REVISION TO SEE IF WE NEED IT.
 	///////////////////////////////////////////////////////////////////

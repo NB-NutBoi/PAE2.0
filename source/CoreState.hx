@@ -67,6 +67,7 @@ class CoreState extends FlxState {
 
     override function draw() {
         super.draw();
+        drawCore();
         if(watermark != null && watermark.visible) watermark.draw();
         if(ColorWheel.instance != null) ColorWheel.instance.draw(); //color wheel :D
         if(Context.instance != null) Context.instance.draw();
@@ -166,6 +167,10 @@ class CoreState extends FlxState {
 
     static function defaultUpdatePlugin(plugin:String):Bool {
         return true;
+    }
+    
+    static function drawCore() {
+        mainScript.draw();
     }
 
     static function loadPlugin(path:String, name:String) {

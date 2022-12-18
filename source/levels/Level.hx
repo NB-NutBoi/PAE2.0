@@ -109,10 +109,14 @@ class Level {
     
     public var saveables:LevelSaveables = null;
 
+    public var collisionLayer:Int = 0;
+
     //-------------------------------------------------------------------------------------------------------------
 
     //Level script
     public var script:LevelScript;
+
+    public var levelSpecificImports:Map<String,Array<{value:Dynamic, name:String}>> = new Map();
 
     //-------------------------------------------------------------------------------------------------------------
 
@@ -203,7 +207,7 @@ class Level {
 
             StaticObject.setAssets(bitmaps);
 
-            if(levelFile.backgroundColor != null)
+            if(levelFile.backgroundColor != null && this == MainState.instance.level) //only "main" level can modify camera bg color.
                 FlxG.camera.bgColor = FlxColor.fromRGB(levelFile.backgroundColor.R,levelFile.backgroundColor.G,levelFile.backgroundColor.B,levelFile.backgroundColor.A);
 
             //-------------------------------------------------------------------------------------------------------------

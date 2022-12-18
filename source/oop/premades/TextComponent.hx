@@ -156,7 +156,7 @@ class TextComponent extends Component {
     //api for interacting with this through the frontend
 
     public function overlapsMouse(?pixelAccurate:Bool = false) {
-        return Utils.overlapsSprite(_text, Utils.getMousePosInCamera(cameras[0]), pixelAccurate);
+        return Utils.overlapsSprite(_text, Utils.getMousePosInCamera(cameras[0]), pixelAccurate, owner.level.collisionLayer);
     }
 
     public function setOffset(?x:Float = 0, ?y:Float = 0) {

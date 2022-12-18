@@ -74,6 +74,12 @@ class LevelScript extends BasicHscript {
                 AddGeneral(imp.name,imp.value);
             }
         }
+
+        for (pack in level.levelSpecificImports) {
+            for (imp in pack) {
+                AddGeneral(imp.name,imp.value);
+            }
+        }
     }
 
     //----------------------------------------------------------------------------------------

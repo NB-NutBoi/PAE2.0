@@ -1,5 +1,6 @@
 package common;
 
+import lowlevel.HAbstracts;
 import common.HscriptTimer;
 import Discord.DiscordClient;
 import saving.SaveManager;
@@ -267,6 +268,9 @@ class BasicHscript extends FlxBasic implements HScriptable {
         AddGeneral("cast", HscriptCast.Cast);
 
         AddGeneral("getTimers", getTimers);
+
+        //ABSTRACTS
+        AddGeneral("abstracts", HAbstracts);
 
 
         //GLOBALS

@@ -174,7 +174,7 @@ class SpriteComponent extends Component {
     //api for interacting with this through the frontend
 
     public function overlapsMouse(?pixelAccurate:Bool = false) {
-        return Utils.overlapsSprite(sprite, Utils.getMousePosInCamera(cameras[0]), pixelAccurate, true);
+        return Utils.overlapsSprite(sprite, Utils.getMousePosInCamera(cameras[0]), pixelAccurate, owner.level.collisionLayer);
     }
 
     public function setOffset(?x:Float = 0, ?y:Float = 0) {

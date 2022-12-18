@@ -98,15 +98,15 @@ class Axle {
 
                 overlap = -1;
 
-                if(moving == 0 || Utils.overlapsSprite(xMoveAxle,mousePos,true,true)){
+                if(moving == 0 || Utils.overlapsSprite(xMoveAxle,mousePos,true)){
                     overlap = 0;
                 }
 
-                if(moving == 1 || Utils.overlapsSprite(yMoveAxle,mousePos,true,true)){
+                if(moving == 1 || Utils.overlapsSprite(yMoveAxle,mousePos,true)){
                     overlap = 1;
                 }
 
-                if(moving == 2 || Utils.overlapsSprite(centerAxle,mousePos,true,true)){
+                if(moving == 2 || Utils.overlapsSprite(centerAxle,mousePos,true)){
                     overlap = 2;
                 }
 
@@ -163,15 +163,15 @@ class Axle {
 
                 overlap = -1;
 
-                if(moving == 0 || Utils.overlapsSprite(xScaleAxle,mousePos,true,true)){
+                if(moving == 0 || Utils.overlapsSprite(xScaleAxle,mousePos,true)){
                     overlap = 0;
                 }
 
-                if(moving == 1 || Utils.overlapsSprite(yScaleAxle,mousePos,true,true)){
+                if(moving == 1 || Utils.overlapsSprite(yScaleAxle,mousePos,true)){
                     overlap = 1;
                 }
 
-                if(moving == 2 || Utils.overlapsSprite(centerAxle,mousePos,true,true)){
+                if(moving == 2 || Utils.overlapsSprite(centerAxle,mousePos,true)){
                     overlap = 2;
                 }
 
@@ -212,7 +212,7 @@ class Axle {
 
                 overlap = -1;
 
-                if(moving == 0 || Utils.overlapsSprite(rotateAxle,mousePos,true,true)){
+                if(moving == 0 || Utils.overlapsSprite(rotateAxle,mousePos,true)){
                     overlap = 0;
                 }
 
