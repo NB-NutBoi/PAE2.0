@@ -1,7 +1,8 @@
 package oop;
 
+import files.HXFile;
+import files.HXFile.HaxeScriptBackend;
 import common.HscriptTimer;
-import common.BasicHscript.HScriptable;
 import saving.SaveManager;
 import Discord.DiscordClient;
 import utility.Language.LanguageManager;
@@ -44,7 +45,7 @@ typedef ComponentClass = {
     public var icon:Null<String>; //optional
     public var editableVars:Null<DynamicAccess<String>>;
     public var defaultVars:Null<Array<Array<Dynamic>>>;
-    public var specialOverrideClass:Null<Class<Component>>;
+    public var specialOverrideClass:Null<Class<HaxeScriptBackend>>;
     public var specialOverrideArgs:Null<Array<Dynamic>>;
     public var script:String; // path because editing this in-json would be a pain in the ass.
     public var static_vars:Null<DynamicAccess<Dynamic>>;
@@ -62,7 +63,7 @@ typedef ComponentTimers = {
     public var timers:Array<HscriptTimerSave>;
 }
 
-class Component extends FlxBasic implements HScriptable {
+class Component extends HaxeScriptBackend {
 
     //REMEMBER TO REGISTER CLASSES!
     public static var componentClasses(default,never):Map<String,ComponentClass> = new Map();
@@ -81,8 +82,6 @@ class Component extends FlxBasic implements HScriptable {
     //low level stuff
     public static var currentBuildingBackend:Component = null;
 
-    public static var componentStandard:String = ""; //gets added to the end of every component code.
-
     @:isVar public static var precisionSprite(get,null):FlxSprite;
     static function get_precisionSprite() {
         if(precisionSprite == null) precisionSprite = new FlxSprite(0,0,"embed/components/Precision.png");
@@ -91,83 +90,30 @@ class Component extends FlxBasic implements HScriptable {
 
     //actual component vars
 
-    public var ready:Bool;
+    var visible:Bool = true;
+
     public var componentType:String;
     var thisClass:ComponentClass;
 
-    public var parser:Parser;
-	public var program:Expr;
-	public var interpreter:Interp;
-
-    public var timers:HscriptTimerManager;
-
-    public var componentFrontend:Dynamic;
     public var owner:Object;
 
-    public var compiling:Bool = false;
     private var usingSavesPackage:Bool = false;
 
-    //private var getsetFrontend(get,set):Dynamic;
+    public static function instanceComponent(comp:ComponentInstanciator, owner:Object):HaxeScript {
+        var instance:ComponentInstance = null;
+        if(Std.isOfType(comp, String)) instance = {component: Std.string(comp), startingData: null, extended: true};
+        else instance = comp;
 
-    //not ideal, but kept for convenience reasons.
-    public static function makeComponentOfType(typeof:String, owner:Object):Component {
-        var _class:ComponentClass = componentClasses.get(typeof);
-
-        var thisClass:Class<Component> = Component;
-        if(_class.specialOverrideClass != null){
-            thisClass = _class.specialOverrideClass;
-        }
-
-        var component:Any = null;
-
-        var instance:ComponentInstance = {
-            extended: true,
-            component: typeof,
-            startingData: {}
-        }
-
-        for (array in _class.defaultVars) {
-            Reflect.setField(instance,array[0],array[1]);
-        }
-
-        if(_class.specialOverrideArgs != null){
-            var args = _class.specialOverrideArgs.copy();
-            args.push(instance);
-            args.push(owner); //!!!MAKE SURE OWNER IS ALWAYS THE LAST ARGUMENT!!!
-            component = Type.createInstance(thisClass, args);
-            args = null;
-        }
-        else{
-            var args:Array<Dynamic> = [instance, owner];
-            component = Type.createInstance(thisClass, args);
-            args = null;
-        }
-
-        return component;
-    }
-
-    public static function instanceComponent(instance:ComponentInstance, owner:Object):Component {
         var _class:ComponentClass = componentClasses.get(instance.component);
 
-        var thisClass:Class<Component> = Component;
+        var thisClass:Class<HaxeScriptBackend> = Component;
         if(_class.specialOverrideClass != null){
             thisClass = _class.specialOverrideClass;
         }
 
         var component:Any = null;
 
-        if(_class.specialOverrideArgs != null){
-            var args = _class.specialOverrideArgs.copy();
-            args.push(instance);
-            args.push(owner); //!!!MAKE SURE OWNER IS ALWAYS THE LAST ARGUMENT!!!
-            component = Type.createInstance(thisClass, args);
-            args = null;
-        }
-        else{
-            var args:Array<Dynamic> = [instance, owner];
-            component = Type.createInstance(thisClass, args);
-            args = null;
-        }
+        component = makeNew(instance, owner, thisClass, thisClass != Component);
 
         return component;
     }
@@ -202,52 +148,78 @@ class Component extends FlxBasic implements HScriptable {
         }
     }
 
-    override public function new(comp:ComponentInstanciator, ?_owner:Object) {
-        super();
+    static function makeNew(instance:ComponentInstance, ?_owner:Object, ?managerClass:Class<HaxeScriptBackend> = null, ?isOverride:Bool = false):HaxeScript {
+        if(managerClass == null) managerClass = Component;
+        var c = HXFile.makeNew(managerClass);
+        final cBackend = cast(c.backend, Component);
 
-        owner = _owner;
+        cBackend.owner = _owner;
 
-        if(comp == null) return;
+        if(instance == null) return c;
 
-        var instance:ComponentInstance = null;
-        if(Std.isOfType(comp, String)) instance = {component: Std.string(comp), startingData: null, extended: true};
-        else instance = comp;
+        cBackend.thisClass = componentClasses.get(instance.component);
+        if(cBackend.thisClass == null) return c;
 
-        if(instance == null) return;
+        cBackend.componentType = cBackend.thisClass.key;
 
-        componentType = instance.component;
-
-        thisClass = componentClasses.get(instance.component);
-        if(thisClass == null) return;
-
-        ready = false;
+        currentCompiling = instance;
+        if(!isOverride) cBackend.compile(AssetCache.getDataCache(cBackend.thisClass.script));
+        currentCompiling = null;
         
-		parser = new hscript.Parser();
-		parser.allowTypes = true;
-        
-        //set preprocesorValues
-        parser.preprocesorValues.set("windows", #if windows true #else false #end);
-        parser.preprocesorValues.set("mac", #if mac true #else false #end);
-        parser.preprocesorValues.set("desktop", #if desktop true #else false #end);
-        parser.preprocesorValues.set("telemetry", #if telemetry true #else false #end);
-        parser.preprocesorValues.set("linux", #if linux true #else false #end);
-        parser.preprocesorValues.set("debug", Main.DEBUG);
-        parser.preprocesorValues.set("discord", #if windows DiscordClient.active #else false #end);
 
-		interpreter = new hscript.Interp();
+        cBackend.create(instance);
+
+        return c;
+    }
+
+    public function create(instance:ComponentInstance) {
+        
+    }
+
+    static var currentCompiling:ComponentInstance;
+    override function compile(fullScript:String) {
+        if(!exists || compiled) return;
+
+        setCompilerFlag("windows", #if windows true #else false #end);
+        setCompilerFlag("mac", #if mac true #else false #end);
+        setCompilerFlag("desktop", #if desktop true #else false #end);
+        setCompilerFlag("telemetry", #if telemetry true #else false #end);
+        setCompilerFlag("linux", #if linux true #else false #end);
+        setCompilerFlag("debug", Main.DEBUG);
+        setCompilerFlag("discord", #if windows DiscordClient.active #else false #end);
 
         AddVariables();
-        compile(AssetCache.getDataCache(thisClass.script));
 
-        if(!ready) return;
+        //Parse and compile
+		try
+        {
+            program = parser.parseString(fullScript = preprocessString(fullScript) + fileStandard);
+            interpreter.execute(program);
+
+            ready = true;
+        }
+        catch (e)
+        {
+            // All exceptions will be caught here
+            LogFile.error("Script error! |[ " + e.message + " ]| :" + parser.line+"\n",true);
+            if(logScriptOnError) trace("Script:\n"+fullScript);
+        }
+
         
 
-        if(instance.startingData != null && thisClass.editableVars != null){
+        fullScript = null;
+        dynamicImports = null;
+
+        populateFrontend();
+
+        compiled = true;
+
+        if(currentCompiling.startingData != null && thisClass.editableVars != null){
 
             for (eVar in thisClass.editableVars.keys()) {
                 var value = null;
-                if(Reflect.hasField(instance.startingData, eVar))
-                    value = Reflect.field(instance.startingData, eVar);
+                if(Reflect.hasField(currentCompiling.startingData, eVar))
+                    value = Reflect.field(currentCompiling.startingData, eVar);
                 else if(exsistsArray(eVar, thisClass.defaultVars))
                     value = getArray(eVar, thisClass.defaultVars);
                 else continue;
@@ -256,31 +228,21 @@ class Component extends FlxBasic implements HScriptable {
             }
         }
 
-        generateFrontend();
-
-        awake();
+        awake(); //dangerous as script may still be hot
 
         parser = null; //i don't think we need the parser at all anymore?
     }
 
-    
-
-
     //------------------------------------------------------------------------------------------------------------------------------------------------------------------
     //------------------------------------------------------------------------------------------------------------------------------------------------------------------
     //------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-    public function AddVariables() {
+    override public function AddVariables() {
+        super.AddVariables();
+
 		//BASICS
-        AddGeneral("trace", _trace);
-        AddGeneral("traceLocals", _traceLocals);
-
         AddGeneral("requireComponent", requireComponent);
-        AddGeneral("requireComponentInstance", requireComponentInstance);
         AddGeneral("importPackage", importPackage);
-
-        AddGeneral("camera", camera);
-        AddGeneral("cameras", cameras);
 
         AddGeneral("globals", ComponentGlobals);
         AddGeneral("setStaticVar", setStaticVar);
@@ -301,319 +263,9 @@ class Component extends FlxBasic implements HScriptable {
         AddGeneral("Destroy", owner.Destroy);
         AddGeneral("Instantiate", owner.Instantiate);
 
-        //script workaround
-        AddGeneral("__this",this);
-
 
         //level
         AddGeneral("Level",owner.level);
-
-        //GLOBALS
-
-        //initializers
-        AddGeneral("initializeGlobalString",initializeGlobalString);
-        AddGeneral("initializeGlobalInt",initializeGlobalInt);
-        AddGeneral("initializeGlobalFloat",initializeGlobalFloat);
-        AddGeneral("initializeGlobalBool",initializeGlobalBool);
-
-        //getters
-        AddGeneral("getGlobalString",getGlobalString);
-        AddGeneral("getGlobalInt",getGlobalInt);
-        AddGeneral("getGlobalFloat",getGlobalFloat);
-        AddGeneral("getGlobalBool",getGlobalBool);
-
-        //setters
-        AddGeneral("setGlobalBool",setGlobalBool);
-        AddGeneral("setGlobalFloat",setGlobalFloat);
-        AddGeneral("setGlobalInt",setGlobalInt);
-        AddGeneral("setGlobalString",setGlobalString);
-    }
-
-	public function AddGeneral(name:String,toAdd:Dynamic)
-	{if(!exists) return;
-        interpreter.variables.set(name, toAdd);
-	}
-
-    private function _trace(content:Dynamic) {
-        trace(content);
-    }
-
-    @:access(hscript.Interp)
-    private function _traceLocals() {
-        trace(interpreter.locals);
-        trace(interpreter.declared);
-        trace(interpreter.variables);
-    }
-
-    //------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    //------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    //------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-    //timers
-
-    public function getTimers():HscriptTimerManager {
-        if(timers == null) timers = new HscriptTimerManager(this);
-        return timers;
-    }
-
-    public function loadTimers(from:Array<HscriptTimerSave>) {
-        if(timers != null) timers.destroy();
-        timers = HscriptTimerManager.load(from,this);
-    }
-
-    //------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    //------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    //------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-    public function initializeGlobalString(name:String, value:String):Null<String> {
-        var s = SaveManager.curSaveData.globals.scriptSaveables.get(name);
-        if(s == null){
-            SaveManager.curSaveData.globals.scriptSaveables.set(name,value);
-        }
-
-        return SaveManager.curSaveData.globals.scriptSaveables.get(name);
-    }
-
-    public function initializeGlobalInt(name:String, value:Int):Null<Int> {
-        var i = SaveManager.curSaveData.globals.scriptSaveables.get(name);
-        if(i == null){
-            SaveManager.curSaveData.globals.scriptSaveables.set(name,value);
-        }
-
-        return SaveManager.curSaveData.globals.scriptSaveables.get(name);
-    }
-
-    public function initializeGlobalFloat(name:String, value:Float):Null<Float> {
-        var f = SaveManager.curSaveData.globals.scriptSaveables.get(name);
-        if(f == null){
-            SaveManager.curSaveData.globals.scriptSaveables.set(name,value);
-        }
-
-        return SaveManager.curSaveData.globals.scriptSaveables.get(name);
-    }
-
-    public function initializeGlobalBool(name:String, value:Bool):Null<Bool> {
-        var b = SaveManager.curSaveData.globals.scriptSaveables.get(name);
-        if(b == null){
-            SaveManager.curSaveData.globals.scriptSaveables.set(name,value);
-        }
-
-        return SaveManager.curSaveData.globals.scriptSaveables.get(name);
-    }
-
-    public function getGlobalString(name:String):Null<String> {
-        var s = SaveManager.curSaveData.globals.scriptSaveables.get(name);
-        if(s != null){
-            if(Std.isOfType(s,String)){
-                return s;
-            }
-        }
-
-        LogFile.error("Global STRING "+name+" Doesn't exist or is not a STRING type!");
-        return null;
-    }
-
-    public function getGlobalInt(name:String):Null<Int> {
-        var i = SaveManager.curSaveData.globals.scriptSaveables.get(name);
-        if(i != null){
-            if(Std.isOfType(i,Int)){
-                return i;
-            }
-        }
-
-        LogFile.error("Global INT "+name+" Doesn't exist or is not an INT type!");
-        return null;
-    }
-
-    public function getGlobalFloat(name:String):Null<Float> {
-        var f = SaveManager.curSaveData.globals.scriptSaveables.get(name);
-        if(f != null){
-            if(Std.isOfType(f,Float)){
-                return f;
-            }
-        }
-
-        LogFile.error("Global FLOAT "+name+" Doesn't exist or is not a FLOAT type!");
-        return null;
-    }
-
-    public function getGlobalBool(name:String):Null<Bool> {
-        var b = SaveManager.curSaveData.globals.scriptSaveables.get(name);
-        if(b != null){
-            if(Std.isOfType(b,Bool)){
-                return b;
-            }
-        }
-
-        LogFile.error("Global BOOL "+name+" Doesn't exist or is not a BOOL type!");
-        return null;
-    }
-
-    public function setGlobalBool(name:String,b:Bool):Null<Bool> {
-        return SaveManager.curSaveData.globals.scriptSaveables.set(name,b);
-    }
-
-    public function setGlobalFloat(name:String,f:Float):Null<Float> {
-        return SaveManager.curSaveData.globals.scriptSaveables.set(name,f);
-    }
-
-    public function setGlobalInt(name:String,i:Int):Null<Int> {
-        return SaveManager.curSaveData.globals.scriptSaveables.set(name,i);
-    }
-
-    public function setGlobalString(name:String,s:String):Null<String> {
-        return SaveManager.curSaveData.globals.scriptSaveables.set(name,s);
-    }
-
-    //------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    //------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    //------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-    public function getScriptVar(name:String):Dynamic {
-        if (!ready || !exists)
-			return null;
-
-        if(!functionExists("__getComponentValue")) { LogFile.warning("Standard component function __getComponentValue not supported!"); return null; }
-
-        return doFunction("__getComponentValue",[name]);
-    }
-
-    public function setScriptVar(name:String, to:Dynamic) {
-        if (!ready || !exists)
-			return;
-
-        if(!functionExists("__setComponentValue")) { LogFile.warning("Standard component function __setComponentValue not supported!"); return; }
-
-        doFunction("__setComponentValue",[name, to]);
-    }
-
-    //------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    //------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    //------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-    public function functionExists(func:String):Bool {
-        if (!ready || !exists)
-			return false;
-
-        if(!interpreter.variables.exists(func)) return false;
-
-        if(!Reflect.isFunction(interpreter.variables[func])) return false;
-
-        return true;
-    }
-
-    public function getFunction(func:String):Dynamic {
-		if (!ready || !exists)
-			return null;
-
-		if(Reflect.isFunction(interpreter.variables[func]))
-			return interpreter.variables[func];
-
-		return null;
-    }
-
-	public function doFunction(func:String, ?args:Array<Dynamic>):Dynamic {
-        if (!ready || !exists) return null;
-        
-		var Function = getFunction(func);
-
-		if (Function != null){
-			if(args == null)
-				args = [];
-
-			
-			var r = Reflect.callMethod(this,Function,args);
-			Function = null;
-			return r;
-		}
-		else{
-            //make sure the console isn't getting flooded because timmy forgot to add the OnUpdate function to his code, all of these are potentially unneeded.
-            if(!Utils.matchesAny(func, Main.defaultFunctions))
-                Console.logWarning("tried calling non-existing function "+ func+" of component "+componentType+" on object "+owner.name+"!");
-		}
-
-		return null;
-    }
-
-    //------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    //------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    //------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-    private function compile(fullScript:String) {
-        if(!exists) return;
-        
-        compiling = true;
-
-        //Parse and compile
-		try
-        {
-            program = parser.parseString(fullScript+componentStandard);
-            interpreter.execute(program);
-
-            ready = true;
-        }
-        catch (e)
-        {
-            // All exceptions will be caught here
-            LogFile.error("Component error! |[ " + e.message + " ]| :" + parser.line+"\n",true);
-        }
-
-        compiling = false;
-    }
-
-    
-
-    @:access(hscript.Interp)
-    private function generateFrontend() {
-        if(!ready || !exists) return;
-
-        currentBuildingBackend = this;
-
-        //might improve this if i figure out how to make properties from thin air
-        //update to the above, it's impossible. properites are too fancy and compile-sided.
-        componentFrontend = {};
-
-        for (variableKey in interpreter.variables.keys()) {
-            if(Reflect.isFunction(interpreter.variables.get(variableKey))){  //variables are a bitch to sync up to an anonymous structure so only functions i guess
-                // better than nothing
-                Reflect.setField(componentFrontend,variableKey,interpreter.variables.get(variableKey));
-            }
-        }
-
-        componentFrontend.camera = camera;
-        componentFrontend.cameras = cameras;
-
-        currentBuildingBackend = null;
-    }
-
-    override function set_camera(value:FlxCamera):FlxCamera {
-        componentFrontend.camera = value;
-        componentFrontend.cameras = [value];
-
-        AddGeneral("camera", value);
-        AddGeneral("cameras", [value]);
-
-        return super.set_camera(value);
-    }
-
-    override function set_cameras(value:Array<FlxCamera>):Array<FlxCamera> {
-        componentFrontend.camera = value[0];
-        componentFrontend.cameras = value;
-
-        AddGeneral("camera", value[0]);
-        AddGeneral("cameras", value);
-
-        return super.set_cameras(value);
-    }
-
-    //------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    //------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    //------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-    private function awake() {
-        if(!exists || !ready) return;
-
-        doFunction("OnAwake");
     }
 
     public function start() {
@@ -638,47 +290,16 @@ class Component extends FlxBasic implements HScriptable {
         doFunction("OnStart");
     }
 
-    override function update(elapsed:Float) {
-        if(!exists || !ready) return;
-        super.update(elapsed);
-
-        if(timers != null) timers.update(elapsed);
-
-        //do update idk
-        doFunction("OnUpdate", [elapsed]);
-    }
-
-    public function lateUpdate(elapsed:Float) {
+    public function draw() {
         if(!exists || !ready) return;
 
-        doFunction("OnLateUpdate", [elapsed]);
-    }
-
-    override function draw() {
-        if(!exists || !ready) return;
-        super.draw();
-
-        //do draw
         doFunction("OnDraw");
     }
 
     override function destroy() {
-        if(!exists) return;
-
-        doFunction("OnDestroy");
-
-        ready = false;
+        super.destroy();
 
         thisClass = null;
-
-        interpreter.variables.clear();
-
-        componentFrontend = null;
-        parser = null;
-		interpreter = null;
-		program = null;
-
-        super.destroy();
     }
     
     public function save() {
@@ -708,9 +329,9 @@ class Component extends FlxBasic implements HScriptable {
     //------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
     //can be overriden if there needs to be builtin components (probably for performance reasons, don't want everything to be handled through hscript)
-    public function clone(newParent:Object):Component {
+    public function clone(newParent:Object):HaxeScript {
 
-        var component:Component = new Component(componentType,newParent);
+        var component:HaxeScript = instanceComponent(componentType,newParent);
 
         //is there any more we can do to sync 2 hscript components?
         //there's no way to sync non-global variables since they're protected with some witchcraft dark magic, and syncing global variables would be a pain to sort.
@@ -723,39 +344,23 @@ class Component extends FlxBasic implements HScriptable {
             for (eVar in thisClass.editableVars.keys()) { //only set vars that were defined in the class json, which is fair.
                 final value = getScriptVar(eVar);
 
-                component.setScriptVar(eVar, value);
+                component.backend.setScriptVar(eVar, value);
             }
         }
 
         return component;
     }
 
-    public function requireComponent(typeof:String):Dynamic {
+    public function requireComponent(typeof:ComponentInstanciator):HaxeScript {
         if (owner == null) return null;
 
         var c:Dynamic = owner.getComponentBackend(typeof);
 
         if(c == null) {
-            c = makeComponentOfType(typeof, owner);
-            owner.componets.add(c);
+            c = instanceComponent(typeof, owner);
+            owner.componets.push(c);
         }
-
-        c = c.componentFrontend;
-
-        return c;
-    }
-
-    public function requireComponentInstance(instance:ComponentInstance) {
-        if (owner == null) return null;
-        
-        var c:Dynamic = owner.getComponentBackend(instance.component);
-
-        if(c == null) {
-            c = instanceComponent(instance, owner);
-            owner.componets.add(c);
-        }
-
-        c = c.componentFrontend;
+        else c = c.frontend;
 
         return c;
     }

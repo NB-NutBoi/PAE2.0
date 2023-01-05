@@ -1,5 +1,6 @@
 package oop.premades;
 
+import files.HXFile;
 import common.HscriptTimer;
 import oop.Component;
 import assets.ImageAsset;
@@ -22,18 +23,11 @@ class TextComponent extends Component {
     public var offsetX:Float = 0;
     public var offsetY:Float = 0;
 
-    override public function new(instancer:Dynamic, owner:Object) {
-        super(null,owner);
+    override function create(instance:ComponentInstance) {
+        super.create(instance);
 
         _text = new Text(0,0,0,"");
         _text.cameras = owner.cameras; //default
-
-        var instance:ComponentInstance = null;
-        if(instancer.component != null) instance = instancer;
-
-        if(instance == null) return;
-
-        componentType = "Text";
 
         _text.text = instance.startingData.text;
         _text.font = instance.startingData.font;
@@ -43,40 +37,38 @@ class TextComponent extends Component {
         offsetX = instance.startingData.offsetX;
         offsetY = instance.startingData.offsetY;
 
+        compiled = true;
         ready = true;
 
         generateFrontend();
     }
 
-    override private function generateFrontend() {
+    private function generateFrontend() {
         if(!ready || !exists) return;
 
-        componentFrontend = {};
-
-        componentFrontend.camera = camera;
-        componentFrontend.cameras = cameras;
+        final frontend:Dynamic = frontend;
 
         //owner
-        componentFrontend.transform = owner.transform;
-        componentFrontend.getComponent = owner.getComponent;
-        componentFrontend.hasComponent = owner.hasComponent;
+        frontend.transform = owner.transform;
+        frontend.getComponent = owner.getComponent;
+        frontend.hasComponent = owner.hasComponent;
 
         //children
-        componentFrontend.getNumberOfChildren = owner.getNumberOfChildren;
-        componentFrontend.getChildAt = owner.getChildAt;
+        frontend.getNumberOfChildren = owner.getNumberOfChildren;
+        frontend.getChildAt = owner.getChildAt;
 
-        componentFrontend.Level = owner.level;
+        frontend.Level = owner.level;
 
-        componentFrontend.overlapsMouse = overlapsMouse;
-        componentFrontend.setOffset = setOffset;
-        componentFrontend.setVisible = setVisible;
+        frontend.overlapsMouse = overlapsMouse;
+        frontend.setOffset = setOffset;
+        frontend.setVisible = setVisible;
 
-        componentFrontend.setText = set_text;
-        componentFrontend.getText = get_text;
-        componentFrontend.setSize = set_size;
-        componentFrontend.getSize = get_size;
-        componentFrontend.setFont = set_font;
-        componentFrontend.getFont = get_font;
+        frontend.setText = set_text;
+        frontend.getText = get_text;
+        frontend.setSize = set_size;
+        frontend.getSize = get_size;
+        frontend.setFont = set_font;
+        frontend.getFont = get_font;
     }
 
     //------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -88,11 +80,9 @@ class TextComponent extends Component {
     override function awake() {}
     override function start() {}
     override function compile(fullScript:String) {}
-    override function requireComponent(typeof:String):Dynamic { return null; }
+    override function requireComponent(typeof:String):HaxeScript { return null; }
     override function AddGeneral(name:String, toAdd:Dynamic) {}
     override function AddVariables() {}
-    override function _traceLocals() {}
-    override function _trace(content:Dynamic) {}
     override function functionExists(func:String):Bool { return false; }
     override function doFunction(func:String, ?args:Array<Dynamic>):Dynamic { return null; }
     override function getFunction(func:String):Dynamic { return null; }
@@ -133,12 +123,11 @@ class TextComponent extends Component {
 
         //default basic destroy (so i don't have to call super)
         exists = false;
-		_cameras = null;
     }
 
-    override public function clone(newParent:Object):Component {
-
-        var clone:TextComponent = new TextComponent("", newParent);
+    override public function clone(newParent:Object):HaxeScript {
+        var c:HaxeScript = Component.instanceComponent("Text",newParent);
+        var clone:TextComponent = c._dynamic.backend;
         clone.text = text;
         clone.font = font;
         clone.size = size;
@@ -146,7 +135,7 @@ class TextComponent extends Component {
         clone.offsetX = offsetX;
         clone.offsetY = offsetY;
 
-        return clone;
+        return c;
     }
 
     //------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -156,7 +145,7 @@ class TextComponent extends Component {
     //api for interacting with this through the frontend
 
     public function overlapsMouse(?pixelAccurate:Bool = false) {
-        return Utils.overlapsSprite(_text, Utils.getMousePosInCamera(cameras[0]), pixelAccurate, owner.level.collisionLayer);
+        return Utils.overlapsSprite(_text, owner.camera, pixelAccurate, owner.level.collisionLayer);
     }
 
     public function setOffset(?x:Float = 0, ?y:Float = 0) {
@@ -195,12 +184,4 @@ class TextComponent extends Component {
 	function set_font(value:String):String {
 		return _text.font = value;
 	}
-
-    override function set_camera(value:FlxCamera):FlxCamera {
-        return _text.camera = value;
-    }
-
-    override function set_cameras(value:Array<FlxCamera>):Array<FlxCamera> {
-        return _text.cameras = value;
-    }
 }

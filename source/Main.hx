@@ -1,6 +1,5 @@
 package;
 
-import common.BasicHscript.HscriptCast;
 import Discord;
 import FlxGamePlus;
 import assets.AssetPaths;
@@ -247,8 +246,15 @@ class Main extends Sprite
 
 		LogFile.Init();
 
-		LogFile.log("Launch args = "+args, true);
-		LogFile.log("CONFIG FILES FOUND: "+ConfigsAvailable);
+		LogFile.log("Launch args = "+args, true, true);
+		LogFile.log("CONFIG FILES FOUND: "+Reflect.callMethod(this,function ():String {
+			var cfgs = "{\n";
+			for (s in ConfigsAvailable.keys()) {
+				cfgs += s + " => "+ConfigsAvailable.get(s)+",\n";
+			}
+			cfgs+="}";
+			return cfgs;
+		},[]), false, true);
 
 		if(!nofps && !DEBUG) nofps = true; 
 

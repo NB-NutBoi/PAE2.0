@@ -1,5 +1,6 @@
 package;
 
+import files.HXFile;
 import ui.elements.Context;
 import oop.Object.FullObjectDataStructure;
 import common.ClientPreferences;
@@ -21,6 +22,8 @@ class MainState extends CoreState {
 
     override function create() {
         instance = this;
+
+        FlxG.autoPause = false;
 
         CoreState.onSave.add(onSave);
         CoreState.onLoad.add(onLoad);

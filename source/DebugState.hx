@@ -1,5 +1,7 @@
 package;
 
+import files.HXFile;
+import files.HXFile.HaxeScript;
 import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.FlxState;
@@ -49,6 +51,8 @@ class DebugState extends CoreState
 	var obj:Object;
 	var obj2:Object;
 
+	var haxeScript:HaxeScript;
+
 	override public function create()
 	{
 		super.create();
@@ -94,20 +98,6 @@ class DebugState extends CoreState
 
 		add(obj);
 		*/
-
-		var player = new Object();
-		var mover = Component.makeComponentOfType("DebugMover", player);
-		player.componets.add(mover);
-
-		add(player);
-
-		var obj3 = new Object();
-		var comp5 = new AudioSourceComponent("",obj3);
-		obj3.componets.add(comp5);
-
-		add(obj3);
-
-		obj3.transform.position.set(700,300);
 		/*
 
 		obj.transform.angularVelocity = 2;
@@ -118,12 +108,9 @@ class DebugState extends CoreState
 		obj2.transform.position.y = -20;
 		*/
 
-		comp5.playClip("assets/sounds/test_wind.asset");
-		comp5.setProximity(200);
-		comp5.drawDebug = true;
-
-		mover.setScriptVar("speed",200);
-		trace(mover.getScriptVar("speed"));
+		haxeScript = HXFile.fromFile("assets/script/test/New1.hx");
+		var haxeScript2:HaxeScript = HXFile.fromFile("assets/script/test/New2.hx");
+		haxeScript.backend.setScriptVar("otherScript",haxeScript2);
 	}
 
 	override public function update(elapsed:Float)
@@ -132,7 +119,7 @@ class DebugState extends CoreState
 
 		if (FlxG.keys.justPressed.F12)
 		{
-			screenshit();
+			haxeScript.backend.doFunction("test");
 		}
 	}
 

@@ -1,10 +1,10 @@
 package;
 
+import files.HXFile;
 import common.HscriptTimer;
 import saving.SaveManager;
 import JsonDefinitions;
 import assets.AssetCache;
-import common.BasicHscript;
 import flixel.FlxBasic;
 import haxe.DynamicAccess;
 import hscript.Expr;
@@ -20,7 +20,7 @@ typedef PluginSavedata = {
     public var timers:Array<HscriptTimerSave>;
 }
 
-class CorePlugin extends BasicHscript {
+class CorePluginBackend extends HaxeScriptBackend {
 
     public var savedata:PluginSavedata;
 
@@ -28,75 +28,20 @@ class CorePlugin extends BasicHscript {
 
     public var saveTimers:Bool = false;
 
-    override public function new(scriptPath:String, id:String) {
+    override public function new(frontend:HaxeScript) {
+        super(frontend);
+
         savedata = {
             scriptSaveables: new DynamicAccess(),
 
             timers: null
         }
-
-        name = id;
-
-        super(scriptPath);
     }
 
-    override private function compile(fullScript:String) {
-        if(!exists) return;
-
-        //Parse and compile
-		try
-        {
-            program = parser.parseString(fullScript);
-            interpreter.execute(program);
-
-            ready = true;
-        }
-        catch (e)
-        {
-            // All exceptions will be caught here
-            LogFile.error("Plugin error! |[ " + e.message + " ]| :" + parser.line+"\n",true);
-        }
-    }
-
-    //------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    //------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    //------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-    override function save() {
-        if(!exists || !ready) return;
-        
-        doFunction("OnSave");
-
-        if(saveTimers && timers != null) savedata.timers = timers.saveTimers();
-
-        SaveManager.curSaveData.pluginSavedata.set(name, savedata);
-    }
-
-    override function load() {
-        if(!exists || !ready) return;
-
-        //load custom savedata from cur save data
-        if(SaveManager.curSaveData.pluginSavedata.exists(name))
-        savedata = SaveManager.curSaveData.pluginSavedata.get(name);
-
-        if(saveTimers && savedata.timers != null) loadTimers(savedata.timers);
-
-        doFunction("OnLoad");
-    }
-
-    public function gameStart() {
-        if(!exists || !ready) return;
-        
-        doFunction("OnGameStart");
-    }
-
-    //------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    //------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    //------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-    override public function AddVariables() {
+    override function AddVariables() {
         super.AddVariables();
-		//BASICS
+        //BASICS
+        importPerms = true;
         AddGeneral("import", _import);
 
         //SAVEABLE VARS
@@ -120,37 +65,36 @@ class CorePlugin extends BasicHscript {
         AddGeneral("setLocalString",setLocalString);
     }
 
-    //------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    //------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    //------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    static final blacklist:Array<String> = []; //add keywords that cannot be imported for whatever reason.
+    public function save() {
+        if(!exists || !ready) return;
+        
+        doFunction("OnSave");
 
-    function _import(what:String, as:String) {
-        if(!exists || (Utils.matchesAny(what, blacklist) || Utils.matchesAny(as, blacklist))) return;
+        if(saveTimers && timers != null) savedata.timers = timers.saveTimers();
 
-        //ADD SPECIAL CASES HERE
-        var special:Bool = true;
-        switch (what.toLowerCase()){
-            default: special = false;
-            case "log", "logfile":
-                AddGeneral(as, LogFile);
-            case "con", "console":
-                AddGeneral(as, Console);
-        }
-        if(special)
-            return;
-
-        //Otherwise, let this figure it out
-        var c = Type.resolveClass(what);
-        if(c == null) {LogFile.error("No class exists with the name "+what+"!"); return;}
-        AddGeneral(as,c);
+        SaveManager.curSaveData.pluginSavedata.set(name, savedata);
     }
 
-    //-------------------------------------------------------------------------------------------------------------
-    //--------------------------------------------------LOCAL VARS-------------------------------------------------
-    //-------------------------------------------------------------------------------------------------------------
+    public function load() {
+        if(!exists || !ready) return;
 
+        //load custom savedata from cur save data
+        if(SaveManager.curSaveData.pluginSavedata.exists(name))
+        savedata = SaveManager.curSaveData.pluginSavedata.get(name);
+
+        if(saveTimers && savedata.timers != null) loadTimers(savedata.timers);
+
+        doFunction("OnLoad");
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    
     public function initializeLocalString(name:String, value:String):Null<String> {
         var s = savedata.scriptSaveables.get(name);
         if(s == null){
@@ -250,4 +194,5 @@ class CorePlugin extends BasicHscript {
     public function setLocalString(name:String,s:String):Null<String> {
         return savedata.scriptSaveables.set(name,s);
     }
+
 }

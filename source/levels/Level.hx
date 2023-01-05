@@ -1,6 +1,8 @@
 package levels;
 
-import common.HscriptTimer.HscriptTimerSave;
+import levels.LevelScript.LevelScriptBackend;
+import files.HXFile;
+import common.HscriptTimer;
 import oop.StaticObject;
 import oop.GenericObject;
 import gameside.dialogue.DialogueState;
@@ -114,9 +116,26 @@ class Level {
     //-------------------------------------------------------------------------------------------------------------
 
     //Level script
-    public var script:LevelScript;
+    public var script:HaxeScript;
 
     public var levelSpecificImports:Map<String,Array<{value:Dynamic, name:String}>> = new Map();
+
+    //this script cannot import anything, and has to have everything imported by some superior script like a plugin or main script
+
+    public static var levelImports:Map<String,Array<{value:Dynamic, name:String}>> = new Map();
+
+    public static function addLevelImportPack(name:String, pack:Array<{value:Dynamic, name:String}>) {
+        levelImports.set(name,pack);
+    }
+
+    public static function getLevelImportPack(name:String) {
+        return levelImports.get(name);
+    }
+
+    public static function removeLevelImportPack(name:String) {
+        if(!levelImports.exists(name)) return;
+        levelImports.remove(name);
+    }
 
     //-------------------------------------------------------------------------------------------------------------
 
@@ -145,7 +164,7 @@ class Level {
 
             if(script != null)
             {
-                if(script.ready) script.onLeave();
+                if(script.backend.ready && script.functionExists("OnLeave")) script.doFunction("OnLeave");
 
                 script.destroy();
             }
@@ -266,16 +285,18 @@ class Level {
                 if(doScript){
                     LogFile.log({ message: "Loading Script "+levelFile.script+".\n", caller: "Level", id: 32},false);
                     
-                    script = new LevelScript(this,levelFile.script);
-                    if(saveables.timers != null) script.loadTimers(saveables.timers);
+                    script = HXFile.makeNew(LevelScriptBackend);
+                    script._dynamic.backend.level = this;
+                    HXFile.compileFromFile(script,levelFile.script);
+                    if(saveables.timers != null) script.backend.loadTimers(saveables.timers);
                     
                     if(saveables.firstTime){
                         saveables.firstTime = false;
-                        script.start();
+                        if(script.functionExists("OnStart")) script.doFunction("OnStart");
                     }
 
-                    if(load) script.load();
-                    else script.onEnter();
+                    if(load) script.doFunction("OnLoad");
+                    else if(script.functionExists("OnEnter")) script.doFunction("OnEnter");
                 }
             }
             else{
@@ -310,7 +331,7 @@ class Level {
         layers.draw();
 
         if(script != null){
-            script.draw();
+            script.doFunction("OnDraw");
         }
 
         Console.endProfile("drawLevel");
@@ -350,8 +371,8 @@ class Level {
 
     public function onSave() {
         if(script != null) {
-            script.save();
-            if(script.timers != null) saveables.timers = script.timers.saveTimers();
+            script.doFunction("OnSave");
+            if(script.backend.timers != null) saveables.timers = script.backend.timers.saveTimers();
         }
 
         SaveManager.curSaveData.mapSaveables.set(this.path,saveables);

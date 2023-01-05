@@ -1,5 +1,6 @@
 package oop.premades;
 
+import files.HXFile.HaxeScript;
 import common.HscriptTimer;
 import oop.Component;
 import assets.SoundAsset;
@@ -47,54 +48,45 @@ class AudioSourceComponent extends Component {
     private var _debugSprite_icon:Null<FlxSprite> = null;
     private var _debugText:Null<FlxText> = null;
 
-    override public function new(instancer:Dynamic, owner:Object) {
-        super(null,owner);
-
-        var instance:ComponentInstance = null;
-        if(instancer.component != null) instance = instancer;
-
-        if(instance == null) return;
-
-        componentType = "AudioSource";
+    override function create(instance:ComponentInstance) {
+        super.create(instance);
 
         //TODO - idk how to handle audio source start data due to the many use cases of this component
 
+        compiled = true;
         ready = true;
 
         generateFrontend();
     }
 
-    override private function generateFrontend() {
+    private function generateFrontend() {
         if(!ready || !exists) return;
 
-        componentFrontend = {};
-
-        componentFrontend.camera = camera;
-        componentFrontend.cameras = cameras;
+        final frontend:Dynamic = frontend;
 
         //owner
-        componentFrontend.transform = owner.transform;
-        componentFrontend.getComponent = owner.getComponent;
-        componentFrontend.hasComponent = owner.hasComponent;
+        frontend.transform = owner.transform;
+        frontend.getComponent = owner.getComponent;
+        frontend.hasComponent = owner.hasComponent;
 
         //children
-        componentFrontend.getNumberOfChildren = owner.getNumberOfChildren;
-        componentFrontend.getChildAt = owner.getChildAt;
+        frontend.getNumberOfChildren = owner.getNumberOfChildren;
+        frontend.getChildAt = owner.getChildAt;
 
-        componentFrontend.Level = owner.level;
+        frontend.Level = owner.level;
 
         
-        componentFrontend.setOffset = setOffset;
-        componentFrontend.setImportant = setImportant;
+        frontend.setOffset = setOffset;
+        frontend.setImportant = setImportant;
 
-        componentFrontend.playClip = playClip;
-        componentFrontend.setProximity = setProximity;
-        componentFrontend.removeProximity = removeProximity;
+        frontend.playClip = playClip;
+        frontend.setProximity = setProximity;
+        frontend.removeProximity = removeProximity;
         
-        componentFrontend.getRadius = get_radius;
-        componentFrontend.setRadius = set_radius;
-        componentFrontend.getPanning = getPanning;
-        componentFrontend.setPanning = setPanning;
+        frontend.getRadius = get_radius;
+        frontend.setRadius = set_radius;
+        frontend.getPanning = getPanning;
+        frontend.setPanning = setPanning;
     }
 
     //------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -106,11 +98,9 @@ class AudioSourceComponent extends Component {
     override function awake() {}
     override function start() {}
     override function compile(fullScript:String) {}
-    override function requireComponent(typeof:String):Dynamic { return null; }
+    override function requireComponent(typeof:String):HaxeScript { return null; }
     override function AddGeneral(name:String, toAdd:Dynamic) {}
     override function AddVariables() {}
-    override function _traceLocals() {}
-    override function _trace(content:Dynamic) {}
     override function functionExists(func:String):Bool { return false; }
     override function doFunction(func:String, ?args:Array<Dynamic>):Dynamic { return null; }
     override function getFunction(func:String):Dynamic { return null; }
@@ -235,12 +225,11 @@ class AudioSourceComponent extends Component {
 
         //default basic destroy (so i don't have to call super)
         exists = false;
-		_cameras = null;
     }
 
-    override public function clone(newParent:Object):Component {
-
-        var clone:AudioSourceComponent = new AudioSourceComponent("", newParent);
+    override public function clone(newParent:Object):HaxeScript {
+        var c:HaxeScript = Component.instanceComponent("AudioSource",newParent);
+        var clone:AudioSourceComponent = c._dynamic.backend;
         
         if(clip != null) {
             clone.playClip(clip.curAsset.key);
@@ -253,7 +242,7 @@ class AudioSourceComponent extends Component {
         else
             clone.setPanning(panning);
 
-        return clone;
+        return c;
     }
 
     //------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -404,14 +393,6 @@ class AudioSourceComponent extends Component {
     //------------------------------------------------------------------------------------------------------------------------------------------------------------------
     //------------------------------------------------------------------------------------------------------------------------------------------------------------------
     //------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-    override function set_camera(value:FlxCamera):FlxCamera {
-        return super.set_camera(value);
-    }
-
-    override function set_cameras(value:Array<FlxCamera>):Array<FlxCamera> {
-        return super.set_cameras(value);
-    }
 
 	function get_radius():Float {
         if(!usingProximity) return 0;

@@ -1,77 +1,27 @@
 package levels;
 
+import utility.Utils;
+import files.HXFile;
 import Discord.DiscordClient;
 import saving.SaveManager;
 import utility.LogFile;
-import common.BasicHscript;
 import flixel.FlxBasic;
 
-class LevelScript extends BasicHscript {
+class LevelScriptBackend extends HaxeScriptBackend {
 
     //class for level script.
     //this script cannot import anything, and has to have everything imported by some superior script like a plugin or main script
-
-    public static var levelImports:Map<String,Array<{value:Dynamic, name:String}>> = new Map();
-
-    public static function addLevelImportPack(name:String, pack:Array<{value:Dynamic, name:String}>) {
-        levelImports.set(name,pack);
-    }
-
-    public static function getLevelImportPack(name:String) {
-        return levelImports.get(name);
-    }
-
-    public static function removeLevelImportPack(name:String) {
-        if(!levelImports.exists(name)) return;
-        levelImports.remove(name);
-    }
-
-    //----------------------------------------------------------------------------------------
-
-
-    public var level:Level;
     
-    override public function new(owner:Level, scriptPath:String) {
-        level = owner;
-        super(scriptPath);
-    }
+    public var level:Level;
 
     override function AddVariables() {
         super.AddVariables();
+        if(Utils.checkNull(level,true,null,"Level script does not have level instance attached!")) return;
+        //LEVEL IMPORTS 
 
-        AddGeneral("Log",LogFile);
-        AddGeneral("DiscordRPC", #if windows DiscordClient #else HscriptMissingDiscord #end );
-
-        //SAVEABLE VARS
-
-        //initializers
-        AddGeneral("initializeLocalString",initializeLocalString);
-        AddGeneral("initializeLocalInt",initializeLocalInt);
-        AddGeneral("initializeLocalFloat",initializeLocalFloat);
-        AddGeneral("initializeLocalBool",initializeLocalBool);
-
-        //getters
-        AddGeneral("getLocalString",getLocalString);
-        AddGeneral("getLocalInt",getLocalInt);
-        AddGeneral("getLocalFloat",getLocalFloat);
-        AddGeneral("getLocalBool",getLocalBool);
-
-        //setters
-        AddGeneral("setLocalBool",setLocalBool);
-        AddGeneral("setLocalFloat",setLocalFloat);
-        AddGeneral("setLocalInt",setLocalInt);
-        AddGeneral("setLocalString",setLocalString);
-
-        //standard functions
-
-        AddGeneral("getObjectByName",level.getObjectByName);
-        AddGeneral("getObjectInLayerByName",level.getObjectInLayerByName);
-        AddGeneral("getRailByName",level.getRailByName);
-        AddGeneral("getRailInLayerByName",level.getRailInLayerByName);
-
-        for (pack in levelImports) {
-            for (imp in pack) {
-                AddGeneral(imp.name,imp.value);
+        for (array in Level.levelImports) {
+            for (imp in array) {
+                AddGeneral(imp.name, imp.value);
             }
         }
 
@@ -80,22 +30,34 @@ class LevelScript extends BasicHscript {
                 AddGeneral(imp.name,imp.value);
             }
         }
-    }
 
-    //----------------------------------------------------------------------------------------
+        //SAVEABLE VARS
 
-    public function onLeave() 
-    {if(!exists || !ready) return;
+        //Initializers
+        AddGeneral("initializeLocalString",initializeLocalString);
+        AddGeneral("initializeLocalInt",initializeLocalInt);
+        AddGeneral("initializeLocalFloat",initializeLocalFloat);
+        AddGeneral("initializeLocalBool",initializeLocalBool);
 
-        if(getFunction("OnLeave") != null)
-            doFunction("OnLeave");
-    }
+        //Getters
+        AddGeneral("getLocalString",getLocalString);
+        AddGeneral("getLocalInt",getLocalInt);
+        AddGeneral("getLocalFloat",getLocalFloat);
+        AddGeneral("getLocalBool",getLocalBool);
 
-    public function onEnter()
-    {if(!exists || !ready) return;
+        //Setters
+        AddGeneral("setLocalBool",setLocalBool);
+        AddGeneral("setLocalFloat",setLocalFloat);
+        AddGeneral("setLocalInt",setLocalInt);
+        AddGeneral("setLocalString",setLocalString);
 
-        if(getFunction("OnEnter") != null)
-            doFunction("OnEnter");
+
+        //Standard functions
+
+        AddGeneral("getObjectByName",level.getObjectByName);
+        AddGeneral("getObjectInLayerByName",level.getObjectInLayerByName);
+        AddGeneral("getRailByName",level.getRailByName);
+        AddGeneral("getRailInLayerByName",level.getRailInLayerByName);
     }
 
     //-------------------------------------------------------------------------------------------------------------
@@ -203,5 +165,10 @@ class LevelScript extends BasicHscript {
     }
 
     //---------------------------------------------------------------------------------------------------
+
+    override function destroy() {
+        level = null;
+        super.destroy();
+    }
 
 }

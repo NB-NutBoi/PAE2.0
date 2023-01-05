@@ -1,5 +1,6 @@
 package oop.premades;
 
+import files.HXFile.HaxeScript;
 import common.HscriptTimer;
 import haxe.DynamicAccess;
 import oop.Component;
@@ -20,69 +21,60 @@ class SaveDataComponent extends Component {
 
     public var key:String;
 
-    override public function new(comp:Dynamic, owner:Object) {
-        super(null,owner);
-
-        var instance:ComponentInstance = null;
-        if(comp.component != null) instance = comp;
-
-        if(instance == null) return;
-
-        componentType = "SaveData";
+    override function create(instance:ComponentInstance) {
+        super.create(instance);
 
         key = owner.name+"."+instance.startingData.uniqueKey;
 
+        compiled = true;
         ready = true;
 
         generateFrontend();
     }
 
-    override private function generateFrontend() {
+    private function generateFrontend() {
         if(!ready || !exists) return;
 
-        componentFrontend = {};
-
-        componentFrontend.camera = camera;
-        componentFrontend.cameras = cameras;
+        final frontend:Dynamic = frontend;
 
         //owner
-        componentFrontend.transform = owner.transform;
-        componentFrontend.getComponent = owner.getComponent;
+        frontend.transform = owner.transform;
+        frontend.getComponent = owner.getComponent;
 
         //children
-        componentFrontend.getNumberOfChildren = owner.getNumberOfChildren;
-        componentFrontend.getChildAt = owner.getChildAt;
+        frontend.getNumberOfChildren = owner.getNumberOfChildren;
+        frontend.getChildAt = owner.getChildAt;
 
-        componentFrontend.Level = owner.level;
+        frontend.Level = owner.level;
 
         //key
-        componentFrontend.setKey = setKey;
+        frontend.setKey = setKey;
 
         //variables
-        componentFrontend.initVarInt = initVarInt;
-        componentFrontend.saveVarInt = saveVarInt;
-        componentFrontend.getVarInt = getVarInt;
-        componentFrontend.getVarIntUnsafe = getVarIntUnsafe;
+        frontend.initVarInt = initVarInt;
+        frontend.saveVarInt = saveVarInt;
+        frontend.getVarInt = getVarInt;
+        frontend.getVarIntUnsafe = getVarIntUnsafe;
 
-        componentFrontend.initVarFloat = initVarFloat;
-        componentFrontend.saveVarFloat = saveVarFloat;
-        componentFrontend.getVarFloat = getVarFloat;
-        componentFrontend.getVarFloatUnsafe = getVarFloatUnsafe;
+        frontend.initVarFloat = initVarFloat;
+        frontend.saveVarFloat = saveVarFloat;
+        frontend.getVarFloat = getVarFloat;
+        frontend.getVarFloatUnsafe = getVarFloatUnsafe;
 
-        componentFrontend.initVarBool = initVarBool;
-        componentFrontend.saveVarBool = saveVarBool;
-        componentFrontend.getVarBool = getVarBool;
-        componentFrontend.getVarBoolUnsafe = getVarBoolUnsafe;
+        frontend.initVarBool = initVarBool;
+        frontend.saveVarBool = saveVarBool;
+        frontend.getVarBool = getVarBool;
+        frontend.getVarBoolUnsafe = getVarBoolUnsafe;
 
-        componentFrontend.initVarString = initVarString;
-        componentFrontend.saveVarString = saveVarString;
-        componentFrontend.getVarString = getVarString;
-        componentFrontend.getVarStringUnsafe = getVarStringUnsafe;
+        frontend.initVarString = initVarString;
+        frontend.saveVarString = saveVarString;
+        frontend.getVarString = getVarString;
+        frontend.getVarStringUnsafe = getVarStringUnsafe;
 
         //DANGEROUS!!! MAKE SURE YOU KNOW WHAT YOU'RE DOING!!!
-        componentFrontend.initVarUnsafe = initVarUnsafe;
-        componentFrontend.saveVarUnsafe = saveVarUnsafe;
-        componentFrontend.getVarUnsafe = getVarUnsafe;
+        frontend.initVarUnsafe = initVarUnsafe;
+        frontend.saveVarUnsafe = saveVarUnsafe;
+        frontend.getVarUnsafe = getVarUnsafe;
     }
 
     //------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -94,11 +86,9 @@ class SaveDataComponent extends Component {
     override function awake() {}
     override function start() {}
     override function compile(fullScript:String) {}
-    override function requireComponent(typeof:String):Dynamic { return null; }
+    override function requireComponent(typeof:String):HaxeScript { return null; }
     override function AddGeneral(name:String, toAdd:Dynamic) {}
     override function AddVariables() {}
-    override function _traceLocals() {}
-    override function _trace(content:Dynamic) {}
     override function functionExists(func:String):Bool { return false; }
     override function doFunction(func:String, ?args:Array<Dynamic>):Dynamic { return null; }
     override function getFunction(func:String):Dynamic { return null; }
@@ -110,6 +100,8 @@ class SaveDataComponent extends Component {
     override function importClassByName(name:String) {}
     override function getTimers() { return null; }
     override function loadTimers(from:Array<HscriptTimerSave>) {}
+
+    override function decompile() {}
 
     //overrides
 
@@ -124,10 +116,9 @@ class SaveDataComponent extends Component {
 
         //default basic destroy (so i don't have to call super)
         exists = false;
-		_cameras = null;
     }
 
-    override public function clone(newParent:Object):Component {
+    override public function clone(newParent:Object):HaxeScript {
 
         LogFile.error("Cannot clone a SaveData component!");
 
@@ -269,17 +260,5 @@ class SaveDataComponent extends Component {
         final data = getSaveData();
         if(!data.exists(name)) return false;
         return Std.isOfType(data.get(name), type);
-    }
-
-    //------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    //------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    //------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-    override function set_camera(value:FlxCamera):FlxCamera {
-        return super.set_camera(value);
-    }
-
-    override function set_cameras(value:Array<FlxCamera>):Array<FlxCamera> {
-        return super.set_cameras(value);
     }
 }

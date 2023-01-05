@@ -3,7 +3,7 @@
 
 //------------------------------------------------------------------------------
 
-function __setComponentValue(name:String, to:Dynamic)
+function __setComponentValue(name:String, to:Dynamic):Dynamic
 {
 	if(!__this.interpreter.locals.exists(name)) return;
 	return __this.interpreter.locals.get(name).r = to;

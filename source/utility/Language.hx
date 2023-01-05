@@ -148,6 +148,8 @@ class Language {
     public var prefix:String = "english";
     public var entries:Map<String,String> = new Map();
 
+    public var properties:Map<String,Any> = new Map();
+
     public function new(pre:String, file:Dynamic) {
         prefix = pre;
         parseCategory("",file);
@@ -159,6 +161,7 @@ class Language {
         for (s in Reflect.fields(category)) {
             var a:Dynamic = Reflect.field(category,s);
             if(Std.isOfType(a, String)) entries.set(cat+append+s,a);
+            else if(!Reflect.isObject(a)) properties.set(cat+append+s,a);
             else parseCategory(cat+append+s,a);
         }
     }
@@ -174,6 +177,10 @@ class Language {
     public function append(otherfile:Language) {
         for (s in otherfile.entries.keys()) {
             entries.set(s,otherfile.entries[s]);
+        }
+
+        for (s in otherfile.properties.keys()) {
+            properties.set(s,otherfile.properties[s]);
         }
 
         otherfile.destroy(); //it has served its purpose.

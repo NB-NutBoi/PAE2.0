@@ -1,5 +1,6 @@
 package oop.premades;
 
+import files.HXFile.HaxeScript;
 import common.HscriptTimer;
 import oop.Component;
 import oop.Component.ComponentInstanciator;
@@ -19,18 +20,11 @@ class SpriteComponent extends Component {
     public var offsetX:Float = 0;
     public var offsetY:Float = 0;
 
-    override public function new(instancer:Dynamic, owner:Object) {
-        super(null,owner);
+    override function create(instance:ComponentInstance) {
+        super.create(instance);
 
         sprite = new Sprite(0,0,null);
         sprite.cameras = owner.cameras; //default
-
-        var instance:ComponentInstance = null;
-        if(instancer.component != null) instance = instancer;
-
-        if(instance == null) return;
-
-        componentType = "Sprite";
 
         texture = instance.startingData.texture;
 
@@ -50,50 +44,48 @@ class SpriteComponent extends Component {
         sprite.flipX = instance.startingData.flipX;
         sprite.flipY = instance.startingData.flipY;
 
+        compiled = true;
         ready = true;
 
         generateFrontend();
     }
 
-    override private function generateFrontend() {
+    private function generateFrontend() {
         if(!ready || !exists) return;
 
-        componentFrontend = {};
-
-        componentFrontend.camera = camera;
-        componentFrontend.cameras = cameras;
+        final frontend:Dynamic = frontend;
 
         //owner
-        componentFrontend.transform = owner.transform;
-        componentFrontend.getComponent = owner.getComponent;
-        componentFrontend.hasComponent = owner.hasComponent;
+        frontend.transform = owner.transform;
+        frontend.getComponent = owner.getComponent;
+        frontend.hasComponent = owner.hasComponent;
 
         //children
-        componentFrontend.getNumberOfChildren = owner.getNumberOfChildren;
-        componentFrontend.getChildAt = owner.getChildAt;
+        frontend.getNumberOfChildren = owner.getNumberOfChildren;
+        frontend.getChildAt = owner.getChildAt;
 
-        componentFrontend.Level = owner.level;
+        frontend.Level = owner.level;
 
         
-        componentFrontend.setOffset = setOffset;
-        componentFrontend.setImportant = setImportant;
+        frontend.setOffset = setOffset;
+        frontend.setImportant = setImportant;
 
-        componentFrontend.overlapsMouse = overlapsMouse;
-        componentFrontend.setVisible = setVisible;
-        componentFrontend.isAnimated = isAnimated;
+        frontend.overlapsMouse = overlapsMouse;
+        frontend.setVisible = setVisible;
+        frontend.isAnimated = isAnimated;
 
-        componentFrontend.setGlowing = setGlowing;
-        componentFrontend.setColorTransform = setColorTransform;
+        frontend.setGlowing = setGlowing;
+        frontend.setColorTransform = setColorTransform;
 
-        componentFrontend.setTexture = set_texture;
-        componentFrontend.getTexture = get_texture;
+        frontend.setTexture = set_texture;
+        frontend.getTexture = get_texture;
 
-        componentFrontend.requestAnimation = requestAnimation;
-        componentFrontend.playAnimation = playAnimation;
+        frontend.requestAnimation = requestAnimation;
+        frontend.playAnimation = playAnimation;
 
-        componentFrontend.setSize = setSize;
-        componentFrontend.getWidth = getWidth;
-        componentFrontend.getHeight = getHeight;
+        frontend.setSize = setSize;
+        frontend.getWidth = getWidth;
+        frontend.getHeight = getHeight;
         
     }
 
@@ -106,11 +98,9 @@ class SpriteComponent extends Component {
     override function awake() {}
     override function start() {}
     override function compile(fullScript:String) {}
-    override function requireComponent(typeof:String):Dynamic { return null; }
+    override function requireComponent(typeof:String):HaxeScript { return null; }
     override function AddGeneral(name:String, toAdd:Dynamic) {}
     override function AddVariables() {}
-    override function _traceLocals() {}
-    override function _trace(content:Dynamic) {}
     override function functionExists(func:String):Bool { return false; }
     override function doFunction(func:String, ?args:Array<Dynamic>):Dynamic { return null; }
     override function getFunction(func:String):Dynamic { return null; }
@@ -139,8 +129,7 @@ class SpriteComponent extends Component {
     }
 
     override function draw() {
-        if(!exists || !ready) return;
-
+        if(sprite == null || !visible) return;
         sprite.draw();
     }
 
@@ -151,12 +140,12 @@ class SpriteComponent extends Component {
 
         //default basic destroy (so i don't have to call super)
         exists = false;
-		_cameras = null;
+        thisClass = null;
     }
 
-    override public function clone(newParent:Object):Component {
-
-        var clone:SpriteComponent = new SpriteComponent("", newParent);
+    override public function clone(newParent:Object):HaxeScript {
+        var c:HaxeScript = Component.instanceComponent("Sprite",newParent);
+        var clone:SpriteComponent = c._dynamic.backend;
         clone.texture = texture;
 
         clone.offsetX = offsetX;
@@ -164,7 +153,7 @@ class SpriteComponent extends Component {
 
         clone.setSize(Std.int(sprite.width), Std.int(sprite.height));
 
-        return clone;
+        return c;
     }
 
     //------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -174,7 +163,7 @@ class SpriteComponent extends Component {
     //api for interacting with this through the frontend
 
     public function overlapsMouse(?pixelAccurate:Bool = false) {
-        return Utils.overlapsSprite(sprite, Utils.getMousePosInCamera(cameras[0]), pixelAccurate, owner.level.collisionLayer);
+        return Utils.overlapsSprite(sprite, owner.camera, pixelAccurate, owner.level.collisionLayer);
     }
 
     public function setOffset(?x:Float = 0, ?y:Float = 0) {
@@ -238,12 +227,4 @@ class SpriteComponent extends Component {
         
 		return value;
 	}
-
-    override function set_camera(value:FlxCamera):FlxCamera {
-        return sprite.camera = value;
-    }
-
-    override function set_cameras(value:Array<FlxCamera>):Array<FlxCamera> {
-        return sprite.cameras = value;
-    }
 }

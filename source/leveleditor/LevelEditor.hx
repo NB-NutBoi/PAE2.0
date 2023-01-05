@@ -333,7 +333,7 @@ class LevelEditor extends CoreState {
     //AXLE HANDLES
 
     function move() {
-        if(curEditedObject == null) return;
+        if(Utils.checkNull(curEditedObject,true,"Level editor axle - move()")) return;
 
         if(snappingEnabled){
 
@@ -352,7 +352,7 @@ class LevelEditor extends CoreState {
     }
 
     function rotate() {
-        if(curEditedObject == null) return;
+        if(Utils.checkNull(curEditedObject,true,"Level editor axle - rotate()")) return;
 
         curEditedObject.transform.setVisualAngle(axle.angle);
     }
@@ -591,7 +591,7 @@ class LevelEditor extends CoreState {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	static function set_curEditedObject(value:GenericObjectVisualizer):GenericObjectVisualizer {
-        if(instance == null) return curEditedObject = null;
+        if(Utils.checkNull(instance,false)) return curEditedObject = null;
         if(value != null) {
             LevelEditor.instance.axle.setPosition(value.transform.internalX, value.transform.internalY);
             LevelEditor.instance.axle.angle = value.transform.internalAngle;
@@ -652,7 +652,7 @@ class LevelEditor extends CoreState {
     }
 
     public function deleteObject(obj:GenericObjectVisualizer) {
-        if(obj == null) return;
+        if(Utils.checkNull(obj,true,"Level Editor - deleteObject()")) return;
         obj.existsInLevel = false;
 
         if(obj.parent != null){

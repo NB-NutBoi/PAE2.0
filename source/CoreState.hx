@@ -1,5 +1,8 @@
 package;
 
+import CorePlugin;
+import files.HXFile;
+import files.HXFile.HaxeScript;
 import ui.elements.Context;
 import ui.elements.ColorPicker.ColorWheel;
 import gameside.inventory.ItemContainer;
@@ -107,76 +110,48 @@ class CoreState extends FlxState {
     public static var coreInitialized:Bool = false;
     public static var coreStarted:Bool = false;
 
-    public static var mainScript:CorePlugin;
-    public static var plugins:Map<String,CorePlugin>;
-
-    public static var tryUpdatePlugin:String->Bool;
+    public static var mainScript:HaxeScript;
 
     public static function initCore() {
         coreInitialized = true;
 
-        tryUpdatePlugin = defaultUpdatePlugin;
-
-        plugins = new Map();
-
         final mainScriptPath = Main.SetupConfig.getConfig("MainScript","String","");
         if(Utils.checkExternalHaxeFileValid(mainScriptPath)){
             AssetCache.cacheData(mainScriptPath);
-            mainScript = new CorePlugin(mainScriptPath, "MainScript"); //careful using OnAwake, it's not safe to do everything yet, save most important stuff to OnStart
+            mainScript = HXFile.makeNew(CorePluginBackend);
+            mainScript._dynamic.backend.name = "MainScript";
+            HXFile.compileFromFile(mainScript,mainScriptPath);
         }
 
         if(mainScript == null){
             LogFile.fatalError("!!! MAIN SCRIPT \""+mainScriptPath+"\" COULD NOT BE INITIATED !!!", 10);
             return;
         } 
-        
-        mainScript.AddGeneral("plugins",plugins);
-        mainScript.AddGeneral("loadPlugin",loadPlugin);
     }
 
     public static function startCore() {
         coreStarted = true;
     
-        mainScript.start(); //should init plugins here
-        for (plugin in plugins) {
-            plugin.start();
-        }
-
-        mainScript.gameStart();
+        mainScript.doFunction("OnStart"); //should init plugins here
+        mainScript.doFunction("OnGameStart");
     }
 
     public static function updateCore(elapsed:Float) {
         _frame = false;
         
 
-        mainScript.update(elapsed);
-        for (plugin in plugins) {
-            if(tryUpdatePlugin(plugin.name)) plugin.update(elapsed);
-        }
+        mainScript._dynamic.backend.doFunction("OnUpdate",[elapsed]);
     }
 
     public static function lateUpdateCore(elapsed:Float) {
         _lateFrame = false;
 
 
-        mainScript.lateUpdate(elapsed);
-        for (plugin in plugins) {
-            if(tryUpdatePlugin(plugin.name)) plugin.lateUpdate(elapsed);
-        }
+        mainScript.doFunction("OnLateUpdate",[elapsed]);
     }
 
-    static function defaultUpdatePlugin(plugin:String):Bool {
-        return true;
-    }
-    
     static function drawCore() {
-        mainScript.draw();
-    }
-
-    static function loadPlugin(path:String, name:String) {
-        final plugin = new CorePlugin(path,name);
-        plugin.AddGeneral("MainScript",mainScript);
-        plugins.set(name,plugin);
+        mainScript.doFunction("OnDraw");
     }
 
     public static function DestroyCore() {
@@ -189,12 +164,12 @@ class CoreState extends FlxState {
     public static final onLoad:Event<String->Void> = new Event<String->Void>();
 
     public static function Save(where:String) {
-        mainScript.save();
+        mainScript._dynamic.backend.save();
         onSave.dispatch(where);
     }
 
     public static function Load(what:String) {
-        mainScript.load();
+        mainScript._dynamic.backend.load();
         onLoad.dispatch(what);
     }
 

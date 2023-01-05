@@ -1,7 +1,6 @@
 package ui;
 
 import Discord.DiscordClient;
-import common.BasicHscript.HScriptable;
 import hscript.Expr;
 import hscript.Interp;
 import hscript.Parser;
@@ -9,7 +8,7 @@ import sys.io.File;
 import utility.LogFile;
 import utility.Utils;
 
-class DMenuScript implements HScriptable {
+class DMenuScript {
 
     public var owner:DMenu;
 

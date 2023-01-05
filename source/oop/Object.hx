@@ -1,6 +1,9 @@
 package oop;
 
 //don't bother on FlxObject, it's got too much functionality, i can write most of what i need myself, specialized for this.
+import files.HXFile.HaxeScriptBackend;
+import lowlevel.ListenerArray;
+import files.HXFile.HaxeScript;
 import levels.Level;
 import JsonDefinitions;
 import oop.Component.ComponentInstance;
@@ -52,7 +55,7 @@ enum ObjectDrawOrder {
 class Object extends GenericObject {
     
     //logic stuff
-    public var componets:FlxTypedGroup<Component>;
+    public var componets:ListenerArray<HaxeScript>;
 
     public static function fromJson(instance:FullObjectDataStructure, level:Level):Object {
         final object = new Object(instance.transform.X, instance.transform.Y);
@@ -70,7 +73,7 @@ class Object extends GenericObject {
 
         for (compInst in instance.components) {
             final comp = Component.instanceComponent(compInst, object);
-            object.componets.add(comp);
+            object.componets.push(comp);
         }
 
         for (childInst in instance.children) {
@@ -79,7 +82,7 @@ class Object extends GenericObject {
         }
 
         for (component in object.componets) {
-            component.start();
+            component._dynamic.backend.start();
         }
 
         return object;
@@ -88,29 +91,35 @@ class Object extends GenericObject {
     override public function new(x:Float = 0, y:Float = 0) {
         super(x,y);
 
-        componets = new FlxTypedGroup();
+        componets = new ListenerArray();
 
-        componets.memberAdded.add(onAddComponent);
+        componets.onArrayAdd.add(onAddComponent);
     }
 
     override public function update(elapsed:Float) {
         super.update(elapsed);
-        componets.update(elapsed);
+        for (script in componets) {
+            script.update(elapsed);
+        }
     }
 
     override function lateUpdate(elapsed:Float) {
         for (component in componets) {
-            component.lateUpdate(elapsed);
+            component.doFunction("OnLateUpdate", [elapsed]);
         }
         super.lateUpdate(elapsed);
     }
 
     override function drawObject() {
-        componets.draw();
+        for (script in componets) {
+            script._dynamic.backend.draw();
+        }
     }
 
     override public function destroy() {
-        componets.destroy();
+        for (script in componets) {
+            script.destroy();
+        }
 
         super.destroy();
     }
@@ -118,57 +127,53 @@ class Object extends GenericObject {
     //------------------------------------------------------------------------------------------------------------------------------------------------------
 
     override public function save() {
-        componets.forEach(_saveComponent);
+        componets.map(_saveComponent);
         super.save();
     }
 
-    private final function _saveComponent(component:Component) { component.save(); }
+    private final function _saveComponent(component:HaxeScript):HaxeScript { cast(component.backend, Component).save(); return component; }
 
     override public function load() {
-        componets.forEach(_loadComponent);
+        componets.map(_loadComponent);
         super.load();
     }
 
-    private final function _loadComponent(component:Component) { component.load(); }
+    private final function _loadComponent(component:HaxeScript):HaxeScript { cast(component.backend, Component).load(); return component; }
 
     //------------------------------------------------------------------------------------------------------------------------------------------------------
 
     override function set_camera(value:FlxCamera):FlxCamera {
-        componets.forEach(onAddComponent);
-        componets.camera = value;
-
+        componets.map(onAddComponent);
         return super.set_camera(value);
     }
 
     override function set_cameras(value:Array<FlxCamera>):Array<FlxCamera> {
-        componets.forEach(onAddComponent);
-        componets.cameras = value;
-
+        componets.map(onAddComponent);
         return super.set_cameras(value);
     }
 
     //------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-    public function getComponent(type:String):Dynamic {
-        for (component in componets.members) {
-            if(component.componentType == type) return component.componentFrontend;
+    public function getComponent(type:String):HaxeScript {
+        for (component in componets) {
+            if(component._dynamic.backend.componentType == type) return component;
         }
         
         return null;
     }
 
-    public function getComponentBackend(type:String):Component {
-        for (component in componets.members) {
-            if(component.componentType == type) return component;
+    public function getComponentBackend(type:String):HaxeScriptBackend {
+        for (component in componets) {
+            if(component._dynamic.backend.componentType == type) return component.backend;
         }
         
         return null;
     }
 
     public function hasComponent(type:String):Bool {
-        for (component in componets.members) {
-            if(component.componentType == type) return true;
+        for (component in componets) {
+            if(component._dynamic.backend.componentType == type) return true;
         }
         
         return false;
@@ -176,8 +181,9 @@ class Object extends GenericObject {
 
     //------------------------------------------------------------------------------------------------------------------------------------------------------
 
-    function onAddComponent(value:Component) {
-        value.cameras = cameras;
+    //check if we still need this
+    function onAddComponent(value:HaxeScript):HaxeScript {
+        return value;
     }
 
     //------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -189,11 +195,11 @@ class Object extends GenericObject {
             var instance = cast(instance, Object);
             var instantiated = cast(instantiated, Object);
 
-        for (component in instance.componets.members) {
+        for (component in instance.componets) {
             if(component == null) continue;
-            var c = component.clone(instantiated);
+            var c = component._dynamic.backend.clone(instantiated);
             if(c == null) continue;
-            instantiated.componets.add(c);
+            instantiated.componets.push(c);
         }
     }
 }

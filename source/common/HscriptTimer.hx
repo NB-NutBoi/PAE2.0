@@ -1,9 +1,7 @@
 package common;
 
+import files.HXFile.HaxeScriptBackend;
 import flixel.util.FlxDestroyUtil;
-import flixel.util.FlxDestroyUtil;
-import flixel.util.FlxDestroyUtil.IFlxDestroyable;
-import common.BasicHscript.HScriptable;
 import haxe.ds.StringMap;
 import flixel.FlxBasic;
 
@@ -91,11 +89,11 @@ class HscriptTimer implements IFlxDestroyable {
 //the manager within script files.
 class HscriptTimerManager extends FlxBasic {
 
-    public var script:HScriptable;
+    public var script:HaxeScriptBackend;
 
     var _timers:StringMap<HscriptTimer> = new StringMap();
 
-    public static function load(from:Array<HscriptTimerSave>, owner:HScriptable):HscriptTimerManager {
+    public static function load(from:Array<HscriptTimerSave>, owner:HaxeScriptBackend):HscriptTimerManager {
         var manager = new HscriptTimerManager(owner);
         for (timerSave in from) {
             manager.loadTimer(timerSave);
@@ -138,7 +136,7 @@ class HscriptTimerManager extends FlxBasic {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    public function new(script:HScriptable)
+    public function new(script:HaxeScriptBackend)
     {
         super();
 

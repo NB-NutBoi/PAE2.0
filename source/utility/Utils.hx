@@ -129,7 +129,7 @@ class Utils {
 		
 		var mousePos:FlxPoint = null;
 		if(mouse == null) mousePos = getMousePosInCamera(spr.camera,null,spr);
-		switch (Type.getClass(mouse)){ //abstracted mouse to not be so strict!
+		else switch (Type.getClass(mouse)){ //abstracted mouse to not be so strict!
 			case FlxCamera: mousePos = getMousePosInCamera(cast mouse,null,spr);
 			case FlxPoint: mousePos = cast mouse;
 			default: return false;
@@ -440,6 +440,14 @@ class Utils {
 	}
 
 	//DATA--------------------------------------------------------------------------------------------------------------------------------------------
+
+	//i don't think it should be inlined? feel free to change it.
+	public static function checkNull(o:Dynamic, ?log:Bool = true, ?functionName:String = null, ?customMessage:String = null) {
+		if(o != null) return false;
+
+		if(log) customMessage == null ? LogFile.error(functionName == null ? "Fed a null object to a function!" : "Fed a null object to the function "+functionName+"!") : LogFile.error(customMessage);
+		return true;
+	}
 
 	public static function arrayFromIterator<T>(iterator:Iterator<T>):Array<T> {
 		if(iterator == null) return [];

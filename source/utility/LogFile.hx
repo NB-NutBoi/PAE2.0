@@ -78,8 +78,10 @@ class LogFile {
 			f.writeString(s);
 			f.close();
 
+			#if debug
 			if (Trace)
 				trace(s.replace("\n", "[br]"));
+			#end
 
 			f = null;
 			message = null;
@@ -94,8 +96,10 @@ class LogFile {
 			f.writeString(message);
 			f.close();
 
+			#if debug
 			if (Trace)
 				trace(message.replace("\n", "[br]"));
+			#end
 
 			f = null;
 			message = null;
@@ -107,7 +111,7 @@ class LogFile {
 	 * @param Message the message
 	 * @param Trace if it should be traced to the powershell console
 	 */
-	public static function log(Message:Message,?Trace:Bool=false) {
+	public static function log(Message:Message,?Trace:Bool=false,?Print:Bool=false) {
 
 		var result = false;
 		var test:LogMessage = cast Message;
@@ -119,14 +123,14 @@ class LogFile {
 		{
 			var m:LogMessage = cast Message;
 			m.message = m.message.replace("[br]", "\n");
-			Console.log(m.message);
+			if(Print) Console.log(m.message);
 			Message = m;
 		}
 		else {
 			var message = Std.string(Message);
 
 			message.replace("[br]", "\n");
-			Console.log(message);
+			if(Print) Console.log(message);
 			
 			Message = message;
 		}
@@ -139,7 +143,7 @@ class LogFile {
 	 * @param Message the warning message
 	 * @param Trace if it should be traced to the powershell console
 	 */
-	public static function warning(Message:Message, ?Trace:Bool = false)
+	public static function warning(Message:Message, ?Trace:Bool = false, ?Print:Bool=false)
 	{
 		var result = false;
 		var test:LogMessage = cast Message;
@@ -151,14 +155,14 @@ class LogFile {
 		{
 			var m:LogMessage = cast Message;
 			m.message = ("WARNING: " + m.message).replace("[br]", "\n");
-			Console.logWarning(m.message);
+			if(Print) Console.logWarning(m.message);
 			Message = m;
 		}
 		else {
 			var message = Std.string(Message);
 			
 			message = ("WARNING: " + message).replace("[br]", "\n");
-			Console.logWarning(message);
+			if(Print) Console.logWarning(message);
 
 			Message = message;
 		}
@@ -171,7 +175,7 @@ class LogFile {
 	 * @param Message the error message
 	 * @param Trace if it should be traced to the powershell console
 	 */
-	public static function error(Message:Message, ?Trace:Bool = false)
+	public static function error(Message:Message, ?Trace:Bool = false, ?Print:Bool=false)
 	{
 		var result = false;
 		var test:LogMessage = cast Message;
@@ -183,14 +187,14 @@ class LogFile {
 		{
 			var m:LogMessage = cast Message;
 			m.message = ("ERROR: " + m.message).replace("[br]", "\n");
-			Console.logError(m.message);
+			if(Print) Console.logError(m.message);
 			Message = m;
 		}
 		else {
 			var message = Std.string(Message);
 
 			message = ("ERROR: " + message).replace("[br]", "\n");
-			Console.logError(message);
+			if(Print) Console.logError(message);
 
 			Message = message;
 		}
