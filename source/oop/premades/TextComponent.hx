@@ -1,5 +1,6 @@
 package oop.premades;
 
+import flixel.util.FlxColor;
 import files.HXFile;
 import common.HscriptTimer;
 import oop.Component;
@@ -69,6 +70,10 @@ class TextComponent extends Component {
         frontend.getSize = get_size;
         frontend.setFont = set_font;
         frontend.getFont = get_font;
+
+        frontend.setGlowing = setGlowing;
+        frontend.setColorTransform = setColorTransform;
+        frontend.setColor = setColor;
     }
 
     //------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -89,13 +94,20 @@ class TextComponent extends Component {
     override function setStaticVar(name:String, value:Dynamic):Dynamic { return null; }
     override function getStaticVar(name:String):Dynamic { return null; }
     override function importPackage(pack:String) {}
+    override function getScriptVarExists(name:String):Bool { return false; }
     override function getScriptVar(name:String):Dynamic { return null; }
     override function setScriptVar(name:String, to:Dynamic) {}
-    override function importClassByName(name:String) {}
     override function load() {}
     override function save() {}
     override function getTimers() { return null; }
     override function loadTimers(from:Array<HscriptTimerSave>) {}
+    override function populateFrontend() {}
+    override function RegisterExternalFunction(name:String, func:Dynamic) {}
+    override function decompile() {}
+    override function _import(what:String, as:String) {}
+    override function grantImportPerms(to:HaxeScript) {}
+    override function preprocessString(script:String, ?og:Bool = true):String { return "";}
+    override function setCompilerFlag(name:String, value:Bool) {}
 
     //overrides
 
@@ -155,6 +167,26 @@ class TextComponent extends Component {
 
     public function setVisible(value:Bool) {
         visible = value;
+    }
+
+    public var glow:Bool = false;
+    public function setGlowing(to:Bool) {
+        if(glow == to) return;
+        glow = to;
+        if(to)
+            _text.setColorTransform(1,1,1,1,30,30,30,0);
+        else
+            _text.setColorTransform(1,1,1,1,0,0,0,0);
+    }
+
+    public function setColorTransform(rm:Float, bm:Float, gm:Float, am:Float, ro:Int, bo:Int, go:Int, ao:Int) {
+        glow = false;
+        _text.setColorTransform(rm,bm,gm,am,ro,bo,go,ao);
+    }
+
+    public function setColor(color:FlxColor) {
+        if(_text.color != color)
+        _text.color = color;
     }
 
     //------------------------------------------------------------------------------------------------------------------------------------------------------------------

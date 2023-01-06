@@ -88,13 +88,20 @@ class AudioListenerComponent extends Component {
     override function setStaticVar(name:String, value:Dynamic):Dynamic { return null; }
     override function getStaticVar(name:String):Dynamic { return null; }
     override function importPackage(pack:String) {}
+    override function getScriptVarExists(name:String):Bool { return false; }
     override function getScriptVar(name:String):Dynamic { return null; }
     override function setScriptVar(name:String, to:Dynamic) {}
-    override function importClassByName(name:String) {}
     override function load() {}
     override function save() {}
     override function getTimers() { return null; }
     override function loadTimers(from:Array<HscriptTimerSave>) {}
+    override function populateFrontend() {}
+    override function RegisterExternalFunction(name:String, func:Dynamic) {}
+    override function decompile() {}
+    override function _import(what:String, as:String) {}
+    override function grantImportPerms(to:HaxeScript) {}
+    override function preprocessString(script:String, ?og:Bool = true):String { return "";}
+    override function setCompilerFlag(name:String, value:Bool) {}
 
     //overrides
 

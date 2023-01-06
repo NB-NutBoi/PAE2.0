@@ -1,5 +1,6 @@
 package oop.premades;
 
+import flixel.util.FlxColor;
 import files.HXFile.HaxeScript;
 import common.HscriptTimer;
 import oop.Component;
@@ -76,6 +77,7 @@ class SpriteComponent extends Component {
 
         frontend.setGlowing = setGlowing;
         frontend.setColorTransform = setColorTransform;
+        frontend.setColor = setColor;
 
         frontend.setTexture = set_texture;
         frontend.getTexture = get_texture;
@@ -107,13 +109,20 @@ class SpriteComponent extends Component {
     override function setStaticVar(name:String, value:Dynamic):Dynamic { return null; }
     override function getStaticVar(name:String):Dynamic { return null; }
     override function importPackage(pack:String) {}
+    override function getScriptVarExists(name:String):Bool { return false; }
     override function getScriptVar(name:String):Dynamic { return null; }
     override function setScriptVar(name:String, to:Dynamic) {}
-    override function importClassByName(name:String) {}
     override function load() {}
     override function save() {}
     override function getTimers() { return null; }
     override function loadTimers(from:Array<HscriptTimerSave>) {}
+    override function populateFrontend() {}
+    override function RegisterExternalFunction(name:String, func:Dynamic) {}
+    override function decompile() {}
+    override function _import(what:String, as:String) {}
+    override function grantImportPerms(to:HaxeScript) {}
+    override function preprocessString(script:String, ?og:Bool = true):String { return "";}
+    override function setCompilerFlag(name:String, value:Bool) {}
 
     //overrides
 
@@ -208,6 +217,11 @@ class SpriteComponent extends Component {
     public function setColorTransform(rm:Float, bm:Float, gm:Float, am:Float, ro:Int, bo:Int, go:Int, ao:Int) {
         glow = false;
         sprite.setColorTransform(rm,bm,gm,am,ro,bo,go,ao);
+    }
+
+    public function setColor(color:FlxColor) {
+        if(sprite.color != color)
+        sprite.color = color;
     }
 
     //------------------------------------------------------------------------------------------------------------------------------------------------------------------

@@ -285,7 +285,9 @@ class HaxeScriptBackend {
                 
                 "trace",
                 "getTimers",
-                "cast": continue; //don't clutter with standard functions
+                "cast",
+                "import",
+                "_import": continue; //don't clutter with standard functions
             }
 
             if(Reflect.isFunction(interpreter.variables.get(variableKey))){
@@ -467,7 +469,10 @@ class HaxeScriptBackend {
 			return Reflect.callMethod(this,func,args);
 		}
 		else{
-            LogFile.warning("tried calling non-existing function "+ func+" of script!");
+            switch(funcName){
+                case "OnUpdate", "OnLateUpdate", "OnDraw": return null; //don't bother with these functions
+                default: LogFile.warning("tried calling non-existing function "+ funcName+" of script!");
+            }
 		}
 
 		return null;
@@ -623,7 +628,9 @@ class InterpPlus extends Interp {
         if( o == null ) error(EInvalidAccess(f));
         if(Std.isOfType(o, HaxeScriptBackend))
         {switch (f) { 
-            case "importPerms": LogFile.warning("Cannot set import perms from script!"); return null;
+            case "importPerms": LogFile.warning("Cannot set import perms from script!",false,true); return null;
+            case "parser", "program", "interpreter": LogFile.warning("Cannot set/change script parser/interpreter/program from script!",false,true); return null;
+            case "exists", "compiled", "ready": LogFile.warning("Cannot change script state from script!",false,true); return null;
         }}
         else if(isHaxeScript(o)){
             if(f == "backend") return null; //NO, YOU ARE NOT ALLOWED THE FORBIDDEN BACKEND.

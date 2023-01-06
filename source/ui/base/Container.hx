@@ -1,5 +1,6 @@
 package ui.base;
 
+import flixel.math.FlxPoint;
 import FlxGamePlus.UIPlugin;
 import assets.ImageAsset;
 import common.Mouse;
@@ -143,12 +144,14 @@ class Container extends FlxBasic {
         if(canScroll && focused){
             cam.scroll.y -= FlxG.mouse.wheel * 2;
         }
+
+        var localMousePos = FlxPoint.get(0,0);
+        localMousePos = Utils.getMousePosInCamera(camera, localMousePos);
         
         for (object in stuffs.members) {
             if(object == null) continue;
 
             if (Std.isOfType(object, ContainerObject)){
-
                 var o:ContainerObject = cast object;
                 if(exclusiveInputs == null || exclusiveInputs == o){
                     o.updateInputs(elapsed);
@@ -159,6 +162,8 @@ class Container extends FlxBasic {
         if(closer != null){
             closer.updateInputs(elapsed);
         }
+
+        localMousePos.put();
     }
 
     public function postUpdate(elapsed:Float) {

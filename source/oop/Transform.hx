@@ -8,6 +8,18 @@ import flixel.math.FlxVector;
 import flixel.text.FlxText;
 import utility.Utils;
 
+typedef TransformCache = {
+    var x:Float;
+    var y:Float;
+    var xAccel:Float;
+    var yAccel:Float;
+
+    var pps:Bool;
+
+    var angle:Float;
+    var angularVel:Float;
+}
+
 @:allow(oop.GenericObject)
 //everything is 2d so why bother with 3d stuff
 class Transform extends FlxBasic{

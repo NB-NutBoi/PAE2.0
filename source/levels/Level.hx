@@ -113,6 +113,8 @@ class Level {
 
     public var collisionLayer:Int = 0;
 
+    public static var loadedLevels:Array<String> = [];
+
     //-------------------------------------------------------------------------------------------------------------
 
     //Level script
@@ -139,14 +141,18 @@ class Level {
 
     //-------------------------------------------------------------------------------------------------------------
 
-    public function new() {
-        
-    }
+    public function new() {}
 
     public function loadLevel(path:String, ?load:Bool = false) {
+        if(this.path != path && loadedLevels.contains(path)){
+            LogFile.error({ message: "Error loading map: map "+path+" is already loaded by another level instance!\n", caller: "Level", id: 2000}, true, true);
+            return;
+        }
+
+
         if(((!FileSystem.exists(path) || FileSystem.isDirectory(path)) && !path.startsWith("embed")) || Path.extension(path) != "map"){
             trace("error loading map");
-            LogFile.error({ message: "Error loading map: path " + path + " is does not exist or is not a valid map file.\n", caller: "Level", id: 30});
+            LogFile.error({ message: "Error loading map: path " + path + " does not exist or is not a valid map file.\n", caller: "Level", id: 30}, true, true);
             return;
         }
         else if(path.startsWith("embed")){
@@ -158,26 +164,11 @@ class Level {
         try
         {
         #end
-
-            if(this.path != path) AssetCache.removeDataCache(this.path); //no need to keep old level's cache.
-
-
-            if(script != null)
-            {
-                if(script.backend.ready && script.functionExists("OnLeave")) script.doFunction("OnLeave");
-
-                script.destroy();
-            }
-
-            script = null;
-
-            if(saveables != null && !load){
-                SaveManager.curSaveData.mapSaveables.set(this.path,saveables);
-            }            
-
-            //--------------------------------------------------------------------------------------------------------------------------------
+            
+            unloadLevel(path,load,false);
 
             this.path = path;
+            loadedLevels.push(path);
             SaveManager.curSaveData.currentMap = path;
             final levelFile:LevelFile = cast Json.parse(AssetCache.getDataCache(path));
 
@@ -238,13 +229,6 @@ class Level {
             FlxNapeSpace.space.constraints.clear();
             FlxNapeSpace.space.clear();
             */
-
-            layers.forEach(FlxDestroyUtil.destroy);
-            layers.destroy();
-            layers = null;
-
-            if(curSkybox != null) curSkybox.destroy();
-            curSkybox = null;
 
             System.gc();
 
@@ -320,11 +304,61 @@ class Level {
         #end
     }
 
+    public function unloadLevel(?newPath:String = "", ?load:Bool = false, ?dealWithAssets:Bool = false) {
+        if(this.path == "") return;
+
+        if(loadedLevels.contains(this.path)) loadedLevels.remove(this.path);
+
+        if(this.path != newPath) AssetCache.removeDataCache(this.path); //no need to keep old level's cache.
+
+
+        if(script != null)
+        {
+            if(script.backend.ready && script.functionExists("OnLeave")) script.doFunction("OnLeave");
+
+            script.destroy();
+        }
+
+        script = null;
+
+        if(saveables != null && !load){
+            SaveManager.curSaveData.mapSaveables.set(this.path,saveables);
+        }
+
+        //--------------------------------------------------------------------------------------------------------------------------------
+
+        if(dealWithAssets){
+            for (s in bitmaps) {
+                AssetCache.removeImageCache(s);
+            }
+
+            bitmaps.resize(0);
+
+            StaticObject.setAssets(bitmaps);
+        }
+
+        //--------------------------------------------------------------------------------------------------------------------------------
+
+        layers.forEach(FlxDestroyUtil.destroy);
+        layers.destroy();
+        layers = null;
+
+        if(curSkybox != null) curSkybox.destroy();
+        curSkybox = null;
+
+        this.path = "";
+    }
+
+    public function externalUnloadLevel() {
+        unloadLevel("",false,true);
+    }
+
     //-------------------------------------------------------------------------------------------------------------
     //----------------------------------------------------DEFAULT--------------------------------------------------
     //-------------------------------------------------------------------------------------------------------------
 
     public function draw() {
+        if(path == "") return;
         Console.beginProfile("drawLevel");
 
         if(curSkybox != null) Utils.drawSkybox(curSkybox);
@@ -338,6 +372,7 @@ class Level {
     }
 
     public function update(elapsed:Float) {
+        if(path == "") return;
         Console.beginProfile("updateLevel");
 
         if(curSkybox != null) curSkybox.update(elapsed);
@@ -359,8 +394,7 @@ class Level {
         if(script != null) script.destroy();
         script = null;
 
-        layers.destroy();
-        layers = null;
+        layers = FlxDestroyUtil.destroy(layers);
 
         StaticObject.clearAssets();
     }

@@ -1,6 +1,8 @@
 package oop;
 
 //don't bother on FlxObject, it's got too much functionality, i can write most of what i need myself, specialized for this.
+import oop.Transform;
+import oop.premades.SaveDataComponent;
 import files.HXFile.HaxeScriptBackend;
 import lowlevel.ListenerArray;
 import files.HXFile.HaxeScript;
@@ -92,8 +94,6 @@ class Object extends GenericObject {
         super(x,y);
 
         componets = new ListenerArray();
-
-        componets.onArrayAdd.add(onAddComponent);
     }
 
     override public function update(elapsed:Float) {
@@ -127,6 +127,27 @@ class Object extends GenericObject {
     //------------------------------------------------------------------------------------------------------------------------------------------------------
 
     override public function save() {
+        if(hasComponent("SaveData")){
+            final sd:SaveDataComponent = cast getComponentBackend("SaveData");
+
+            var keyCache = sd.key;
+            sd.setKey("objectInstance");
+
+            var tCache:TransformCache = {
+                x: transform.position.x,
+                y: transform.position.y,
+                xAccel: transform.velocity.x,
+                yAccel: transform.velocity.y,
+                pps: transform.usePixelsPerSecond,
+                angle: transform.angle,
+                angularVel: transform.angularVelocity
+            }
+
+            sd.saveVarUnsafe("transform",tCache);
+
+            sd.key = keyCache;
+        }
+        
         componets.map(_saveComponent);
         super.save();
     }
@@ -134,23 +155,30 @@ class Object extends GenericObject {
     private final function _saveComponent(component:HaxeScript):HaxeScript { cast(component.backend, Component).save(); return component; }
 
     override public function load() {
+        if(hasComponent("SaveData")){
+            final sd:SaveDataComponent = cast getComponentBackend("SaveData");
+
+            var keyCache = sd.key;
+            sd.setKey("objectInstance");
+
+            var tCache:TransformCache = sd.getVarUnsafe("transform");
+
+            transform.setPosition(tCache.x,tCache.y);
+            transform.angle = tCache.angle;
+
+            transform.usePixelsPerSecond = tCache.pps;
+
+            transform.velocity.set(tCache.xAccel,tCache.yAccel);
+            transform.angularVelocity = tCache.angularVel;
+            
+            sd.key = keyCache;
+        }
+
         componets.map(_loadComponent);
         super.load();
     }
 
     private final function _loadComponent(component:HaxeScript):HaxeScript { cast(component.backend, Component).load(); return component; }
-
-    //------------------------------------------------------------------------------------------------------------------------------------------------------
-
-    override function set_camera(value:FlxCamera):FlxCamera {
-        componets.map(onAddComponent);
-        return super.set_camera(value);
-    }
-
-    override function set_cameras(value:Array<FlxCamera>):Array<FlxCamera> {
-        componets.map(onAddComponent);
-        return super.set_cameras(value);
-    }
 
     //------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -177,13 +205,6 @@ class Object extends GenericObject {
         }
         
         return false;
-    }
-
-    //------------------------------------------------------------------------------------------------------------------------------------------------------
-
-    //check if we still need this
-    function onAddComponent(value:HaxeScript):HaxeScript {
-        return value;
     }
 
     //------------------------------------------------------------------------------------------------------------------------------------------------------------------

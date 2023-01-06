@@ -1,5 +1,6 @@
 package oop;
 
+import common.EventTrack;
 import files.HXFile;
 import files.HXFile.HaxeScriptBackend;
 import common.HscriptTimer;
@@ -388,13 +389,12 @@ class Component extends HaxeScriptBackend {
         "Maps" => ["StringMap" => StringMap, "IntMap" => IntMap, "ObjectMap" => ObjectMap],
         "Rendering" => ["Sprite" => Sprite, "Text" => Text, "Skybox" => Skybox],
         "Language" => ["LanguageManager" => LanguageManager],
+        "EventTracks" => ["Track" => Track, "WaitNode" => WaitNode, "WaitForNode" => WaitForNode, "FunctionNode" => FunctionNode, "SkipNode" => SkipNode, "GotoNode" => GotoNode, "BiNode" => BiNode],
         "Discord" => ["DiscordRPC" => #if windows DiscordClient #else HscriptMissingDiscord #end ],
     ];
 
     public function importPackage(pack:String) {
         switch (pack){ //allow for more specialized packs
-            case "LowLevel":
-                AddGeneral("importClassByName", importClassByName);
             case "Saves":
                 usingSavesPackage = true;
             case "Main":
@@ -407,18 +407,6 @@ class Component extends HaxeScriptBackend {
                     AddGeneral(key, pack.get(key));
                 }
         }
-    }
-
-    //------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    //------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    //------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-    //low level package
-
-    public function importClassByName(name:String) {
-        var c = Type.resolveClass(name);
-        if(c == null) {LogFile.error("No class exists with the name "+name+"!"); return;}
-        AddGeneral(name, c);
     }
 
     //------------------------------------------------------------------------------------------------------------------------------------------------------------------
