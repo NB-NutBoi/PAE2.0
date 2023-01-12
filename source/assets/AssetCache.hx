@@ -33,7 +33,7 @@ class AssetCache {
 			}
 		}
 
-		LogFile.warning("no image cached with " + key + " exists!, caching.", false);
+		LogFile.warning("no image cached with " + key + " exists!, caching.", false, true);
 		return cacheImage(key);
 	}
 
@@ -100,7 +100,7 @@ class AssetCache {
 			return Std.string(d);
 		}
 
-		LogFile.warning("no data cached with " + key + " exists!, caching.", false);
+		LogFile.warning("no data cached with " + key + " exists!, caching.", false, true);
 		return cacheData(key);
 	}
 
@@ -160,7 +160,7 @@ class AssetCache {
 			}
 		}
 
-		LogFile.warning("no sound cached with " + key + " exists!, caching.", false);
+		LogFile.warning("no sound cached with " + key + " exists!, caching.", false, true);
 		return cacheSound(key);
 	}
 

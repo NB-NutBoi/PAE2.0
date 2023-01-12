@@ -5,6 +5,7 @@ import haxe.DynamicAccess;
 
 /**
  * NOT SAVEABLE!!!
+ * (redo every time script is loaded.)
  */
 typedef Dialogue = {
     public var onStart:Null<Void->Void>;
@@ -13,6 +14,7 @@ typedef Dialogue = {
     public var onLoad:Null<Void->Void>;
 }
 
+//(Saveable)
 typedef DialogueCache = {
     public var script:String;
     public var scriptVars:DynamicAccess<ScriptVariable>;

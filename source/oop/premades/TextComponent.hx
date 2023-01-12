@@ -74,6 +74,11 @@ class TextComponent extends Component {
         frontend.setGlowing = setGlowing;
         frontend.setColorTransform = setColorTransform;
         frontend.setColor = setColor;
+
+        frontend.setCamera = setCamera;
+        frontend.getCamera = getCamera;
+        frontend.setCameras = setCameras;
+        frontend.getCameras = getCameras;
     }
 
     //------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -97,8 +102,6 @@ class TextComponent extends Component {
     override function getScriptVarExists(name:String):Bool { return false; }
     override function getScriptVar(name:String):Dynamic { return null; }
     override function setScriptVar(name:String, to:Dynamic) {}
-    override function load() {}
-    override function save() {}
     override function getTimers() { return null; }
     override function loadTimers(from:Array<HscriptTimerSave>) {}
     override function populateFrontend() {}
@@ -148,6 +151,46 @@ class TextComponent extends Component {
         clone.offsetY = offsetY;
 
         return c;
+    }
+
+    override function load() {
+        if(owner.hasComponent("SaveData")){
+            final sd:SaveDataComponent = cast owner.getComponentBackend("SaveData");
+            
+            //LOAD SAVED DATA
+            var keyCache = sd.key;
+            sd.setKey("textComponent");
+
+            if(sd.existsVarType("text",String)) text = sd.getVarStringUnsafe("text");
+            if(sd.existsVarType("font",String)) font = sd.getVarStringUnsafe("font");
+            if(sd.existsVarType("size",Int)) size = sd.getVarInt("size");
+            if(sd.existsVarType("color",Int)) _text.color = sd.getVarInt("color");
+
+            if(sd.existsVarType("offsetX",Float)) offsetX = sd.getVarFloatUnsafe("offsetX");
+            if(sd.existsVarType("offsetY",Float)) offsetY = sd.getVarFloatUnsafe("offsetY");
+
+            sd.key = keyCache;
+        }
+    }
+
+    override function save() {
+        if(owner.hasComponent("SaveData")){
+            final sd:SaveDataComponent = cast owner.getComponentBackend("SaveData");
+
+            var keyCache = sd.key;
+            sd.setKey("textComponent");
+
+            sd.saveVarString("text",text);
+            sd.saveVarString("font",font);
+
+            sd.saveVarInt("size",size);
+            sd.saveVarInt("color",_text.color);
+
+            sd.saveVarFloat("offsetX",offsetX);
+            sd.saveVarFloat("offsetY",offsetY);
+            
+            sd.key = keyCache;
+        }
     }
 
     //------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -216,4 +259,20 @@ class TextComponent extends Component {
 	function set_font(value:String):String {
 		return _text.font = value;
 	}
+
+    function setCamera(c:FlxCamera) {
+        _text.camera = owner.camera = c;
+    }
+
+    function getCamera():FlxCamera {
+        return owner.camera;
+    }
+
+    function setCameras(c:Array<FlxCamera>) {
+        _text.cameras = owner.cameras = c;
+    }
+
+    function getCameras():Array<FlxCamera> {
+        return owner.cameras;
+    }
 }

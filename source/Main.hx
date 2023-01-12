@@ -3,7 +3,7 @@ package;
 import Discord;
 import FlxGamePlus;
 import assets.AssetPaths;
-import common.ConfigFile;
+import files.ConfigFile;
 import common.Keyboard;
 import flixel.FlxG;
 import flixel.math.FlxPoint;

@@ -1,7 +1,7 @@
 package ui.premades;
 
+import gameside.inventory.Item;
 import haxe.Json;
-import gameside.inventory.Item.ItemJson;
 import openfl.net.FileFilter;
 import lowlevel.FileBrowser;
 import utility.Language;
@@ -18,22 +18,12 @@ import flixel.text.FlxText;
 import ui.elements.ContainerCloser;
 import ui.elements.ContainerMover;
 
-typedef ItemTexture = {
-    public var nick:String;
-    public var index:Int;
-    public var path:String;
-    public var width:Int;
-    public var height:Int;
-    public var xOffset:Float;
-    public var yOffset:Float;
-}
-
 class ItemEditor extends DMenu{
     
     var itemName:FlxText;
     var itemDescription:FlxText;
     var itemLang:String;
-    //description uses "itemLang_Description" and name uses "itemLang_Name", that way only one lang needs to be saved, and it can be changed easily.
+    //item uses "Inventory.(itemLang).Description" and name uses "Inventory.(itemLang).Name", that way only one lang needs to be saved, and it can be changed easily.
 
     var grid:FlxSprite;
     var gridW:Int = 1;
@@ -592,8 +582,8 @@ class ItemEditor extends DMenu{
 
         itemLang = _;
 
-        itemName.text = LanguageManager.getText(_+"_Name");
-        itemDescription.text = LanguageManager.getText(_+"_Description");
+        itemName.text = LanguageManager.getText("Inventory."+_+".Name");
+        itemDescription.text = LanguageManager.getText("Inventory."+_+".Description");
     }
 
     public function onType_indicator1() {

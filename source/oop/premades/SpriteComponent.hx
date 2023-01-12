@@ -26,9 +26,9 @@ class SpriteComponent extends Component {
 
         sprite = new Sprite(0,0,null);
         sprite.cameras = owner.cameras; //default
-
+       
         texture = instance.startingData.texture;
-
+        
         offsetX = instance.startingData.offsetX;
         offsetY = instance.startingData.offsetY;
 
@@ -44,6 +44,8 @@ class SpriteComponent extends Component {
 
         sprite.flipX = instance.startingData.flipX;
         sprite.flipY = instance.startingData.flipY;
+
+        sprite.color = instance.startingData.tint;
 
         compiled = true;
         ready = true;
@@ -88,7 +90,14 @@ class SpriteComponent extends Component {
         frontend.setSize = setSize;
         frontend.getWidth = getWidth;
         frontend.getHeight = getHeight;
-        
+
+        frontend.setFlipX = setFlipX;
+        frontend.setFlipY = setFlipY;
+
+        frontend.setCamera = setCamera;
+        frontend.getCamera = getCamera;
+        frontend.setCameras = setCameras;
+        frontend.getCameras = getCameras;
     }
 
     //------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -112,8 +121,6 @@ class SpriteComponent extends Component {
     override function getScriptVarExists(name:String):Bool { return false; }
     override function getScriptVar(name:String):Dynamic { return null; }
     override function setScriptVar(name:String, to:Dynamic) {}
-    override function load() {}
-    override function save() {}
     override function getTimers() { return null; }
     override function loadTimers(from:Array<HscriptTimerSave>) {}
     override function populateFrontend() {}
@@ -163,6 +170,58 @@ class SpriteComponent extends Component {
         clone.setSize(Std.int(sprite.width), Std.int(sprite.height));
 
         return c;
+    }
+
+    override function load() {
+        if(owner.hasComponent("SaveData")){
+            final sd:SaveDataComponent = cast owner.getComponentBackend("SaveData");
+            
+            //LOAD SAVED DATA
+            var keyCache = sd.key;
+            sd.setKey("spriteComponent");
+
+            if(sd.existsVarType("texture",String)) texture = sd.getVarStringUnsafe("texture");
+
+            var w = getWidth();
+            var h = getHeight();
+
+            if(sd.existsVarType("width",Int)) w = sd.getVarIntUnsafe("width");
+            if(sd.existsVarType("height",Int)) h = sd.getVarIntUnsafe("height");
+
+            setSize(w,h);
+
+            if(sd.existsVarType("flipX",Bool)) sprite.flipX = sd.getVarBoolUnsafe("flipX");
+            if(sd.existsVarType("flipY",Bool)) sprite.flipY = sd.getVarBoolUnsafe("flipY");
+
+            if(sd.existsVarType("offsetX",Float)) offsetX = sd.getVarFloatUnsafe("offsetX");
+            if(sd.existsVarType("offsetY",Float)) offsetY = sd.getVarFloatUnsafe("offsetY");
+
+            if(sd.existsVarType("tint",Int)) sprite.color = sd.getVarInt("tint");
+
+            sd.key = keyCache;
+        }
+    }
+
+    override function save() {
+        if(owner.hasComponent("SaveData")){
+            final sd:SaveDataComponent = cast owner.getComponentBackend("SaveData");
+
+            var keyCache = sd.key;
+            sd.setKey("spriteComponent");
+
+            sd.saveVarInt("width",getWidth());
+            sd.saveVarInt("height",getHeight());
+
+            sd.saveVarBool("flipX",sprite.flipX);
+            sd.saveVarBool("flipY",sprite.flipY);
+
+            sd.saveVarFloat("offsetX",offsetX);
+            sd.saveVarFloat("offsetY",offsetY);
+
+            sd.saveVarInt("tint",sprite.color);
+
+            sd.key = keyCache;
+        }
     }
 
     //------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -224,6 +283,14 @@ class SpriteComponent extends Component {
         sprite.color = color;
     }
 
+    public function setFlipX(to:Bool) {
+        sprite.flipX = to;
+    }
+
+    public function setFlipY(to:Bool) {
+        sprite.flipY = to;
+    }
+
     //------------------------------------------------------------------------------------------------------------------------------------------------------------------
     //------------------------------------------------------------------------------------------------------------------------------------------------------------------
     //------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -235,10 +302,27 @@ class SpriteComponent extends Component {
 
 	function set_texture(value:String):String {
         if(value == "") return value;
+        if(sprite.assets != null && sprite.assets[0].key == value) return value;
         
         var asset = ImageAsset.get(value);
         sprite.setAsset(asset);
         
 		return value;
 	}
+
+    function setCamera(c:FlxCamera) {
+        sprite.camera = owner.camera = c;
+    }
+
+    function getCamera():FlxCamera {
+        return owner.camera;
+    }
+
+    function setCameras(c:Array<FlxCamera>) {
+        sprite.cameras = owner.cameras = c;
+    }
+
+    function getCameras():Array<FlxCamera> {
+        return owner.cameras;
+    }
 }

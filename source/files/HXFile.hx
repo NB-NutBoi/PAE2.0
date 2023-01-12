@@ -1,6 +1,5 @@
 package files;
 
-import cpp.Pointer as CppReference;
 import lowlevel.HAbstracts;
 import Discord;
 import saving.SaveManager;
@@ -24,6 +23,9 @@ using StringTools;
  * @author NutBoi
  */
 class HXFile {
+
+    //making/compiling functions.
+
     public static function makeNew(?managerClass:Class<HaxeScriptBackend> = null):HaxeScript {
         return new HaxeScript(managerClass);
     }
@@ -38,6 +40,16 @@ class HXFile {
         if(!Utils.checkExternalHaxeFileValid(path)) return;
         final content = File.getContent(path);
         script.backend.compile(content);
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public static function destroy(script:HaxeScript) {
+        script.destroy();
+    }
+
+    public static function update(script:HaxeScript, elapsed:Float){
+        script.update(elapsed);
     }
 }
 
@@ -162,7 +174,7 @@ class HaxeScriptBackend {
         parser = new hscript.Parser();
 		parser.allowTypes = true;
 
-        interpreter = new InterpPlus();
+        interpreter = new InterpPlus(frontend);
 
         compiled = false;
         ready = false;
@@ -436,7 +448,7 @@ class HaxeScriptBackend {
         #if debug
             trace(content);
         #else
-            LogFile.log(Std.string(content),true);
+            LogFile.log(Std.string(content),true,true);
         #end
     }
 
@@ -566,11 +578,14 @@ class HaxeScriptBackend {
         if(!importPerms) return;
         to.backend.importPerms = true;
         to.backend.AddGeneral("import", to.backend._import);
+        to.backend.AddGeneral("grantImportPerms", to.backend.grantImportPerms); //this file is now allowed to grant import perms
     }
 
     static final blacklist:Array<String> = []; //add keywords that cannot be imported for whatever reason.
 
     function _import(what:String, as:String) {
+        if(!importPerms) return;
+        if(ScriptGlobals.__backendCaller != null && ScriptGlobals.__backendCaller != frontend) return;
         if(!exists || (Utils.matchesAny(what, blacklist) || Utils.matchesAny(as, blacklist))) return;
 
         //ADD SPECIAL CASES HERE
@@ -588,7 +603,7 @@ class HaxeScriptBackend {
 
         //Otherwise, let this figure it out
         var c = Type.resolveClass(what);
-        if(c == null) {LogFile.error("No class exists with the name "+what+"!"); return;}
+        if(c == null) {LogFile.error("No class exists with the name "+what+"!",true,true); return;}
         AddGeneral(as,c);
     }
 
@@ -599,6 +614,12 @@ class HaxeScriptBackend {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class InterpPlus extends Interp {
+    var caller:HaxeScript;
+
+    override public function new(c:HaxeScript) {
+        caller = c;
+        super();
+    }
 
 	override function get( o : Dynamic, f : String ) : Dynamic {
         if ( o == null ) error(EInvalidAccess(f));
@@ -611,8 +632,17 @@ class InterpPlus extends Interp {
 				}
 			#else
                 if(Std.isOfType(o, HaxeScriptBackend)){
-                    //TODO maybe do some precautions here?
-                    Reflect.getProperty(o, f);
+                    if(!caller.backend.importPerms)
+                    switch (f) { 
+                        case "importPerms": 
+                            LogFile.warning("Cannot get import perms from script!",false,true); 
+                            null;
+                        case "parser", "program", "interpreter": 
+                            LogFile.warning("Cannot get script parser/interpreter/program from script!",false,true); 
+                            null;
+                        default: Reflect.getProperty(o, f);
+                    }
+                    else Reflect.getProperty(o, f);
                 }
                 else if(isHaxeScript(o)){
                     if(o.backend.getScriptVarExists(f)) o.backend.getScriptVar(f);
@@ -645,12 +675,21 @@ class InterpPlus extends Interp {
     }
 
 	override function call( o : Dynamic, f : Dynamic, args : Array<Dynamic> ) : Dynamic {
-        if(Std.isOfType(o, HaxeScriptBackend)) switch(f){
-        case //block illegal accesses to the backend class
-        "import",
-        "_import": return null; }
+        ScriptGlobals.__backendCaller = caller;
+        if(!caller.backend.importPerms) switch(f){
+            case //block illegal accesses to the backend class
+            "import",
+            "_import",
+            "grantImportPerms": 
+                LogFile.log("cannot use the function "+f+" for security reasons.");
+                return null;
+        }
     
-		return Reflect.callMethod(o,f,args);
+        final r = Reflect.callMethod(o,f,args);
+
+        ScriptGlobals.__backendCaller = null;
+
+		return r;
 	}
 
     static inline function isHaxeScript(o:Dynamic) {
@@ -664,6 +703,8 @@ class InterpPlus extends Interp {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 class ScriptGlobals {
+    public static var __backendCaller:HaxeScript = null; //Used for security purposes
+
     public static function initializeGlobalString(name:String, value:String):Null<String> {
         var s = SaveManager.curSaveData.globals.scriptSaveables.get(name);
         if(s == null){
@@ -797,3 +838,5 @@ class HscriptMissingDiscord {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//Custom parser features when?

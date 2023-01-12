@@ -35,10 +35,10 @@
 
 	<section if="aun">
 		<echo value="COMPILING AUN" />
-		<assets path=".Games/AUN/assets" rename="assets" embed="false"/>
-		<assets path=".Games/AUN/config" rename="config" embed="false"/>
+		<assets path=".Games/PA-AUN/assets" rename="assets" embed="false"/>
+		<assets path=".Games/PA-AUN/config" rename="config" embed="false"/>
 
-		<set name="BUILD_DIR" value=".Games/AUN/export"/>
+		<set name="BUILD_DIR" value=".Games/PA-AUN/export"/>
 
 		<set name="noStandard"/>
 	</section>

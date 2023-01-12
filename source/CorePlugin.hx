@@ -41,8 +41,6 @@ class CorePluginBackend extends HaxeScriptBackend {
     override function AddVariables() {
         super.AddVariables();
         //BASICS
-        importPerms = true;
-        AddGeneral("import", _import);
 
         //SAVEABLE VARS
 

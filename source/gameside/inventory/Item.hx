@@ -1,6 +1,14 @@
 package gameside.inventory;
 
-import ui.premades.ItemEditor.ItemTexture;
+typedef ItemTexture = {
+    public var nick:String;
+    public var index:Int;
+    public var path:String;
+    public var width:Int;
+    public var height:Int;
+    public var xOffset:Float;
+    public var yOffset:Float;
+}
 
 typedef ItemJson = {
     public var maxQuantity:Int;
@@ -13,6 +21,8 @@ typedef ItemJson = {
 }
 
 class Item {
+    public static var registeredItems:Map<String,Item> = new Map(); //Future rework (items'll work like minecraft items registering-wise in the future)
+
     //technical
     public var exists:Bool = true;
 

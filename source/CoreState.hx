@@ -112,6 +112,7 @@ class CoreState extends FlxState {
 
     public static var mainScript:HaxeScript;
 
+    @:access(files.HaxeScriptBackend)
     public static function initCore() {
         coreInitialized = true;
 
@@ -120,6 +121,9 @@ class CoreState extends FlxState {
             AssetCache.cacheData(mainScriptPath);
             mainScript = HXFile.makeNew(CorePluginBackend);
             mainScript._dynamic.backend.name = "MainScript";
+            mainScript.backend.importPerms = true;
+            mainScript.backend.AddGeneral("import", mainScript.backend._import); //THIS IS THE ONLY PLACE THAT CAN GRANT IMPORT PERMISSIONS!
+            mainScript.backend.AddGeneral("grantImportPerms", mainScript.backend.grantImportPerms);
             HXFile.compileFromFile(mainScript,mainScriptPath);
         }
 

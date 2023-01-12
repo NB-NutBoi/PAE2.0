@@ -1,6 +1,7 @@
 package oop;
 
 //don't bother on FlxObject, it's got too much functionality, i can write most of what i need myself, specialized for this.
+import utility.Utils;
 import oop.Transform;
 import oop.premades.SaveDataComponent;
 import files.HXFile.HaxeScriptBackend;
@@ -60,6 +61,7 @@ class Object extends GenericObject {
     public var componets:ListenerArray<HaxeScript>;
 
     public static function fromJson(instance:FullObjectDataStructure, level:Level):Object {
+        if(Utils.checkNull(instance,true,null,"Fed null object instance to instanciator!")) return null;
         final object = new Object(instance.transform.X, instance.transform.Y);
         object.level = level;
         object.transform.z = instance.transform.Z;
@@ -75,11 +77,13 @@ class Object extends GenericObject {
 
         for (compInst in instance.components) {
             final comp = Component.instanceComponent(compInst, object);
+            if(comp == null) continue;
             object.componets.push(comp);
         }
 
         for (childInst in instance.children) {
             final child = GenericObject.fromJson(childInst, level);
+            if(child == null) continue;
             object.addChild(child);
         }
 

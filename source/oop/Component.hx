@@ -104,6 +104,8 @@ class Component extends HaxeScriptBackend {
         var instance:ComponentInstance = null;
         if(Std.isOfType(comp, String)) instance = {component: Std.string(comp), startingData: null, extended: true};
         else instance = comp;
+        
+        if(Utils.checkNull(instance,true,null,"Fed null component instance to object!")) return null;
 
         var _class:ComponentClass = componentClasses.get(instance.component);
 
@@ -167,7 +169,6 @@ class Component extends HaxeScriptBackend {
         if(!isOverride) cBackend.compile(AssetCache.getDataCache(cBackend.thisClass.script));
         currentCompiling = null;
         
-
         cBackend.create(instance);
 
         return c;

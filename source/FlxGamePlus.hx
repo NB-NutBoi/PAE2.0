@@ -1,5 +1,6 @@
 package;
 
+import common.LongTime;
 import haxe.ds.StringMap;
 import flixel.util.FlxTimer.FlxTimerManager;
 import ui.elements.Context;
@@ -301,6 +302,7 @@ class GameOverlay extends FlxBasic {
     }
 
     override function update(elapsed:Float) {
+        LongTime.update(elapsed);
         super.update(elapsed);
         if(Context.instance != null){
             Context.instance.update(elapsed);

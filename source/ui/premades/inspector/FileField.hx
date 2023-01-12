@@ -78,10 +78,12 @@ class FileField extends NodeField {
 
     @:access(flixel.input.mouse.FlxMouse)
     function onBrowsed() {
+        if(!exists) return;
         FlxG.mouse._leftButton.current = RELEASED; //fix deselecting.
         switch (FileBrowser.latestResult){
             case SAVE, CANCEL, ERROR: return;
             case SELECT:
+                if(Utils.checkNull(FileBrowser.filePath,true,"onBrowsed")) return;
                 fileField.textField.text = FileBrowser.filePath;
                 fileField.caret = FileBrowser.filePath.length;
                 fileField.onUpdateText();

@@ -357,6 +357,15 @@ class Utils {
 
     //MATHS--------------------------------------------------------------------------------------------------------------------------------------------
 
+	// Haxe doesn't specify the size of an int or float, in practice it's 32 bits
+    public static inline var INT_MIN :Int = -2147483648;
+
+    public static inline var INT_MAX :Int = 2147483647;
+
+    public static inline var FLOAT_MIN = -1.79769313486231e+308;
+
+    public static inline var FLOAT_MAX = 1.79769313486231e+308;
+
     inline public static function clamp(value:Float, min:Float, max:Float):Float {
 		return Math.max(min, Math.min(max, value));
 	}

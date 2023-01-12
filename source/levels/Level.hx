@@ -143,7 +143,7 @@ class Level {
 
     public function new() {}
 
-    public function loadLevel(path:String, ?load:Bool = false) {
+    public function loadLevel(path:String,?loadSavegame:Bool = false) {
         if(this.path != path && loadedLevels.contains(path)){
             LogFile.error({ message: "Error loading map: map "+path+" is already loaded by another level instance!\n", caller: "Level", id: 2000}, true, true);
             return;
@@ -164,16 +164,18 @@ class Level {
         try
         {
         #end
-            
-            unloadLevel(path,load,false);
+            unloadLevel(path,false);
 
             this.path = path;
             loadedLevels.push(path);
             SaveManager.curSaveData.currentMap = path;
             final levelFile:LevelFile = cast Json.parse(AssetCache.getDataCache(path));
 
+            var _load = false;
+
             if(SaveManager.curSaveData.mapSaveables.get(path) != null){
                 saveables = SaveManager.curSaveData.mapSaveables.get(path);
+                _load = true;
             }
             else{
                 saveables = {
@@ -193,7 +195,6 @@ class Level {
             //--------------------------------------------------------------------------------------------------------------------------------
 
             var nonRepeating:Array<String> = [];
-
             for (s in bitmaps) {
                 if(!levelFile.bitmaps.contains(s)){
                     nonRepeating.push(s);
@@ -246,13 +247,10 @@ class Level {
             }
 
             //--------------------------------------------------------------------------------------------------------------------------------
-
-            if(saveables != null){
-                //load saveables stuff that isn't live usage here.
-            }
-
-            if(load) for (layer in layers) {
+            
+            if(_load) for (layer in layers) {
                 for (basic in layer) {
+                    if(basic == null) continue;
                     if(Std.isOfType(basic, GenericObject)) cast(basic, GenericObject).load();
                 }
             }
@@ -260,7 +258,7 @@ class Level {
             //--------------------------------------------------------------------------------------------------------------------------------
 
             
-
+            
             var doScript:Bool = true;
             //script can be null
             if(levelFile.script != null){
@@ -279,8 +277,10 @@ class Level {
                         if(script.functionExists("OnStart")) script.doFunction("OnStart");
                     }
 
-                    if(load) script.doFunction("OnLoad");
+                    if(loadSavegame && script.functionExists("OnLoad")) script.doFunction("OnLoad");
                     else if(script.functionExists("OnEnter")) script.doFunction("OnEnter");
+
+                    if(script.functionExists("OnCreate")) script.doFunction("OnCreate");
                 }
             }
             else{
@@ -304,13 +304,15 @@ class Level {
         #end
     }
 
-    public function unloadLevel(?newPath:String = "", ?load:Bool = false, ?dealWithAssets:Bool = false) {
+    public function unloadLevel(?newPath:String = "", ?dealWithAssets:Bool = false) {
         if(this.path == "") return;
 
         if(loadedLevels.contains(this.path)) loadedLevels.remove(this.path);
 
         if(this.path != newPath) AssetCache.removeDataCache(this.path); //no need to keep old level's cache.
 
+        //save level before leaving
+        onSave();
 
         if(script != null)
         {
@@ -321,7 +323,7 @@ class Level {
 
         script = null;
 
-        if(saveables != null && !load){
+        if(saveables != null){
             SaveManager.curSaveData.mapSaveables.set(this.path,saveables);
         }
 
@@ -350,7 +352,7 @@ class Level {
     }
 
     public function externalUnloadLevel() {
-        unloadLevel("",false,true);
+        unloadLevel("",true);
     }
 
     //-------------------------------------------------------------------------------------------------------------
@@ -430,11 +432,13 @@ class Level {
             if(layer.members.length == 0) continue;
             for (basic in layer.members) {
                 if(!Std.isOfType(basic, GenericObject)) continue;
-                if(cast(basic, GenericObject).name == name) return cast basic;
+
+                var o = recursiveObjectSearch(name, cast basic);
+                if(o != null) return o;
             }
         }
 
-        LogFile.log("No object exists in scene with the name "+name);
+        LogFile.log("No object exists in scene with the name "+name,true,true);
         return null;
     }
 
@@ -448,7 +452,7 @@ class Level {
             }
         }
 
-        LogFile.log("No rail exists in scene with the name "+name);
+        LogFile.log("No rail exists in scene with the name "+name,true,true);
         return null;
     }
 
@@ -462,11 +466,13 @@ class Level {
         if(layers.members[layer].members.length != 0){
             for (basic in layers.members[layer].members) {
                 if(!Std.isOfType(basic, GenericObject)) continue;
-                if(cast(basic, GenericObject).name == name) return cast basic;
+
+                var o = recursiveObjectSearch(name, cast basic);
+                if(o != null) return o;
             }
         }
 
-        LogFile.log("No object exists in scene layer "+layer+" with the name "+name);
+        LogFile.log("No object exists in scene layer "+layer+" with the name "+name,true,true);
         return null;
     }
 
@@ -482,7 +488,18 @@ class Level {
             }
         }
 
-        LogFile.log("No rail exists in scene layer "+layer+" with the name "+name);
+        LogFile.log("No rail exists in scene layer "+layer+" with the name "+name,true,true);
+        return null;
+    }
+
+    function recursiveObjectSearch(name:String, object:GenericObject):GenericObject {
+        if(object.name == name) return object;
+
+        for (o in object.children) {
+            var rO = recursiveObjectSearch(name,o);
+            if(rO != null) return rO;
+        }
+
         return null;
     }
 

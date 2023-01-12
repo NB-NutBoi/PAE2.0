@@ -13,13 +13,32 @@ class HAbstracts {
     public static var Color:Class<HscriptColor> = HscriptColor;
     
     //i really hate that i can't import abstracts to HScript
-    public static function newDynamicAccess():DynamicAccess<Dynamic> {
-        return new DynamicAccess<Dynamic>();
-    }
+    public static var DynamicAccess:Class<HscriptDynamicAccess> = HscriptDynamicAccess;
 
     public static function newAnonymous():Dynamic {
         return {};
     }
+
+}
+
+class HscriptDynamicAccess {
+	
+	public function makeNew<T>(type:Class<T>):DynamicAccess<T> {
+		var da:DynamicAccess<T> = new DynamicAccess();
+		return da;
+	}
+
+	public static function get<T>(dyn:DynamicAccess<T>, key:String):T {
+		return dyn.get(key);
+	}
+
+	public static function set<T>(dyn:DynamicAccess<T>, key:String, to:T):T {
+		return dyn.set(key,to);
+	}
+
+	public static function keys(dyn:DynamicAccess<Dynamic>):Array<String> {
+		return dyn.keys();
+	}
 
 }
 
