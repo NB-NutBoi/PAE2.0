@@ -14,6 +14,16 @@ class LevelScriptBackend extends HaxeScriptBackend {
     
     public var level:Level;
 
+    override function logWarning(Message:String, ?Trace:Bool = false, ?Print:Bool = false) {
+        super.logWarning("[LevelScript: "+level.name+"] "+Message, Trace, Print);
+    }
+
+    override function logError(Message:String, ?Trace:Bool = false, ?Print:Bool = false) {
+        super.logError("[LevelScript: "+level.name+"] "+Message, Trace, Print);
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
     override function AddVariables() {
         super.AddVariables();
         if(Utils.checkNull(level,true,null,"Level script does not have level instance attached!")) return;

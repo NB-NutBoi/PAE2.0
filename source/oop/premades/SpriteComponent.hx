@@ -1,5 +1,6 @@
 package oop.premades;
 
+import files.HXFile.Import;
 import flixel.util.FlxColor;
 import files.HXFile.HaxeScript;
 import common.HscriptTimer;
@@ -27,6 +28,8 @@ class SpriteComponent extends Component {
         sprite = new Sprite(0,0,null);
         sprite.cameras = owner.cameras; //default
        
+        ImageAsset.loadFromFile(instance.startingData.texture, true); //cache the asset.
+
         texture = instance.startingData.texture;
         
         offsetX = instance.startingData.offsetX;
@@ -126,7 +129,7 @@ class SpriteComponent extends Component {
     override function populateFrontend() {}
     override function RegisterExternalFunction(name:String, func:Dynamic) {}
     override function decompile() {}
-    override function _import(what:String, as:String) {}
+    override function _import(what:Import, as:Import) {}
     override function grantImportPerms(to:HaxeScript) {}
     override function preprocessString(script:String, ?og:Bool = true):String { return "";}
     override function setCompilerFlag(name:String, value:Bool) {}

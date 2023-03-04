@@ -1,5 +1,6 @@
 package;
 
+import utility.LogFile;
 import common.LongTime;
 import haxe.ds.StringMap;
 import flixel.util.FlxTimer.FlxTimerManager;
@@ -37,8 +38,8 @@ class FlxGamePlus extends FlxGame {
     public static var DebugCam:FlxCamera; //will be used to draw debug ui info, such as the ruler.
     public static var OverlayCam:FlxCamera; //will be used to draw overlay objects.
 
-    override public function new(GameWidth:Int = 0, GameHeight:Int = 0, InitialState:Class<FlxState>, Zoom:Float = 1, UpdateFramerate:Int = 60, DrawFramerate:Int = 60, SkipSplash:Bool = true, StartFullScreen:Bool = false) {
-        super(GameWidth, GameHeight, InitialState, Zoom, UpdateFramerate, DrawFramerate, SkipSplash, StartFullScreen);
+    override public function new(GameWidth:Int = 0, GameHeight:Int = 0, InitialState:Class<FlxState>, UpdateFramerate:Int = 60, DrawFramerate:Int = 60, SkipSplash:Bool = true, StartFullScreen:Bool = false) {
+        super(GameWidth, GameHeight, InitialState, UpdateFramerate, DrawFramerate, SkipSplash, StartFullScreen);
         Application.current.window.onFocusOut.add(focusLost);
 
         DebugCam = new FlxCamera();
@@ -108,6 +109,7 @@ class FlxGamePlus extends FlxGame {
     public static var mouseMove:Array<Float> = [0,0];
 
     override function update() {
+        Utils.frame(true);
         CoreState._frame = true;
         CoreState._lateFrame = true;
         Mouse.reset();
@@ -116,6 +118,7 @@ class FlxGamePlus extends FlxGame {
         DebugCam.zoom = FlxG.camera.zoom;
         
         lastMousePosition = [FlxG.mouse.screenX, FlxG.mouse.screenY];
+        Utils.frame(false);
     }
 
     //mouse stuff
@@ -215,12 +218,15 @@ class FlxGamePlus extends FlxGame {
 
             if(Main.DEBUG){
                 if(Main.SetupConfig.configExists("DMenuDirectory")){
+                    LogFile.log("\n[-------------------v DMenus v------------------]\n\n");
+
                     DMenu.register(Main.SetupConfig.getConfig("DMenuDirectory","STRING","assets/dmenu"));
+
+                    LogFile.log("\n[-----------------------------------------------]\n\n");
                 }
             }
         }
-
-        if(UIPlugin.instance != null) UIPlugin.reset();
+        else UIPlugin.reset();
 
         if(GameOverlay.instance == null){
             FlxG.plugins.add(new GameOverlay(OverlayCam));
@@ -302,7 +308,6 @@ class GameOverlay extends FlxBasic {
     }
 
     override function update(elapsed:Float) {
-        LongTime.update(elapsed);
         super.update(elapsed);
         if(Context.instance != null){
             Context.instance.update(elapsed);

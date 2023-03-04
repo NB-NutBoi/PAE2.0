@@ -1,5 +1,6 @@
 package levels;
 
+import flixel.FlxCamera;
 import levels.LevelScript.LevelScriptBackend;
 import files.HXFile;
 import common.HscriptTimer;
@@ -105,6 +106,9 @@ class Level {
     public var bitmaps:Array<String> = [];
 
     public var path:String = "";
+    public var name:String = "";
+
+    public var camera(get,default):FlxCamera = null;
 
     public var curSkybox:Skybox = null;
     public var layers:FlxTypedGroup<Layer> = new FlxTypedGroup();
@@ -143,7 +147,7 @@ class Level {
 
     public function new() {}
 
-    public function loadLevel(path:String,?loadSavegame:Bool = false) {
+    public function loadLevel(path:String, ?loadSavegame:Bool = false, ?scriptOverride:String = null) {
         if(this.path != path && loadedLevels.contains(path)){
             LogFile.error({ message: "Error loading map: map "+path+" is already loaded by another level instance!\n", caller: "Level", id: 2000}, true, true);
             return;
@@ -151,12 +155,10 @@ class Level {
 
 
         if(((!FileSystem.exists(path) || FileSystem.isDirectory(path)) && !path.startsWith("embed")) || Path.extension(path) != "map"){
-            trace("error loading map");
             LogFile.error({ message: "Error loading map: path " + path + " does not exist or is not a valid map file.\n", caller: "Level", id: 30}, true, true);
             return;
         }
         else if(path.startsWith("embed")){
-            trace("LOADING EMBEDDED MAP.");
             if(!Assets.exists(path)) { LogFile.error({ message: "Error loading embedded map " + path + ".\n", caller: "Level", id: 30}); return; }
         }
 
@@ -168,7 +170,7 @@ class Level {
 
             this.path = path;
             loadedLevels.push(path);
-            SaveManager.curSaveData.currentMap = path;
+            if(this == MainState.instance.level) SaveManager.curSaveData.currentMap = path;
             final levelFile:LevelFile = cast Json.parse(AssetCache.getDataCache(path));
 
             var _load = false;
@@ -216,6 +218,8 @@ class Level {
             bitmaps = levelFile.bitmaps;
             //layers = levelFile.layers;
 
+            name = levelFile.levelName;
+
             StaticObject.setAssets(bitmaps);
 
             if(levelFile.backgroundColor != null && this == MainState.instance.level) //only "main" level can modify camera bg color.
@@ -261,6 +265,7 @@ class Level {
             
             var doScript:Bool = true;
             //script can be null
+            if(scriptOverride != null) levelFile.script = scriptOverride;
             if(levelFile.script != null){
                 doScript = Utils.checkExternalHaxeFileValid(levelFile.script);
 
@@ -269,8 +274,9 @@ class Level {
                     
                     script = HXFile.makeNew(LevelScriptBackend);
                     script._dynamic.backend.level = this;
-                    HXFile.compileFromFile(script,levelFile.script);
                     if(saveables.timers != null) script.backend.loadTimers(saveables.timers);
+                    HXFile.compileFromFile(script,levelFile.script);
+                    
                     
                     if(saveables.firstTime){
                         saveables.firstTime = false;
@@ -279,8 +285,6 @@ class Level {
 
                     if(loadSavegame && script.functionExists("OnLoad")) script.doFunction("OnLoad");
                     else if(script.functionExists("OnEnter")) script.doFunction("OnEnter");
-
-                    if(script.functionExists("OnCreate")) script.doFunction("OnCreate");
                 }
             }
             else{
@@ -391,7 +395,7 @@ class Level {
     }
 
     public function destroy() {
-        trace("level destroyed");
+        #if debug trace("level destroyed"); #end
 
         if(script != null) script.destroy();
         script = null;
@@ -512,4 +516,9 @@ class Level {
 
         script.doFunction(name,args);
     }
+
+	function get_camera():FlxCamera {
+		if(camera == null) return FlxG.camera;
+        return camera;
+	}
 }

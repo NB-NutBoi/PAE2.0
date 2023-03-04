@@ -1,13 +1,4 @@
 package utility;
-//------------------------------------------------------------
-//------------------------------------------------------------
-//---------------------------------------------------------------------------------------------------------|
-/* This file is under protection and belongs to the PA: AUN project team.                                  |
- * You may learn from this code and / or modify the source code for redistribution with proper accrediting.|
- * -NUT                                                                                                    |
- *///                                                                                                      |
-//---------------------------------------------------------------------------------------------------------|
-
 
 import flixel.util.typeLimit.OneOfTwo;
 import openfl.errors.Error;
@@ -32,7 +23,8 @@ typedef Message = OneOfTwo<Dynamic,LogMessage>;
  * very basic log file functionality, static.
  * 
  * this morphed from readable code to "what the fuck am i looking at"
- * @author NutBoi
+ * 
+ * author @NB-NutBoi
  */
 @:allow(Main)
 class LogFile {
@@ -80,7 +72,7 @@ class LogFile {
 
 			#if debug
 			if (Trace)
-				trace(s.replace("\n", "[br]"));
+				trace(s.endsWith("\n") ? s.substr(0,s.lastIndexOf("\n")-1) : s);
 			#end
 
 			f = null;
@@ -98,7 +90,7 @@ class LogFile {
 
 			#if debug
 			if (Trace)
-				trace(message.replace("\n", "[br]"));
+				trace(message.endsWith("\n") ? message.substr(0,message.lastIndexOf("\n")-1) : message);
 			#end
 
 			f = null;
@@ -110,6 +102,7 @@ class LogFile {
 	 * Logs a message.
 	 * @param Message the message
 	 * @param Trace if it should be traced to the powershell console
+	 * @param Print if it should be printed to the ingame console
 	 */
 	public static function log(Message:Message,?Trace:Bool=false,?Print:Bool=false) {
 
@@ -142,6 +135,7 @@ class LogFile {
 	 * Produces a warning in the log.
 	 * @param Message the warning message
 	 * @param Trace if it should be traced to the powershell console
+	 * @param Print if it should be printed to the ingame console
 	 */
 	public static function warning(Message:Message, ?Trace:Bool = false, ?Print:Bool=false)
 	{
@@ -174,6 +168,7 @@ class LogFile {
 	 * Produces an error in the log.
 	 * @param Message the error message
 	 * @param Trace if it should be traced to the powershell console
+	 * @param Print if it should be printed to the ingame console
 	 */
 	public static function error(Message:Message, ?Trace:Bool = false, ?Print:Bool=false)
 	{
@@ -205,6 +200,7 @@ class LogFile {
 	/**
 	 * Produces an error in the log, popup window, and closes the game.
 	 * @param Message the error message
+	 * @param ErrorId the error id to display on the crash screen
 	 * @param Trace if it should be traced to the powershell console
 	 */
 	public static function fatalError(Message:Message, ErrorId:Int = 0, ?Trace:Bool = false)

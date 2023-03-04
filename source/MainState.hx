@@ -1,5 +1,12 @@
 package;
 
+import common.Keyboard;
+import flixel.FlxObject;
+import flixel.math.FlxAngle;
+import flixel.addons.display.shapes.FlxShapeCircle;
+import lime.math.Vector2;
+import flixel.addons.transition.TransitionData;
+import flixel.addons.transition.TransitionFade;
 import files.HXFile;
 import ui.elements.Context;
 import oop.Object.FullObjectDataStructure;
@@ -25,8 +32,8 @@ class MainState extends CoreState {
 
         FlxG.autoPause = false;
 
-        CoreState.onSave.add(onSave);
-        CoreState.onLoad.add(onLoad);
+        CoreState.onSave.add(onSave,false,100);
+        CoreState.onLoad.add(onLoad,false,100);
 
         level = new Level(); //standard level instance
 
@@ -67,6 +74,7 @@ class MainState extends CoreState {
         CoreState.onLoad.remove(onLoad);
 
         level.destroy();
+        level = null;
 
         instance = null;
 

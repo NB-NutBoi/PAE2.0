@@ -1,5 +1,6 @@
 package assets;
 
+import utility.LogFile;
 import flixel.FlxG;
 import haxe.Json;
 import haxe.io.Path;
@@ -41,7 +42,7 @@ class SoundAsset {
             return returnable;
         }
         catch(e){
-            trace(e.message);
+            LogFile.error("Error parsing sound asset: "+e.message, true, true);
             returnable = null;
             return null;
         }

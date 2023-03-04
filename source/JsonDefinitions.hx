@@ -1,5 +1,7 @@
 package;
 
+import common.HscriptTimer.HscriptTimerSave;
+import haxe.DynamicAccess;
 import flixel.util.typeLimit.OneOfFour;
 
 typedef JSONColor = {
@@ -23,3 +25,9 @@ typedef JSONScale = {
 }
 
 typedef ScriptVariable = OneOfFour<Float,String,Int,Bool>;
+
+typedef ScriptState = {
+    public var scriptSaveables:DynamicAccess<ScriptVariable>;
+
+    public var timers:Array<HscriptTimerSave>;
+}

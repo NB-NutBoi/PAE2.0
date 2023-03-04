@@ -203,8 +203,8 @@ class Component extends HaxeScriptBackend {
         catch (e)
         {
             // All exceptions will be caught here
-            LogFile.error("Script error! |[ " + e.message + " ]| :" + parser.line+"\n",true);
-            if(logScriptOnError) trace("Script:\n"+fullScript);
+            LogFile.error("Script error! |[ " + e.message + " ]| :" + parser.line+"\n", true, true);
+            if(logScriptOnError) LogFile.log("Script:\n"+fullScript, true);
         }
 
         
@@ -360,7 +360,7 @@ class Component extends HaxeScriptBackend {
 
         if(c == null) {
             c = instanceComponent(typeof, owner);
-            owner.componets.push(c);
+            owner.components.push(c);
         }
         else c = c.frontend;
 
@@ -583,6 +583,8 @@ class Component extends HaxeScriptBackend {
 
             LogFile.log("Registered component class "+componentClass.key+".");
             componentClasses.set(componentClass.key, componentClass);
+
+            AssetCache.cacheData(componentClass.script); //preemptively cache component scripts.
         }
     }
 }

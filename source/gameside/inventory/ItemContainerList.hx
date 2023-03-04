@@ -1,5 +1,6 @@
 package gameside.inventory;
 
+import gameside.inventory.Item.ItemStack;
 import gameside.inventory.ItemContainer;
 
 /**
@@ -12,7 +13,7 @@ class ItemContainerList implements ItemContainer{
     private var _maxSize:Int = 0;
     private var _limitedSpace:Bool = false;
 
-    public var storage:Array<ItemSlot>;
+    public var storage:Array<ItemStack>;
 
 	public function new(?maxLength:Int = 0) {
 		storage = [];
@@ -25,8 +26,8 @@ class ItemContainerList implements ItemContainer{
         exists = false;
 
 		for (slot in storage) {
-			if(slot.item != null)
-				slot.item.destroy();
+			if(slot != null)
+				slot.destroy();
 		}
 
 		storage.resize(0);
@@ -37,45 +38,58 @@ class ItemContainerList implements ItemContainer{
     //------------------------------------------------------------------------------------------------------------------------------------------------------------------
     //------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-	public function addItem(item:Item, ?x:Int = 0, ?y:Int = 0):Bool {
+	public function addItem(stack:ItemStack, ?x:Int = 0, ?y:Int = 0, ?destroyStackIfMerge:Bool):Bool {
 		if(!exists) return false;
 
 		if(_limitedSpace && storage.length >= maxSize) return false;
 
-		var theSlot = null;
-		storage.push( theSlot = {
-			item: item,
-			itemSourceX: -1,
-			itemSourceY: -1,
-			x: 0,
-			y: storage.length,
-			occupied: true
-		});
+		var index:Int = storage.push(stack);
+		stack.index = index;
 
-		theSlot.item.positionX = theSlot.x;
-		theSlot.item.positionY = theSlot.y;
+		stack.setPosition(0,index);
 
 		return true;
 	}
 
-	public function addItemToFirstAvailableSlot(item:Item):Bool {
-		return addItem(item);
+	public function addItemToFirstAvailableSlot(stack:ItemStack, ?destroyStackIfMerge:Bool):Bool {
+		return addItem(stack);
+	}
+
+	//moving
+
+	public function moveItem(index:Int, ?x:Int, ?y:Int, ?destroyStackIfMerge:Bool):Bool {
+		var stack:ItemStack = storage[index];
+        if(stack == null) return false;
+
+		storage.remove(stack);
+		storage.insert(index,stack);
+
+		for (i in 0...storage.length) {
+			storage[i].index = i;
+		}
+
+		return false;
+	}
+
+	public function rotateItem(index:Int, by:Int) {
+		var stack:ItemStack = storage[index];
+        if(stack == null) return;
+		
+		stack.rotate(by);
 	}
 
 	//removing
 
-    public function removeItemByIdName(idName:String, ?destroy:Bool = true):Void {
+    public function removeItemByName(idName:String, ?destroy:Bool = true):Void {
         if(!exists) return;
 
-		var curSlot:ItemSlot = null;
+		var curStack:ItemStack = null;
 
-        for (slot in storage) {
-			if(slot.item.id == idName){
-				curSlot = slot;
-			}
+        for (stack in storage) {
+			if(stack.id == idName) curStack = stack;
 		}
 
-		if(curSlot != null) removeSlot(curSlot, destroy);
+		if(curStack != null) removeStack(curStack, destroy);
     }
 
     public function removeItemStackByName(idName:String, stack:Int, ?destroy:Bool = true):Void {
@@ -83,54 +97,48 @@ class ItemContainerList implements ItemContainer{
         //this is the only way to remove quantity of a specific item without having direct access to the item.
         
         //accounts for stacks.
-		if(!exists) return;
+		var curStack:ItemStack = null;
 
-		var curSlot:ItemSlot = null;
-
-        for (slot in storage) {
-			if(slot.item.id == idName){
-				curSlot = slot;
-			}
+        for (stack in storage) {
+			if(stack.id == idName) curStack = stack;
 		}
 
-		if(curSlot == null) return;
-		curSlot.item.quantity -= stack;
+		if(curStack == null) return;
+		curStack.quantity -= stack;
 
-		if(curSlot.item.quantity < 1){
-			removeSlot(curSlot, destroy);
-		}
+		if(curStack.quantity < 1) removeStack(curStack, destroy);
     }
 
 	public function removeItemAt(x:Int, y:Int, ?destroy:Bool) {
 		if(!exists) return;
-
-		var curSlot:ItemSlot = storage[y];
-
-		if(curSlot != null) removeSlot(curSlot, destroy);
+		removeStack(storage[y], destroy);
 	}
 
 	public function removeItemStackAt(x:Int, y:Int, stack:Int, ?destroy:Bool) {
 		if(!exists) return;
 
-		var curSlot:ItemSlot = storage[y];
+		var curStack:ItemStack = storage[y];
 
-		if(curSlot == null) return;
-		curSlot.item.quantity -= stack;
+		if(curStack == null) return;
+		curStack.quantity -= stack;
 
-		if(curSlot.item.quantity < 1){
-			removeSlot(curSlot, destroy);
-		}
+		if(curStack.quantity < 1) removeStack(curStack, destroy);
 	}
 
     //misc?
 
-	public function getItemAt(x:Int,y:Int):Item {
+	public function getItemAt(x:Int,y:Int):ItemStack {
         if(!exists) return null;
         if(storage[y] == null) return null;
         
-        var theSlot = storage[y];
+        return storage[y];
+    }
 
-        return theSlot.item;
+	public function getItemIndexAt(x:Int,y:Int):Int {
+        if(!exists) return null;
+        if(storage[y] == null) return -1;
+
+        return y;
     }
 
 	public function transferItemAt(x:Int, y:Int, to:ItemContainer, ?toX:Int = -1, ?toY:Int = -1) {
@@ -147,15 +155,17 @@ class ItemContainerList implements ItemContainer{
     //------------------------------------------------------------------------------------------------------------------------------------------------------------------
     //------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-	private inline function removeSlot(slot:ItemSlot, ?destroy:Bool = true) {
-		slot.item.positionX = -1;
-		slot.item.positionY = -1;
+	private inline function removeStack(stack:ItemStack, ?destroy:Bool = true) {
+		stack.positionX = -1;
+		stack.positionY = -1;
 
-        if(destroy) slot.item.destroy();
+        if(destroy) stack.destroy();
 
-        slot.item = null;
-        slot.occupied = false;
-		storage.remove(slot);
+		var index:Int = storage.indexOf(stack);
+		storage.remove(stack);
+		for (i in index...storage.length) {
+            storage[i].index = i;
+        }
     }
 
 	function get_maxSize():Int {
@@ -170,4 +180,5 @@ class ItemContainerList implements ItemContainer{
 	public function toString():String {
         return Std.string(storage);
     }
+
 }

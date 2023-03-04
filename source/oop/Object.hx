@@ -58,7 +58,7 @@ enum ObjectDrawOrder {
 class Object extends GenericObject {
     
     //logic stuff
-    public var componets:ListenerArray<HaxeScript>;
+    public var components:ListenerArray<HaxeScript>;
 
     public static function fromJson(instance:FullObjectDataStructure, level:Level):Object {
         if(Utils.checkNull(instance,true,null,"Fed null object instance to instanciator!")) return null;
@@ -67,6 +67,7 @@ class Object extends GenericObject {
         object.transform.z = instance.transform.Z;
 
         object.name = instance.name;
+        object.camera = level.camera;
 
         object.transform.angle = instance.transform.A;
         object.Static = instance.Static;
@@ -78,7 +79,7 @@ class Object extends GenericObject {
         for (compInst in instance.components) {
             final comp = Component.instanceComponent(compInst, object);
             if(comp == null) continue;
-            object.componets.push(comp);
+            object.components.push(comp);
         }
 
         for (childInst in instance.children) {
@@ -87,7 +88,7 @@ class Object extends GenericObject {
             object.addChild(child);
         }
 
-        for (component in object.componets) {
+        for (component in object.components) {
             component._dynamic.backend.start();
         }
 
@@ -97,33 +98,36 @@ class Object extends GenericObject {
     override public function new(x:Float = 0, y:Float = 0) {
         super(x,y);
 
-        componets = new ListenerArray();
+        components = new ListenerArray();
     }
 
     override public function update(elapsed:Float) {
         super.update(elapsed);
-        for (script in componets) {
+        for (script in components) {
             script.update(elapsed);
         }
     }
 
     override function lateUpdate(elapsed:Float) {
-        for (component in componets) {
+        for (component in components) {
             component.doFunction("OnLateUpdate", [elapsed]);
         }
         super.lateUpdate(elapsed);
     }
 
     override function drawObject() {
-        for (script in componets) {
+        for (script in components) {
             script._dynamic.backend.draw();
         }
     }
 
     override public function destroy() {
-        for (script in componets) {
+        for (script in components) {
             script.destroy();
         }
+
+        components.kill();
+        components = null;
 
         super.destroy();
     }
@@ -152,7 +156,7 @@ class Object extends GenericObject {
             sd.key = keyCache;
         }
         
-        componets.map(_saveComponent);
+        components.map(_saveComponent);
         super.save();
     }
 
@@ -178,7 +182,7 @@ class Object extends GenericObject {
             sd.key = keyCache;
         }
 
-        componets.map(_loadComponent);
+        components.map(_loadComponent);
         super.load();
     }
 
@@ -188,7 +192,7 @@ class Object extends GenericObject {
 
 
     public function getComponent(type:String):HaxeScript {
-        for (component in componets) {
+        for (component in components) {
             if(component._dynamic.backend.componentType == type) return component;
         }
         
@@ -196,7 +200,7 @@ class Object extends GenericObject {
     }
 
     public function getComponentBackend(type:String):HaxeScriptBackend {
-        for (component in componets) {
+        for (component in components) {
             if(component._dynamic.backend.componentType == type) return component.backend;
         }
         
@@ -204,7 +208,7 @@ class Object extends GenericObject {
     }
 
     public function hasComponent(type:String):Bool {
-        for (component in componets) {
+        for (component in components) {
             if(component._dynamic.backend.componentType == type) return true;
         }
         
@@ -220,11 +224,11 @@ class Object extends GenericObject {
             var instance = cast(instance, Object);
             var instantiated = cast(instantiated, Object);
 
-        for (component in instance.componets) {
+        for (component in instance.components) {
             if(component == null) continue;
             var c = component._dynamic.backend.clone(instantiated);
             if(c == null) continue;
-            instantiated.componets.push(c);
+            instantiated.components.push(c);
         }
     }
 }

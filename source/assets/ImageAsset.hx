@@ -45,7 +45,7 @@ class ImageAsset {
             return returnable;
         }
         catch(e){
-            trace(e.message);
+            LogFile.error("Error parsing image asset: "+e.message, true, true);
             returnable = null;
             return null;
         }
@@ -64,31 +64,41 @@ class ImageAsset {
         return file;
     }
 
-    public static function loadFromFile(file:String):ImageAsset {
+    @:access(assets.AnimatedAsset)
+    public static function loadFromFile(file:String, ?cache:Bool = false):ImageAsset {
+        if(AnimatedAsset.exists(file)) return AnimatedAsset.get(file);
         if(ImageAssets.exists(file)) return ImageAssets[file];
         if(!Utils.checkAssetFilePreRequisites(file)) return getDefault();
-        var assetFile:ImageAssetFile = parseFile(file);
+        if(cache && !AssetCache.dataCacheExists(file)) AssetCache.cacheData(file);
+        var assetFile:ImageAssetFile = parseFile(file, null);
         if(isMostRecentAnimated) {
             isMostRecentAnimated = false; //reset it.
             LogFile.warning("Tried getting animated asset "+file+" as static image asset, corrected.");
 
             assetFile = null;
             
-            return AnimatedAsset.get(file);
+            return AnimatedAsset.loadFromFile(file, cache);
         }
         if(assetFile == null) return getDefault();
         assetFile = fixFile(assetFile, file);
 
+        if(cache && !AssetCache.imageCacheExists(assetFile.texture)) AssetCache.cacheImage(assetFile.texture);
         var asset:ImageAsset = new ImageAsset(assetFile, file);
         ImageAssets.set(file, asset);
         return asset;
     }
 
+    @:access(assets.AnimatedAsset)
     public static function get(file:String):ImageAsset {
+        if(AnimatedAsset.exists(file)) return AnimatedAsset.get(file); //stop trying to get animated with this!! (unless you're level)
         if(!ImageAssets.exists(file)) return loadFromFile(file);
         var asset = ImageAssets[file];
-        if(asset.graphic.bitmap.image == null){trace("Bitmap missing!"); asset.graphic.bitmap = AssetCache.getImageCache(asset._texture);}
+        if(asset.graphic.bitmap.image == null){ #if debug trace("Bitmap missing!"); #end asset.graphic.bitmap = AssetCache.getImageCache(asset._texture);}
         return asset;
+    }
+
+    public static function exists(file:String):Bool {
+        return ImageAssets.exists(file);
     }
     
     public static function getDefault() {
@@ -133,11 +143,12 @@ class ImageAsset {
         flags = file.flags == null ? [] : file.flags.copy();
 
         if(file.flags.contains("MISSING")){
-            graphic = FlxGraphic.fromBitmapData(Main.crash_prevention_bitmap);
+            if(FlxG.bitmap.get("missing_bitmap") != null) graphic = FlxG.bitmap.get("missing_bitmap");
+            else graphic = FlxGraphic.fromBitmapData(Main.crash_prevention_bitmap, false, "missing_bitmap");
             important = true;
         }
         else{
-            graphic = FlxGraphic.fromBitmapData(AssetCache.getImageCache(file.texture));
+            graphic = FlxGraphic.fromBitmapData(AssetCache.getImageCache(file.texture), false, file.texture);
         }
 
         if(file.flags.contains("FORCENOAA")){

@@ -1,25 +1,20 @@
 package gameside.inventory;
 
-typedef ItemSlot = {
-    public var item:Item; // only the top left corner of the item should contain the item, the rest should be a reference to the correct slots
-    public var itemSourceX:Int;
-    public var itemSourceY:Int;
-
-    public var x:Int;
-    public var y:Int;
-
-    public var occupied:Bool; //faster calculations for bigger items?
-}
+import gameside.inventory.Item.ItemStack;
 
 interface ItemContainer {
     private var exists:Bool;
 
-    public function getItemAt(x:Int,y:Int):Item;
+    public function getItemAt(x:Int,y:Int):ItemStack;
+    public function getItemIndexAt(x:Int,y:Int):Int;
 
-    public function addItem(item:Item, ?x:Int, ?y:Int):Bool;
-    public function addItemToFirstAvailableSlot(item:Item):Bool;
+    public function addItem(stack:ItemStack, ?x:Int, ?y:Int, ?destroyStackIfMerge:Bool):Bool;
+    public function addItemToFirstAvailableSlot(stack:ItemStack, ?destroyStackIfMerge:Bool):Bool;
 
-    public function removeItemByIdName(idName:String, ?destroy:Bool = true):Void;
+    public function moveItem(index:Int, ?x:Int, ?y:Int, ?destroyStackIfMerge:Bool):Bool;
+    public function rotateItem(index:Int, by:Int):Void;
+
+    public function removeItemByName(idName:String, ?destroy:Bool = true):Void;
     public function removeItemStackByName(idName:String, stack:Int, ?destroy:Bool = true):Void;
 
     public function removeItemAt(x:Int, y:Int, ?destroy:Bool = true):Void;
@@ -28,6 +23,12 @@ interface ItemContainer {
     public function transferItemAt(x:Int, y:Int, to:ItemContainer, ?toX:Int = -1, ?toY:Int = -1):Void;
 }
 
+typedef ItemSlotPos = {
+    public var x:Int;
+    public var y:Int;
+}
+
 typedef ItemContainerCache = {
-    
+    public var items:Array<ItemContainerCache>;
+    public var slots:Array<Array<Int>>;
 }

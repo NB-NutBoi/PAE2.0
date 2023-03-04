@@ -1,5 +1,7 @@
 package gameside.inventory;
 
+import utility.LogFile;
+import gameside.inventory.Item;
 import gameside.inventory.ItemContainer;
 import lowlevel.Vector2D.Array2D;
 
@@ -15,10 +17,11 @@ Not be responsible for the interface's functionality, but the other way around.
 class ItemContainerGrid implements ItemContainer {
     var exists:Bool = true;
 
-    private var storage:Array2D<ItemSlot>;
+    private var items:Array<ItemStack>;
+    private var slots:Array2D<Int>;
 
     public function new(width:Int, height:Int) {
-        storage = new Array2D(width,height);
+        slots = new Array2D(width,height);
         resize(width,height);
     }
 
@@ -27,69 +30,41 @@ class ItemContainerGrid implements ItemContainer {
 
         exists = false;
 
-        for (array in storage.array) {
+        for (array in slots.array) {
             for (slot in array) {
-                if(slot.item != null)
-                    slot.item.destroy();
+                if(slot > -1) items[slot].destroy();
             }
         }
         
-        storage.clear();
-        storage = null;
+        slots.clear();
+        slots = null;
     }
 
-    //------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    //------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    //------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     //managing items
 
     //adding
 
-    public function addItem(item:Item, ?x:Int = 0, ?y:Int = 0):Bool { //adding requires the item class, but afterwards everything is handled with the item id
+    public function addItem(stack:ItemStack, ?x:Int = 0, ?y:Int = 0, ?destroyStackIfMerge:Bool = true):Bool { //adding requires the item class, but afterwards everything is handled with the item id
         if(!exists) return false;
-        if(!storage.exists(x,y)) return false;
+        if(!slots.inBounds(x,y)) return false;
 
-        var toSlot = storage.get(x,y);
-        if(toSlot.occupied){
-            if(toSlot.item == null) toSlot = storage.get(toSlot.itemSourceX, toSlot.itemSourceY);
-            if(toSlot.item == null) return false; //idk what happened but my guess is a bug.
-            
-            if(item.itemFile == toSlot.item.itemFile && item.ammount == toSlot.item.ammount && item.id == toSlot.item.id){
-                if(toSlot.item.maxQuantity > 1){
-                    //can hold multiple
+        var toSlot = slots.get(x,y);
+        
+        if(toSlot > -1) return items[toSlot].mergeStack(stack,destroyStackIfMerge);
+        else if(fitsAround(stack,x,y))
+        {
+            var index:Int = items.push(stack);
+            stack.index = index;
+            stack.setPosition(x,y);
+            slots.set(x,y,index);
 
-                    toSlot.item.quantity += item.quantity;
-                    var diff = toSlot.item.quantity - toSlot.item.maxQuantity;
+            if(stack.item.itemWidth == 1 && stack.item.itemHeight == 1) return true;
 
-                    if(diff > 0){
-                        toSlot.item.quantity -= diff;
-                        item.ammount = diff;
-                        //technically failed but added as much item stack as it could.
-                        return false;
-                    }     //success!
-                    else return true;
-                }
-            }
-        }
-        else if(fitsAround(item, x, y)) {
-            toSlot.item = item;
-            toSlot.occupied = true;
-
-            toSlot.item.positionX = toSlot.x;
-		    toSlot.item.positionY = toSlot.y;
-            
-            if(item.itemWidth == 1 && item.itemHeight == 1) return true;
-
-            for (extraX in 1...item.itemWidth) {
-                for (extraY in 1...item.itemHeight) {
-                    var extraSpace = storage.get(x + extraX, y + extraY);
-    
-                    extraSpace.occupied = true;
-                    extraSpace.itemSourceX = x;
-                    extraSpace.itemSourceY = y;
-                }
-            }
+            setItemCorner(index,x,y);
 
             return true;
         }
@@ -97,35 +72,91 @@ class ItemContainerGrid implements ItemContainer {
         return false;
     }
 
-    public function addItemToFirstAvailableSlot(item:Item):Bool {
+    public function addItemToFirstAvailableSlot(stack:ItemStack, ?destroyStackIfMerge:Bool = true):Bool {
         if(!exists) return false;
+
+        var prevRotation = stack.curRotation;
+        var iterateWidth:Int = slots.width - (stack.item.itemWidth-1);
+		var iterateHeight:Int = slots.height - (stack.item.itemHeight-1);
+
+        stack.curRotation = 0;
         
-        for (y in 0...storage.height) {
-            for (x in 0...storage.width) {
-                if(addItem(item,x,y) == true){
+        for (y in 0...iterateHeight) {
+            for (x in 0...iterateWidth) {
+                if(addItem(stack,x,y,destroyStackIfMerge) == true){
                     return true;
                 }
             }
         }
 
+        if(stack.item.itemWidth == stack.item.itemHeight) return false;
+
+        //Non-rotated failed, try swapping axis. (rotating)
+        iterateWidth = slots.width - (stack.item.itemHeight-1);
+		iterateHeight = slots.height - (stack.item.itemWidth-1);
+
+        stack.curRotation = 1;
+
+        for (y in 0...iterateHeight) {
+            for (x in 0...iterateWidth) {
+                if(addItem(stack,x,y,destroyStackIfMerge) == true){
+                    return true;
+                }
+            }
+        }
+
+        stack.curRotation = prevRotation;
+
         return false;
+    }
+
+    //moving
+
+    public function moveItem(index:Int, ?x:Int = 0, ?y:Int = 0, ?destroyStackIfMerge:Bool = true):Bool {
+        var stack:ItemStack = items[index];
+        if(stack == null) return false;
+
+        var toSlot:Int = slots.get(x,y);
+
+        if(toSlot > -1) return items[toSlot].mergeStack(stack,destroyStackIfMerge);
+        else if(fitsAround(stack,x,y))
+        {
+            replaceReferencesFor(index, -1);
+            setItemCorner(index,x,y);
+
+            return true;
+        }
+
+        return false;
+    }
+
+    public function rotateItem(index:Int, by:Int) {
+        var stack:ItemStack = items[index];
+        if(stack == null) return;
+
+        var prevRotation = (stack.drag ? stack.tempRotation : stack.curRotation);
+        stack.rotate(by);
+
+        if(stack.drag) return;
+        if(fitsAround(stack,stack.positionX,stack.positionY))
+        {
+            replaceReferencesFor(index, -1);
+            setItemCorner(index,stack.positionX,stack.positionY);
+
+            return;
+        }
+
+        stack.drag ? stack.tempRotation = prevRotation : stack.curRotation = prevRotation;
     }
 
     //removing
 
-    public function removeItemByIdName(idName:String, ?destroy:Bool = true):Void {
+    public function removeItemByName(idName:String, ?destroy:Bool = true):Void {
         if(!exists) return;
 
         //doesn't account for stacks.
-
-        for (y in 0...storage.height) {
-            for (x in 0...storage.width) {
-                var curSlot = storage.get(x,y);
-                if(curSlot.item.id == idName){
-                    removeFromSlot(curSlot, destroy);
-                    break;
-                }
-            }
+        for (i in 0...items.length) {
+            if(items[i].id == idName) { removeItem(i, destroy); break; }
         }
     }
 
@@ -134,108 +165,114 @@ class ItemContainerGrid implements ItemContainer {
         //this is the only way to remove quantity of a specific item without having direct access to the item.
         
         //accounts for stacks.
-        for (y in 0...storage.height) {
-            for (x in 0...storage.width) {
-                var curSlot = storage.get(x,y);
-                if(curSlot.item.id == idName){
+        for (i in 0...items.length) {
+            if(items[i].id == idName)
+            {
+                items[i].quantity -= stack;
+                if(items[i].quantity < 1) removeItem(i, destroy);
 
-                    curSlot.item.quantity -= stack;
-
-                    if(curSlot.item.quantity < 1){
-                        removeFromSlot(curSlot, destroy);
-                    }
-                    
-                    break;
-                }
+                break;
             }
         }
     }
 
     public function removeItemAt(x:Int, y:Int, ?destroy:Bool = true) {
         if(!exists) return;
-        if(!storage.exists(x,y)) return;
+        if(!slots.inBounds(x,y)) return;
+        
+        var atSlot:Int = slots.get(x,y);
+        if(atSlot <= -1) return;
 
-        var curSlot = storage.get(x,y);
-        if(curSlot.itemSourceX != -1 && curSlot.itemSourceY != -1) curSlot = storage.get(curSlot.itemSourceX,curSlot.itemSourceY);
-
-        removeFromSlot(curSlot, destroy);
+        removeItem(atSlot, destroy);
     }
 
     public function removeItemStackAt(x:Int, y:Int, stack:Int, ?destroy:Bool = true) {
         if(!exists) return;
-        if(!storage.exists(x,y)) return;
+        if(!slots.inBounds(x,y)) return;
 
-        var curSlot = storage.get(x,y);
-        if(curSlot.itemSourceX != -1 && curSlot.itemSourceY != -1) curSlot = storage.get(curSlot.itemSourceX,curSlot.itemSourceY);
+        var atSlot:Int = slots.get(x,y);
+        if(atSlot <= -1) return;
 
-        curSlot.item.quantity -= stack;
+        items[atSlot].quantity -= stack;
 
-        if(curSlot.item.quantity < 1){
-            removeFromSlot(curSlot, destroy);
-        }
+        if(items[atSlot].quantity < 1) removeItem(atSlot, destroy);
     }
 
     //misc?
 
-    public function getItemAt(x:Int,y:Int):Item {
+    public function getItemAt(x:Int,y:Int):ItemStack {
         if(!exists) return null;
-        if(!storage.exists(x,y)) return null;
-        
-        var theSlot = storage.get(x,y);
+        if(!slots.inBounds(x,y)) return null;
 
-        if(theSlot.itemSourceX != -1 && theSlot.itemSourceY != -1) theSlot = storage.get(theSlot.itemSourceX,theSlot.itemSourceY);
+        var atSlot:Int = slots.get(x,y);
+        if(atSlot <= -1) return null;
 
-        return theSlot.item;
+        return items[atSlot];
     }
 
-    //------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    //------------------------------------------------------------------------------------------------------------------------------------------------------------------
-    //------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    public function getItemIndexAt(x:Int,y:Int):Int {
+        if(!exists) return null;
+        if(!slots.inBounds(x,y)) return null;
 
-    private function fitsAround(item:Item, x:Int, y:Int):Bool {
-        if(item.itemWidth == 1 && item.itemHeight == 1) return true; //it's a 1x1, a check to see if it fits within the given coordinates has already been made, so it will fit.
-        if(item.itemWidth-1 + x > storage.width || item.itemHeight-1 + y > storage.height) return false; //too big to fit within the bounds if placed here.
+        return slots.get(x,y);
+    }
 
-        var fits:Bool = true;
-        for (extraX in 1...item.itemWidth) {
-            for (extraY in 1...item.itemHeight) {
-                var checking = storage.get(x + extraX, y + extraY);
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-                if(checking.occupied){
-                    fits = false;
-                    break;
-                }
+    private function fitsAround(stack:ItemStack, x:Int, y:Int):Bool {
+        if(stack.item.itemWidth == 1 && stack.item.itemHeight == 1) return true; //it's a 1x1, a check to see if it fits within the given coordinates has already been made, so it will fit.
+        if(stack.item.itemWidth-1 + x > slots.width || stack.item.itemHeight-1 + y > slots.height) return false; //too big to fit within the bounds if placed here.
+
+        var calcRotation:Int = (stack.drag ? stack.tempRotation : stack.curRotation);
+
+        for (extraX in 1...stack.item.itemWidth) {
+            for (extraY in 1...stack.item.itemHeight) {
+                if((calcRotation % 2 == 0 ? slots.get(x + extraX, y + extraY) : slots.get(x + extraY, y + extraX)) > -1) return false;
             }
         }
 
-        return fits;
+        return true;
     }
 
-    private function removeReferencesFor(forX:Int, forY:Int) {
-        if(forX == -1 || forY == -1) return;
+    private function replaceReferencesFor(forIndex:Int, to:Int = -1) {
+        if(forIndex == -1) return;
         
-        for (y in 0...storage.height) {
-            for (x in 0...storage.width) {
-                if(storage.get(x,y).occupied == true && (storage.get(x,y).itemSourceX == forX && storage.get(x,y).itemSourceY == forY) && storage.get(x,y).item == null){
-
-                    storage.get(x,y).occupied = false;
-                    storage.get(x,y).itemSourceX = -1;
-                    storage.get(x,y).itemSourceY = -1;
-                }
+        for (y in 0...slots.height) {
+            for (x in 0...slots.width) {
+                if(slots.get(x,y) == forIndex) slots.set(x,y, to);
             }
         }
     }
 
-    private inline function removeFromSlot(slot:ItemSlot, ?destroy:Bool = true) {
-        if(slot.item.itemWidth > 1 || slot.item.itemHeight > 1) removeReferencesFor(slot.x,slot.y);
+    private function removeItem(index:Int, ?destroy:Bool = true){
+        replaceReferencesFor(index, -1);
 
-        slot.item.positionX = -1;
-		slot.item.positionY = -1;
+        items[index].setPosition(-1,-1);
 
-        if(destroy) slot.item.destroy();
+        if(destroy) items[index].destroy();
 
-        slot.item = null;
-        slot.occupied = false;
+        items.remove(items[index]);
+        for (i in index...items.length) {
+            replaceReferencesFor(items[i].index, i);
+            items[i].index = i;
+        }
+    }
+
+    private function setItemCorner(index:Int, x:Int, y:Int){
+        var stack:ItemStack = items[index];
+        if(stack == null) return;
+        if(stack.item.itemWidth == 1 && stack.item.itemHeight == 1) return;
+        var calcRotation:Int = (stack.drag ? stack.tempRotation : stack.curRotation);
+        
+        for (extraX in 1...stack.item.itemWidth) {
+            for (extraY in 1...stack.item.itemHeight) {
+                calcRotation % 2 == 0 ? slots.set(x + extraX, y + extraY,index) : slots.set(x + extraY, y + extraX,index);
+            }
+        }
+
+        stack = null;
     }
 
     //------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -258,27 +295,20 @@ class ItemContainerGrid implements ItemContainer {
 
     //resizes the grid and generates new slots if needed.
     public function resize(newWidth:Int, newHeight:Int) {
-        if(newHeight != storage.height || newWidth != storage.width) storage.modifySize(newWidth, newHeight);
+        if(newHeight != slots.height || newWidth != slots.width) slots.modifySize(newWidth, newHeight);
 
         for (y in 0...newHeight)
         {   
             for (x in 0...newWidth)
             {
-                if(storage.get(x,y) == null){
-                    storage.set(x,y,{
-                        item: null,
-                        itemSourceX: -1,
-                        itemSourceY: -1,
-                        x: x,
-                        y: y,
-                        occupied: false
-                    });
+                if(slots.get(x,y) == null){
+                    slots.set(x,y,-1);
                 }
             }
         }
     }
 
     public function toString():String {
-        return Std.string(storage);
+        return Std.string(slots);
     }
 }

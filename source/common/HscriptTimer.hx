@@ -1,5 +1,7 @@
 package common;
 
+import flixel.tweens.FlxEase;
+import utility.Utils;
 import files.HXFile.HaxeScriptBackend;
 import flixel.util.FlxDestroyUtil;
 import haxe.ds.StringMap;
@@ -7,7 +9,7 @@ import flixel.FlxBasic;
 
 typedef HscriptTimerSave = {
     public var name:String;
-    public var callback:String;
+    public var callbacks:HscriptTimerCallbacks;
 
     public var length:Float;
     public var time:Float;
@@ -18,25 +20,32 @@ typedef HscriptTimerSave = {
     public var done:Bool;
 }
 
+typedef HscriptTimerCallbacks = {
+    public var onComplete:Null<String>;
+    public var onUpdate:Null<String>;
+}
+
 //timers that are local to an individual hscript instance.
 class HscriptTimer implements IFlxDestroyable {
 
     public var manager:HscriptTimerManager;
 
     public var name:String;
-    public var callback:String;
+    public var callbacks:HscriptTimerCallbacks;
 
     public var length:Float;
     public var time:Float;
+
+    public var percent(get,never):Float;
 
     public var loops:Int;
 
     public var paused:Bool = true;
     public var done:Bool = false;
 
-    public function new(id:String, call:String, t:Float, ?l:Int = 0) {
+    public function new(id:String, call:HscriptTimerCallbacks, t:Float, ?l:Int = 0) {
         name = id;
-        callback = call;
+        callbacks = call;
         length = time = t;
         loops = l;
     }
@@ -45,6 +54,8 @@ class HscriptTimer implements IFlxDestroyable {
         if(done) return;
 		
 		if (!paused){
+            if(callbacks != null &&  (callbacks.onUpdate != "" && callbacks.onUpdate != null )) manager.script.doFunction(callbacks.onUpdate,[name,elapsed]);
+            
 			time -= elapsed;
 			if (time <= 0)
 			{
@@ -54,8 +65,8 @@ class HscriptTimer implements IFlxDestroyable {
     }
 
     public function complete():Void {
-        manager.script.doFunction(callback,[name]);
-		done = true;
+        done = true;
+        if(callbacks != null && (callbacks.onComplete != "" && callbacks.onComplete != null )) manager.script.doFunction(callbacks.onComplete,[name]);
 	}
 
 	public function cancel():Void {
@@ -72,7 +83,7 @@ class HscriptTimer implements IFlxDestroyable {
 	}
 
     public function loop() {
-        loops--;
+        if(loops != -1) loops--;
         var leftover = time;
         reset();
         time-=Math.abs(leftover); //no cheating
@@ -82,7 +93,11 @@ class HscriptTimer implements IFlxDestroyable {
         manager = null;
 
         name = null;
-        callback = null;
+        callbacks = null;
+	}
+
+	function get_percent():Float {
+		return 1-(Utils.clamp(time,0,length)/length);
 	}
 }
 
@@ -103,7 +118,7 @@ class HscriptTimerManager extends FlxBasic {
     }
 
     private function loadTimer(from:HscriptTimerSave) {
-        final timer = new HscriptTimer(from.name,from.callback,from.length,from.loops);
+        final timer = new HscriptTimer(from.name,from.callbacks,from.length,from.loops);
         timer.manager = this;
         timer.time = from.time;
         timer.paused = from.paused;
@@ -118,7 +133,7 @@ class HscriptTimerManager extends FlxBasic {
             final timer = _timers.get(s);
 			var timerSave:HscriptTimerSave = {
                 name: timer.name,
-                callback: timer.callback,
+                callbacks: timer.callbacks,
                 length: timer.length,
                 time: timer.time,
                 loops: timer.loops,
@@ -168,7 +183,7 @@ class HscriptTimerManager extends FlxBasic {
         for (key in _timers.keys()) {
             final timer = _timers.get(key);
             if(timer.done){
-                if(timer.loops > 0) {
+                if(timer.loops > 0 || timer.loops == -1) {
                     timer.loop();
                     timer.update(elapsed);
                     continue;
@@ -198,11 +213,17 @@ class HscriptTimerManager extends FlxBasic {
     public function StartNewTimer(name:String, time:Float, callback:String, ?loops:Int = 0):HscriptTimer {
         final timer = AddTimer(name,time,callback,loops);
         timer.paused = false;
+        timer.update(0); //initial frame update (won't take away time.)
         return timer;
     }
 
     public function AddTimer(name:String, time:Float, callback:String, ?loops:Int = 0):HscriptTimer {
-        final timer = new HscriptTimer(name,callback,time,loops);
+        final timer = new HscriptTimer(name,
+        {
+            onComplete: callback,
+            onUpdate: ""
+        },
+        time,loops);
         timer.manager = this;
 		_timers.set(name, timer);
         return timer;
@@ -221,18 +242,47 @@ class HscriptTimerManager extends FlxBasic {
 
     public function SetTimerPaused(name:String,paused:Bool):Void {
 		final t = _timers.get(name);
-		if (t != null)
+		if (t != null) {
 			t.paused = paused;
+            t.update(0); //initial frame update (won't take away time.)
+        }
 	}
 
     public function ResetTimer(name:String, ?newtime:Null<Float> = null):Void {
 		final t = _timers.get(name);
-		if (t != null)
-			t.reset(newtime);
+		if (t != null){
+            t.reset(newtime);
+            t.update(0); //initial frame update (won't take away time.)
+        }
 	}
 
     public function TimerExists(name:String):Bool {
 		final t = _timers.get(name);
 		return (t != null);
+	}
+
+    public function TimerPercent(name:String):Float {
+        if(!TimerExists(name)) return 1;
+        return _timers.get(name).percent;
+    }
+
+    public function GetTimer(name:String):HscriptTimer {
+        return _timers.get(name);
+    }
+
+    //---------------------------------------------------------------//
+
+    public function SetTimerCompleteCallback(name:String,callback:String):Void {
+		final t = _timers.get(name);
+		if (t != null)
+			t.callbacks.onComplete = callback;
+	}
+
+    public function SetTimerUpdateCallback(name:String,callback:String):Void {
+		final t = _timers.get(name);
+		if (t != null) {
+			t.callbacks.onUpdate = callback;
+            t.update(0); //initial frame update (so the update function gets called before draw.)
+        }
 	}
 }

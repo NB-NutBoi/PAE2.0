@@ -71,7 +71,7 @@ class LanguageManager {
         if(languages[prefix] == null || prefix == curLanguage) return;
         curLanguage = prefix;
 
-        trace("set cur lang to "+curLanguage);
+        LogFile.log("Set cur lang to "+curLanguage, true);
 
         listeners.dispatch();
     }
@@ -95,6 +95,11 @@ class LanguageManager {
 
     public static function getTextCats(key:String, categories:Array<String>) {
         return getText(categories.join(".")+"."+key);
+    }
+
+    public static function getProperty(key:String, type:String):Any {
+        if(languages[curLanguage] == null) { LogFile.error("Could not get lang property as lang is missing!",true,true); return null; }
+        return languages[curLanguage].getProperty(key, type);
     }
 
     //-------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -146,49 +151,65 @@ class LanguageManager {
 
 class Language {
     public var prefix:String = "english";
-    public var entries:Map<String,String> = new Map();
-
-    public var properties:Map<String,Any> = new Map();
+    public var lang:Dynamic;
 
     public function new(pre:String, file:Dynamic) {
         prefix = pre;
-        parseCategory("",file);
-    }
-
-    function parseCategory(cat:String, category:Dynamic) {
-        final append:String = cat == "" ? "" : ".";
-
-        for (s in Reflect.fields(category)) {
-            var a:Dynamic = Reflect.field(category,s);
-            if(Std.isOfType(a, String)) entries.set(cat+append+s,a);
-            else if(!Reflect.isObject(a)) properties.set(cat+append+s,a);
-            else parseCategory(cat+append+s,a);
-        }
+        lang = file;
     }
 
     public function getText(key:String) {
-        var s = entries[key];
-        if(s == null)
+        var fields = key.split(".");
+        var entry:Dynamic = lang;
+        
+        for (s in fields) {
+            if(entry == null) break;
+            entry = Reflect.field(entry,s);
+        }
+
+        if(entry == null || !Std.isOfType(entry, String))
             return "LANG ENTRY MISSING";
 
-        return s;
+        return Std.string(entry);
+    }
+
+    public function getProperty(key:String, type:String):Any {
+        var fields = key.split(".");
+        var entry:Dynamic = lang;
+        
+        for (s in fields) {
+            if(entry == null) break;
+            entry = Reflect.field(entry,s);
+        }
+
+        if(entry == null || !Std.isOfType(entry, String))
+            return "PROPERTY ENTRY MISSING";
+
+        switch (type.toLowerCase()){
+            case "int": return cast(entry, Int);
+            case "float": return cast(entry, Float);
+            case "bool": return cast(entry, Bool);
+            case "dynamic": return entry;
+        }
+
+        return Std.string(entry);
+    }
+
+    public function appendCategory(what:Dynamic, to:Dynamic) {
+        for (s in Reflect.fields(what)) {
+            if(Reflect.hasField(to, s)) appendCategory(Reflect.field(what, s), Reflect.field(to, s));
+            else Reflect.setField(to, s, Reflect.field(what, s));
+        }
     }
 
     public function append(otherfile:Language) {
-        for (s in otherfile.entries.keys()) {
-            entries.set(s,otherfile.entries[s]);
-        }
-
-        for (s in otherfile.properties.keys()) {
-            properties.set(s,otherfile.properties[s]);
-        }
+        appendCategory(otherfile.lang,lang);
 
         otherfile.destroy(); //it has served its purpose.
     }
 
     public function destroy() {
-        entries.clear();
-        entries = null;
+        lang = null;
         prefix = null;
     }
 }

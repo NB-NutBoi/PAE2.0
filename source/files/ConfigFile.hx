@@ -136,7 +136,7 @@ class ConfigFile {
         for (s in configs.keys()) {
             finalString += s+"="+configs[s]+"\n";
         }
-        finalString += "\n//This file was generated automatically by PAR "+Main.GameVersion;
+        finalString += "\n//This file was generated automatically by PAE "+Main.GameVersion;
         return finalString;
     }
 }

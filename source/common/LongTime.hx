@@ -3,6 +3,8 @@ package common;
 import utility.Utils;
 
 typedef LongTimeCache = {
+    public var counting:Bool;
+
     public var seconds:Float;
     public var minutes:Int;
     public var hours:Int;
@@ -31,17 +33,30 @@ class LongTime {
     public var counting:Bool = false;
 
     public function new(?cache:LongTimeCache = null) {
-        setCache(cache);
+        if(cache != null) setCache(cache);
         times.push(this);
     }
 
     public function setCache(cache:LongTimeCache) {
-        if(cache == null) return;
         seconds = cache.seconds;
         minutes = cache.minutes;
         hours = cache.hours;
         days = cache.days;
         years = cache.years;
+
+        counting = cache.counting;
+    }
+
+    public function getCache():LongTimeCache {
+        return {
+            counting: counting,
+
+            seconds: seconds,
+            minutes: minutes,
+            hours: hours,
+            days: days,
+            years: years
+        };
     }
 
     public function updateTime() {
@@ -65,6 +80,18 @@ class LongTime {
             days -= 365;
             if(years < Utils.INT_MAX) years++; //stop so no overflow happens
         }
+    }
+
+    public function toString():String {
+        var s:String = "";
+
+        if(years > 0) s += years+" Years, ";
+        if(days > 0) s += days+" Days, ";
+        if(hours > 0) s += hours+" Hours, ";
+        if(minutes > 0) s += minutes+" Minutes, ";
+        s += seconds+" Seconds.";
+
+        return s;
     }
 
 }

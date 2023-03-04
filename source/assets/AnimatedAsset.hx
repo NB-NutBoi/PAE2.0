@@ -48,7 +48,7 @@ class AnimatedAsset extends ImageAsset {
             return returnable;
         }
         catch(e){
-            trace(e.message);
+            LogFile.error("Error parsing animated asset: "+e.message, true, true);
             returnable = null;
             return null;
         }
@@ -69,13 +69,16 @@ class AnimatedAsset extends ImageAsset {
         return file;
     }
     
-    public static function loadFromFile(file:String):AnimatedAsset {
+    public static function loadFromFile(file:String, ?cache:Bool = false):AnimatedAsset {
         if(AnimatedAssets.exists(file)) return AnimatedAssets[file];
         if(!Utils.checkAssetFilePreRequisites(file)) return getDefault();
+        if(cache && !AssetCache.dataCacheExists(file)) AssetCache.cacheData(file);
         var assetFile:AnimatedAssetFile = parseFile(file);
         if(assetFile == null) return getDefault();
         assetFile = fixFile(assetFile, file);
 
+        if(cache && !AssetCache.imageCacheExists(assetFile.texture)) AssetCache.cacheImage(assetFile.texture);
+        if(cache && !AssetCache.dataCacheExists(assetFile.xml)) AssetCache.cacheData(assetFile.xml);
         var asset:AnimatedAsset = new AnimatedAsset(assetFile, file);
         AnimatedAssets.set(file, asset);
         return asset;
@@ -84,8 +87,12 @@ class AnimatedAsset extends ImageAsset {
     public static function get(file:String):AnimatedAsset {
         if(!AnimatedAssets.exists(file)) return loadFromFile(file);
         var asset = AnimatedAssets[file];
-        if(asset.graphic.bitmap.image == null){trace("Bitmap missing!"); asset.graphic.bitmap = AssetCache.getImageCache(asset._texture);}
+        if(asset.graphic.bitmap.image == null){ #if debug trace("Animated asset Bitmap missing!"); #end asset.graphic.bitmap = AssetCache.getImageCache(asset._texture);}
         return asset;
+    }
+
+    public static function exists(file:String):Bool {
+        return AnimatedAssets.exists(file);
     }
 
     public static function getDefault() {
@@ -120,11 +127,12 @@ class AnimatedAsset extends ImageAsset {
         flags = file.flags == null ? [] : file.flags.copy();
 
         if(file.flags.contains("MISSING")){
-           graphic = FlxGraphic.fromBitmapData(Main.crash_prevention_bitmap);
-           important = true;
+            if(FlxG.bitmap.get("missing_bitmap") != null) graphic = FlxG.bitmap.get("missing_bitmap");
+            else graphic = FlxGraphic.fromBitmapData(Main.crash_prevention_bitmap, false, "missing_bitmap");
+            important = true;
         }
         else{
-            graphic = FlxGraphic.fromBitmapData(AssetCache.getImageCache(file.texture));
+            graphic = FlxGraphic.fromBitmapData(AssetCache.getImageCache(file.texture), false, file.texture);
         }
 
         if(file.flags.contains("FORCENOAA")){
@@ -162,7 +170,6 @@ class AnimatedAsset extends ImageAsset {
 	}
 
 	function set_xml(value:String):String {
-		_xml = AssetCache.getDataCache(value);
-        return _xml;
+        return _xml = AssetCache.getDataCache(value);
 	}
 }

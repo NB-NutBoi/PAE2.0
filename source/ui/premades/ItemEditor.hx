@@ -37,7 +37,6 @@ class ItemEditor extends DMenu{
     var itemHeight:Int;
 
     var maxQuantity:Int;
-    var defaultAmmount:Float;
 
     //--------------------------------------------------------
 
@@ -62,8 +61,9 @@ class ItemEditor extends DMenu{
 
     var maxQuant:TextField;
     var quantSafeIndicator:FlxSprite;
-    var defAmmount:TextField;
-    var ammountSafeIndicator:FlxSprite;
+
+    var script:TextField;
+    var scriptSafeIndicator:FlxSprite;
 
     var itemW:TextField;
     var itemH:TextField;
@@ -84,7 +84,7 @@ class ItemEditor extends DMenu{
         var mover:ContainerMover = new ContainerMover();
         super.mover = mover;
 
-        new ContainerCloser(273,5,this);
+        new ContainerCloser(973,5,this);
 
         var itemLabel:FlxText = new FlxText(70,7,"ITEM EDITOR",20);
         itemLabel.font = "vcr";
@@ -242,17 +242,20 @@ class ItemEditor extends DMenu{
 
         sepparator = Utils.makeRamFriendlyRect(128,550,180,2); add(sepparator);
 
-        label = new FlxText(130,556,0,"Default\nAmmount",17); label.font = "vcr"; add(label);
+        label = new FlxText(130,555,0,"Script",17); label.font = "vcr"; add(label);
 
-        defAmmount = new TextField(260,560,50);
-        add(defAmmount);
+        script = new TextField(180,578,130);
+        add(script);
 
-        ammountSafeIndicator = new FlxSprite(220,560,"embed/ui/tick.png");
-        ammountSafeIndicator.color = FlxColor.GREEN;
-        add(ammountSafeIndicator);
+        scriptSafeIndicator = new FlxSprite(220,553,"embed/ui/tick.png");
+        scriptSafeIndicator.color = FlxColor.GREEN;
+        add(scriptSafeIndicator);
 
-        defAmmount.onType.add(onType_indicator3);
-        defAmmount.onPressEnter.add(enterItemAmmount);
+        script.onType.add(onType_indicator3);
+        script.onPressEnter.add(enterScript);
+
+        var selectScriptButton = new Button(132,578,25,25,"...",browseScript);
+        add(selectScriptButton);
 
         //---------------------------------------------------------------------------------------------------------
 
@@ -327,12 +330,9 @@ class ItemEditor extends DMenu{
         maxQuant.onUpdateText();
         lastValidQuant = "1";
 
-        defaultAmmount = 1;
-
-        defAmmount.textField.text = "1";
-        defAmmount.caret = 1;
-        defAmmount.onUpdateText();
-        lastValidAmmount = "1";
+        script.textField.text = "";
+        script.caret = 0;
+        script.onUpdateText();
 
         onSelectTextureFromList(curItemTexture);
     }
@@ -454,6 +454,21 @@ class ItemEditor extends DMenu{
         lastValidTexY = Std.string(tex.yOffset);
 
         applyTexture();
+    }
+
+    public function browseScript() {
+        FileBrowser.callback = _scriptBrowsed;
+        FileBrowser.browse([new FileFilter("Script files", "*.hx")], false);
+    }
+
+    function _scriptBrowsed() {
+        switch (FileBrowser.latestResult){
+            case SAVE, CANCEL, ERROR: return;
+            case SELECT:
+                script.textField.text = FileBrowser.filePath;
+                script.caret = FileBrowser.filePath.length;
+                script.onUpdateText();
+        }
     }
 
     //-------------------------------------------------------------------------------------------------------------------
@@ -630,29 +645,6 @@ class ItemEditor extends DMenu{
         quantSafeIndicator.color = FlxColor.RED;
     }
 
-    public function onType_indicator3() {
-        ammountSafeIndicator.color = FlxColor.RED;
-    }
-
-    var lastValidAmmount:String;
-    public function enterItemAmmount(_) {
-        var texIdx = getTextureIdxFromSelected(textureList.selected);
-        var tex = itemTextures[texIdx];
-
-        //check ammount
-        if(!Math.isNaN(Std.parseFloat(defAmmount.textField.text))){
-            var value = Std.parseFloat(defAmmount.textField.text);
-
-            lastValidAmmount = Std.string(value);
-            defaultAmmount = value;
-        }
-        else{
-            defAmmount.textField.text = lastValidAmmount;
-        }
-
-        ammountSafeIndicator.color = FlxColor.GREEN;
-    }
-
     var lastValidQuant:String;
     public function enterMaxQuant(_) {
         //check quantity
@@ -673,6 +665,14 @@ class ItemEditor extends DMenu{
         quantSafeIndicator.color = FlxColor.GREEN;
     }
 
+    public function onType_indicator3() {
+        scriptSafeIndicator.color = FlxColor.RED;
+    }
+
+    public function enterScript(_) {
+        scriptSafeIndicator.color = FlxColor.GREEN;
+    }
+
     //-------------------------------------------------------------------------------------------------------------------
     //-------------------------------------------------------------------------------------------------------------------
     //-------------------------------------------------------------------------------------------------------------------
@@ -680,12 +680,12 @@ class ItemEditor extends DMenu{
     public function save() {
         var json:ItemJson = {
             maxQuantity: maxQuantity,
-            defaultAmmount: defaultAmmount,
             langId: itemLang,
             textures: itemTextures,
             curTexture: curItemTexture,
             iWidth: itemWidth,
-            iHeight: itemHeight
+            iHeight: itemHeight,
+            script: script.textField.text
         }
 
         var c = Json.stringify(json,null," ");
@@ -738,12 +738,9 @@ class ItemEditor extends DMenu{
                 maxQuant.onUpdateText();
                 lastValidQuant = maxQuant.textField.text;
 
-                defaultAmmount = jsonSelect.defaultAmmount;
-
-                defAmmount.textField.text = Std.string(defaultAmmount);
-                defAmmount.caret = defAmmount.textField.text.length;
-                defAmmount.onUpdateText();
-                lastValidAmmount = defAmmount.textField.text;
+                script.textField.text = jsonSelect.script;
+                script.caret = jsonSelect.script.length;
+                script.onUpdateText();
 
                 onSelectTextureFromList(curItemTexture);
         }

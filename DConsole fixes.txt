@@ -1,0 +1,12 @@
+FOR TEXT FIELDS BREAKING:
+- go to the lines "Lib.current.stage.focus = null;" and "Lib.current.stage.focus = txtPrompt;" in DCOpenflInterface.hx
+- place Lib.current.stage.window.textInputEnabled = true; below them.
+
+FOR NOT ALLOWING COMPILATION DUE TO IMPROPER HSCRIPT HANDLING:
+- go to all lines that say "throw hscript.Expr.Error.EInvalidAccess(f);"
+- replace them with "throw #if hscriptPos hscript.Expr.ErrorDef.EInvalidAccess(f); #else hscript.Expr.Error.EInvalidAccess(f); #end"
+
+FOR MESSING UP CODE COMPLETION:
+- go to your haxelib folder (typically C:\HaxeToolkit\haxe\lib)
+- find the dconsole lib
+- remove the dependencies field in haxelib.json (remember to have hscript installed.)

@@ -1,5 +1,6 @@
 package;
 
+import common.LongTime;
 import CorePlugin;
 import files.HXFile;
 import files.HXFile.HaxeScript;
@@ -24,6 +25,8 @@ import lime.app.Event;
 class CoreState extends FlxState {
 
     public static var watermark:FlxText;
+
+    public static var timeScale:Float = 1; //the local time scale that only gets applied to the state, not the plugins
 
     override public function new(?MaxSize:Int) {
         super(MaxSize);
@@ -77,13 +80,14 @@ class CoreState extends FlxState {
     }
     
     override function tryUpdate(elapsed:Float) {
+        LongTime.update(elapsed);
         
         if(_frame) //make sure this is only updated once per frame (why would there be multiple coreState instances running anyway)
             updateCore(elapsed);
 
         if(!Main.Paused){
             if (persistentUpdate || subState == null)
-                update(elapsed);
+                update(elapsed * timeScale);
         }
         
 		if (_requestSubStateReset)
@@ -94,7 +98,7 @@ class CoreState extends FlxState {
 		if (subState != null)
 		{
             if(!Main.Paused)
-			    subState.tryUpdate(elapsed);
+			    subState.tryUpdate(elapsed * timeScale);
 		}
 
         if(_lateFrame)
@@ -116,27 +120,36 @@ class CoreState extends FlxState {
     public static function initCore() {
         coreInitialized = true;
 
+        Utils.BeginTimestampMeasure("CreateCore");
+
         final mainScriptPath = Main.SetupConfig.getConfig("MainScript","String","");
         if(Utils.checkExternalHaxeFileValid(mainScriptPath)){
             AssetCache.cacheData(mainScriptPath);
             mainScript = HXFile.makeNew(CorePluginBackend);
-            mainScript._dynamic.backend.name = "MainScript";
+            cast(mainScript.backend, CorePluginBackend).name = "MainScript";
+
+            //THIS IS THE ONLY PLACE THAT CAN GRANT IMPORT PERMISSIONS!
             mainScript.backend.importPerms = true;
-            mainScript.backend.AddGeneral("import", mainScript.backend._import); //THIS IS THE ONLY PLACE THAT CAN GRANT IMPORT PERMISSIONS!
+            mainScript.backend.AddGeneral("import", mainScript.backend._import); 
             mainScript.backend.AddGeneral("grantImportPerms", mainScript.backend.grantImportPerms);
+
             HXFile.compileFromFile(mainScript,mainScriptPath);
+            AssetCache.removeDataCache(mainScriptPath); //Clear this cache as nothing will need to be created again from this.
         }
 
         if(mainScript == null){
             LogFile.fatalError("!!! MAIN SCRIPT \""+mainScriptPath+"\" COULD NOT BE INITIATED !!!", 10);
             return;
-        } 
+        }
     }
 
     public static function startCore() {
         coreStarted = true;
     
         mainScript.doFunction("OnStart"); //should init plugins here
+
+        LogFile.log("\nCore script creation took "+Utils.EndTimestampMeasure("CreateCore")+"\n[-----------------------v MAIN GAME START v----------------------]\n\n\n");
+
         mainScript.doFunction("OnGameStart");
     }
 

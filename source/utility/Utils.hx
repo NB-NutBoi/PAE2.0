@@ -1,5 +1,9 @@
 package utility;
 
+import flixel.math.FlxMath;
+import haxe.Timer;
+import openfl.geom.Matrix;
+import haxe.ds.StringMap;
 import sys.io.File;
 import openfl.display.PNGEncoderOptions;
 import haxe.crypto.Base64;
@@ -27,6 +31,19 @@ import sys.FileSystem;
 using StringTools;
 
 class Utils {
+
+	//EXTERNAL--------------------------------------------------------------------------------------------------------------------------------------------
+
+	public static function frame(start:Bool) {
+		//Run logic that needs to run every update cycle
+		switch (start){
+			case true: for (t in activeTimers) { t.thisFrame = false; }
+			case false: var thisFrame:Null<Array<String>> = [];
+			for (key => value in activeTimers) { if(!value.thisFrame) thisFrame.push(key); }
+			for (key in thisFrame) { activeTimers.remove(key); }
+			thisFrame = null;
+		}
+	}
 	
 	public static function fancyOpenURL(schmancy:String)
 	{
@@ -88,7 +105,13 @@ class Utils {
 	public static var ramFriendlyGraphic:FlxGraphic;
 	public static function makeRamFriendlyRect(x:Float,y:Float,width:Int,height:Int, ?color:Int = 0xFFFFFFFF, ?antialiasing:Bool = false):FlxSprite {
 		var s = new FlxSprite(x,y);
-		if(ramFriendlyGraphic == null) ramFriendlyGraphic = makeBitmapGraphic(AssetCache.getImageCache("embed/debug/ramSaver.png"));
+
+		if(ramFriendlyGraphic == null){
+			ramFriendlyGraphic = makeBitmapGraphic(AssetCache.getImageCache("embed/debug/ramSaver.png"));
+			ramFriendlyGraphic.destroyOnNoUse = false;
+			ramFriendlyGraphic.persist = true;
+		}
+
 		s.loadGraphic(ramFriendlyGraphic);
 		s.setGraphicSize(width,height);
 		s.color = color;
@@ -131,7 +154,7 @@ class Utils {
 		if(mouse == null) mousePos = getMousePosInCamera(spr.camera,null,spr);
 		else switch (Type.getClass(mouse)){ //abstracted mouse to not be so strict!
 			case FlxCamera: mousePos = getMousePosInCamera(cast mouse,null,spr);
-			case FlxPoint: mousePos = cast mouse;
+			case FlxBasePoint: mousePos = cast mouse;
 			default: return false;
 		}
 
@@ -140,7 +163,7 @@ class Utils {
 		final ogY = mousePos.y;
 
         if(!pixelAccurate){
-        	mousePos.rotate(spr.getGraphicMidpoint(FlxPoint.weak()),-spr.angle);
+        	mousePos.pivotDegrees(spr.getGraphicMidpoint(FlxPoint.weak()),-spr.angle);
 
 			var b = spr.overlapsPoint(mousePos);
 			
@@ -160,7 +183,7 @@ class Utils {
 		}
 
         var frameData:BitmapData = spr.updateFramePixels();
-        mousePos.rotate(spr.getGraphicMidpoint(FlxPoint.weak()),-spr.angle);
+        mousePos.pivotDegrees(spr.getGraphicMidpoint(FlxPoint.weak()),-spr.angle);
         var rotatedPos:Array<Int> = [
             /*x*/Math.round((mousePos.x - (spr.x*spr.scrollFactor.x)) * (1 / spr.scale.x)),
             /*y*/Math.round((mousePos.y - (spr.y*spr.scrollFactor.y)) * (1 / spr.scale.y))
@@ -342,7 +365,7 @@ class Utils {
 		return s;
 	}
 
-	public static function getBitmapFromB64String(s:String) {
+	public static function getBitmapFromB64String(s:String):BitmapData {
 		return BitmapData.fromBase64(s,"image/jpg");
 	}
 
@@ -353,6 +376,26 @@ class Utils {
 
 		b.clear();
 		b = null;
+	}
+
+	/**
+	 * Try not to use this too much - Is heavy on RAM
+	 * @param source the bitmap to resize
+	 * @param width new width
+	 * @param height new height
+	 * @return the resized bitmap
+	 */
+	@:access(openfl.display.BitmapData)
+	public static function resizeBitmap(source:BitmapData, width:Int, height:Int):BitmapData {
+		if(source == null) return null;
+		var scaleX:Float = width / source.width;
+		var scaleY:Float = height / source.height;
+		var matrix:Matrix = new Matrix();
+		var resized:BitmapData = new BitmapData(width,height,source.transparent);
+		resized.image.buffer.format = source.image.buffer.format;
+		matrix.scale(scaleX, scaleY);
+		resized.draw(source, matrix);
+		return resized;
 	}
 
     //MATHS--------------------------------------------------------------------------------------------------------------------------------------------
@@ -386,14 +429,16 @@ class Utils {
 		return dumbArray;
 	}
 
+	static final d2r = (Math.PI / 180.0);
+	static final r2d = (180.0 / Math.PI);
 	inline public static function deg2Rad(degree:Float):Float
 	{
-		return degree * (Math.PI / 180.0);
+		return degree * d2r;
 	}
 
 	inline public static function rad2deg(radian:Float):Float
 	{
-		return radian * (180.0 / Math.PI);
+		return radian * r2d;
 	}
 
 	//STRINGS--------------------------------------------------------------------------------------------------------------------------------------------
@@ -466,22 +511,71 @@ class Utils {
 		}
 		return array;
 	}
-}
 
-abstract OneOf<A, B>(Either<A, B>) from Either<A, B> to Either<A, B> {
-	@:from inline static function fromA<A, B>(a:A):OneOf<A, B> {
-	  return Left(a);
+	//LOGIC--------------------------------------------------------------------------------------------------------------------------------------------
+
+	//The less you use this, the better, as this is iterated through ever frame, twice.
+	static var activeTimers:StringMap<{thisFrame:Bool, left:Float}> = new StringMap();
+
+	//USE ONLY ON SECTIONS THAT RUN EVERY FRAME TO AVOID PROBLEMS!
+	public static function executeAfterSeconds(name:String, seconds:Float, elapsed:Float):Bool {
+		var _t:{thisFrame:Bool, left:Float} = null;
+
+		if(!activeTimers.exists(name)){
+			activeTimers.set(name, _t = {
+				thisFrame: true,
+				left: seconds - elapsed
+			});
+		}
+		else{
+			_t = activeTimers.get(name);
+
+			_t.thisFrame = true;
+			_t.left -= elapsed;
+		}
+
+		if(_t.left <= 0){
+			_t.left = seconds + _t.left;
+			return true;
+		}
+		
+		return false;
 	}
-	@:from inline static function fromB<A, B>(b:B):OneOf<A, B> {
-	  return Right(b);  
-	} 
-	  
-	@:to inline function toA():Null<A> return switch(this) {
-	  case Left(a): a; 
-	  default: null;
+
+	static var timestamps:Map<String,Float> = new Map();
+
+	public static function BeginTimestampMeasure(name:String) 
+	{
+		timestamps.set(name,Timer.stamp());
+    }
+
+	public static function EndTimestampMeasure(name:String):String
+	{
+		var t0 = timestamps.get(name);
+        if(t0 == null)
+            return "null";
+        
+		var time = (Timer.stamp() - t0) + "s";
+
+		timestamps.remove(name);
+
+		return time;
 	}
-	@:to inline function toB():Null<B> return switch(this) {
-	  case Right(b): b;
-	  default: null;
+
+	public static function BeginIndependentTimeMeasuring():Float 
+	{
+		return Timer.stamp();
 	}
-  }
+
+	public static function EndIndependentTimeMeasuring(t0:Float):String 
+	{
+		var time = (Timer.stamp() - t0) + "s";
+		return time;
+	}
+
+	public static function EndIndependentTimeMeasuringRounded(t0:Float):String 
+	{
+		var time = FlxMath.roundDecimal((Timer.stamp() - t0),2) + "s";
+		return time;
+	}
+}

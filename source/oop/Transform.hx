@@ -4,7 +4,6 @@ import oop.GenericObject;
 import flixel.FlxBasic;
 import flixel.FlxSprite;
 import flixel.math.FlxPoint;
-import flixel.math.FlxVector;
 import flixel.text.FlxText;
 import utility.Utils;
 
@@ -26,8 +25,8 @@ class Transform extends FlxBasic{
 
     private var owner:GenericObject;
     
-    public var internalPosition(default, null):FlxVector;
-    public var position(default, null):FlxVector;
+    public var internalPosition(default, null):FlxPoint;
+    public var position(default, null):FlxPoint;
 
     public var z:Int = 0; //Layering stuff. (DEPRECATED)
 
@@ -38,7 +37,7 @@ class Transform extends FlxBasic{
      */
     public var usePixelsPerSecond:Bool = false;
 
-    public var velocity(default, null):FlxVector;
+    public var velocity(default, null):FlxPoint;
     public var angularVelocity:Float;
 
 
@@ -63,10 +62,10 @@ class Transform extends FlxBasic{
         internalAngle = 0;
         angle = 0;
 
-        position = new FlxVector(x,y);
-        internalPosition = new FlxVector(0,0);
+        position = new FlxPoint(x,y);
+        internalPosition = new FlxPoint(0,0);
 
-        velocity = new FlxVector(0,0);
+        velocity = new FlxPoint(0,0);
     }
 
     override function destroy() {

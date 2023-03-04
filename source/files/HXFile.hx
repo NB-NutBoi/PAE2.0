@@ -1,5 +1,8 @@
 package files;
 
+import flixel.util.typeLimit.OneOfTwo;
+import haxe.DynamicAccess;
+import JsonDefinitions;
 import lowlevel.HAbstracts;
 import Discord;
 import saving.SaveManager;
@@ -50,6 +53,14 @@ class HXFile {
 
     public static function update(script:HaxeScript, elapsed:Float){
         script.update(elapsed);
+    }
+
+    public static function save(script:HaxeScript) {
+        if(Std.isOfType(script.backend, SaveableHaxeScriptBackend)) cast(script.backend, SaveableHaxeScriptBackend).save();
+    }
+
+    public static function load(script:HaxeScript) {
+        if(Std.isOfType(script.backend, SaveableHaxeScriptBackend)) cast(script.backend, SaveableHaxeScriptBackend).load();
     }
 }
 
@@ -155,6 +166,14 @@ class HaxeScriptBackend {
         exists = true;
     }
 
+    function logError(Message:String, ?Trace:Bool = false, ?Print:Bool=false) {
+        LogFile.error(Message,Trace,Print);
+    }
+
+    function logWarning(Message:String, ?Trace:Bool = false, ?Print:Bool=false) {
+        LogFile.warning(Message,Trace,Print);
+    }
+
     //DIVIDE PROCESS.
     //-------------------------------------------------
 
@@ -192,10 +211,13 @@ class HaxeScriptBackend {
         AddGeneral("this",frontend);
         AddGeneral("trace",_trace);
         AddGeneral("cast", ScriptGlobals.Cast);
+        AddGeneral("Std", Std);
 
         AddGeneral("getTimers", getTimers);
 
         AddGeneral("abstracts", HAbstracts);
+
+        AddGeneral("Discord", #if windows DiscordClient #else HscriptMissingDiscord #end);
 
         //GLOBALS
 
@@ -257,8 +279,8 @@ class HaxeScriptBackend {
         catch (e)
         {
             // All exceptions will be caught here
-            LogFile.error("Script error! |[ " + e.message + " ]| :" + parser.line+"\n",true);
-            if(logScriptOnError) trace("Script:\n"+fullScript);
+            logError("Script error! |[ " + e.message + " ]| :" + parser.line+"\n", true, true);
+            if(logScriptOnError) LogFile.log("Script:\n"+fullScript, true);
         }
 
         
@@ -294,6 +316,10 @@ class HaxeScriptBackend {
                 "setGlobalFloat",
                 "setGlobalInt",
                 "setGlobalString",
+
+                "__getVarExists",
+                "__setVar",
+                "__getVar",
                 
                 "trace",
                 "getTimers",
@@ -483,7 +509,7 @@ class HaxeScriptBackend {
 		else{
             switch(funcName){
                 case "OnUpdate", "OnLateUpdate", "OnDraw": return null; //don't bother with these functions
-                default: LogFile.warning("tried calling non-existing function "+ funcName+" of script!");
+                default: logWarning("Tried calling non-existing function "+ funcName+" of script!",false, true);
             }
 		}
 
@@ -494,7 +520,7 @@ class HaxeScriptBackend {
         if (!ready || !exists)
 			return null;
 
-        if(!functionExists("__getVar")) { LogFile.warning("Standard component function __getVar not supported!"); return null; }
+        if(!functionExists("__getVar")) { logWarning("Standard component function __getVar not supported!"); return null; }
 
         return doFunction("__getVar",[name, interpreter]);
     }
@@ -503,7 +529,7 @@ class HaxeScriptBackend {
         if (!ready || !exists)
 			return null;
 
-        if(!functionExists("__setVar")) { LogFile.warning("Standard component function __setVar not supported!"); return null; }
+        if(!functionExists("__setVar")) { logWarning("Standard component function __setVar not supported!"); return null; }
 
         return doFunction("__setVar",[name, to, interpreter]);
     }
@@ -512,7 +538,7 @@ class HaxeScriptBackend {
         if (!ready || !exists)
 			return false;
 
-        if(!functionExists("__getVarExists")) { LogFile.warning("Standard component function __getVarExists not supported!"); return false; }
+        if(!functionExists("__getVarExists")) { logWarning("Standard component function __getVarExists not supported!"); return false; }
 
         return doFunction("__getVarExists",[name, interpreter]);
     }
@@ -583,30 +609,219 @@ class HaxeScriptBackend {
 
     static final blacklist:Array<String> = []; //add keywords that cannot be imported for whatever reason.
 
-    function _import(what:String, as:String) {
+    function _import(what:Import, as:Import) {
         if(!importPerms) return;
         if(ScriptGlobals.__backendCaller != null && ScriptGlobals.__backendCaller != frontend) return;
-        if(!exists || (Utils.matchesAny(what, blacklist) || Utils.matchesAny(as, blacklist))) return;
+        if(!exists) return;
 
-        //ADD SPECIAL CASES HERE
-        var special:Bool = false;
-        switch (what.toLowerCase()){
-            case "log", "logfile":
-                AddGeneral(as, LogFile);
-                special = true;
-            case "con", "console":
-                AddGeneral(as, Console);
-                special = true;
+        var imports:Array<String> = [];
+
+        if(Std.isOfType(what, String)) imports = [what];
+        else imports = what;
+
+        var importDefs:Array<String> = [];
+
+        if(Std.isOfType(as, String)) importDefs = [as];
+        else importDefs = as;
+
+        if(imports.length != importDefs.length) return;
+
+        for (i in 0...imports.length) {
+            what = imports[i];
+            as = importDefs[i];
+
+            if(Utils.matchesAny(cast(what, String), blacklist) || Utils.matchesAny(cast(what, String), blacklist)) continue;
+
+            //ADD SPECIAL CASES HERE
+            var special:Bool = false;
+            switch (cast(what, String).toLowerCase()){
+                case "log", "logfile":
+                    AddGeneral(as, LogFile);
+                    special = true;
+                case "con", "console":
+                    AddGeneral(as, Console);
+                    special = true;
+            }
+            if(special)
+                return;
+
+            //Otherwise, let this figure it out
+            var c = Type.resolveClass(what);
+            if(c == null) {logError("No class exists with the name "+what+"!",true,true); return;}
+            AddGeneral(as,c);
         }
-        if(special)
-            return;
-
-        //Otherwise, let this figure it out
-        var c = Type.resolveClass(what);
-        if(c == null) {LogFile.error("No class exists with the name "+what+"!",true,true); return;}
-        AddGeneral(as,c);
     }
 
+}
+
+typedef Import = OneOfTwo<String,Array<String>>;
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class SaveableHaxeScriptBackend extends HaxeScriptBackend
+{
+    var state:ScriptState;
+
+    override public function new(frontend:HaxeScript) {
+        state = {
+            scriptSaveables: new DynamicAccess(),
+
+            timers: null
+        }
+
+        super(frontend);
+    }
+
+    override function AddVariables() {
+        super.AddVariables();
+        //BASICS
+
+        //SAVEABLE VARS
+
+        //initializers
+        AddGeneral("initializeLocalString",initializeLocalString);
+        AddGeneral("initializeLocalInt",initializeLocalInt);
+        AddGeneral("initializeLocalFloat",initializeLocalFloat);
+        AddGeneral("initializeLocalBool",initializeLocalBool);
+
+        //getters
+        AddGeneral("getLocalString",getLocalString);
+        AddGeneral("getLocalInt",getLocalInt);
+        AddGeneral("getLocalFloat",getLocalFloat);
+        AddGeneral("getLocalBool",getLocalBool);
+
+        //setters
+        AddGeneral("setLocalBool",setLocalBool);
+        AddGeneral("setLocalFloat",setLocalFloat);
+        AddGeneral("setLocalInt",setLocalInt);
+        AddGeneral("setLocalString",setLocalString);
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    public function save() {
+        if(!exists || !ready) return;
+        
+        doFunction("OnSave");
+
+        if(timers != null) state.timers = timers.saveTimers();
+    }
+
+    public function load() {
+        if(!exists || !ready) return;
+
+        if(state.timers != null) loadTimers(state.timers);
+
+        doFunction("OnLoad");
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    
+    public function initializeLocalString(name:String, value:String):Null<String> {
+        var s = state.scriptSaveables.get(name);
+        if(s == null){
+            state.scriptSaveables.set(name,value);
+        }
+
+        return state.scriptSaveables.get(name);
+    }
+
+    public function initializeLocalInt(name:String, value:Int):Null<Int> {
+        var s = state.scriptSaveables.get(name);
+        if(s == null){
+            state.scriptSaveables.set(name,value);
+        }
+
+        return state.scriptSaveables.get(name);
+    }
+
+    public function initializeLocalFloat(name:String, value:Float):Null<Float> {
+        var s = state.scriptSaveables.get(name);
+        if(s == null){
+            state.scriptSaveables.set(name,value);
+        }
+
+        return state.scriptSaveables.get(name);
+    }
+
+    public function initializeLocalBool(name:String, value:Bool):Null<Bool> {
+        var s = state.scriptSaveables.get(name);
+        if(s == null){
+            state.scriptSaveables.set(name,value);
+        }
+
+        return state.scriptSaveables.get(name);
+    }
+
+    public function getLocalString(name:String):Null<String> {
+        var s = state.scriptSaveables.get(name);
+        if(s != null){
+            if(Std.isOfType(s,String)){
+                return s;
+            }
+        }
+
+        logError("Local STRING "+name+" Doesn't exist or is not a STRING type!");
+        return null;
+    }
+
+    public function getLocalInt(name:String):Null<Int> {
+        var i = state.scriptSaveables.get(name);
+        if(i != null){
+            if(Std.isOfType(i,Int)){
+                return i;
+            }
+        }
+
+        logError("Local INT "+name+" Doesn't exist or is not an INT type!");
+        return null;
+    }
+
+    public function getLocalFloat(name:String):Null<Float> {
+        var f = state.scriptSaveables.get(name);
+        if(f != null){
+            if(Std.isOfType(f,Float)){
+                return f;
+            }
+        }
+
+        logError("Local FLOAT "+name+" Doesn't exist or is not a FLOAT type!");
+        return null;
+    }
+
+    public function getLocalBool(name:String):Null<Bool> {
+        var b = state.scriptSaveables.get(name);
+        if(b != null){
+            if(Std.isOfType(b,Bool)){
+                return b;
+            }
+        }
+
+        logError("Local BOOL "+name+" Doesn't exist or is not a BOOL type!");
+        return null;
+    }
+
+    public function setLocalBool(name:String,b:Bool):Null<Bool> {
+        return state.scriptSaveables.set(name,b);
+    }
+
+    public function setLocalFloat(name:String,f:Float):Null<Float> {
+        return state.scriptSaveables.set(name,f);
+    }
+
+    public function setLocalInt(name:String,i:Int):Null<Int> {
+        return state.scriptSaveables.set(name,i);
+    }
+
+    public function setLocalString(name:String,s:String):Null<String> {
+        return state.scriptSaveables.set(name,s);
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -661,7 +876,10 @@ class InterpPlus extends Interp {
             case "importPerms": LogFile.warning("Cannot set import perms from script!",false,true); return null;
             case "parser", "program", "interpreter": LogFile.warning("Cannot set/change script parser/interpreter/program from script!",false,true); return null;
             case "exists", "compiled", "ready": LogFile.warning("Cannot change script state from script!",false,true); return null;
-        }}
+        }
+
+        Reflect.setProperty(o,f,v); //woops
+        }
         else if(isHaxeScript(o)){
             if(f == "backend") return null; //NO, YOU ARE NOT ALLOWED THE FORBIDDEN BACKEND.
             

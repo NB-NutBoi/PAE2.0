@@ -21,15 +21,15 @@ class DiscordClient
     public static var active:Bool = false;
     public static var ready:Bool = false;
     public function new()
-    {
-        trace("Discord Client starting...");
+    {   
+        #if debug trace("Discord Client starting..."); #end
         DiscordRpc.start({
             clientID: Main.discordRPC_id,
             onReady: onReady,
             onError: onError,
             onDisconnected: onDisconnected
         });
-        trace("Discord Client prepared, waiting for start...");
+        #if debug trace("Discord Client prepared, waiting for start..."); #end
 
         while (true)
         {
@@ -57,30 +57,29 @@ class DiscordClient
     static function onReady()
     {
         DiscordRpc.presence({
-            details: d,
-            state: s,
+            details: s,
+            state: d,
             largeImageKey: lik,
             largeImageText: Main.GameVersion,
             smallImageKey: sik
         });
-        trace("Discord Client started.");
+        #if debug trace("Discord Client started."); #end
         ready = true;
     }
 
     static function onError(_code:Int, _message:String)
     {
-        trace('Error! $_code : $_message');
-        LogFile.error('Discord rich pressence Error! $_code : $_message');
+        LogFile.error('Discord rich pressence Error! $_code : $_message', true, true);
     }
 
     static function onDisconnected(_code:Int, _message:String)
     {
-        trace('Disconnected! $_code : $_message');
+        LogFile.error('Discord rich pressence disconnected! $_code : $_message', true, true);
     }
 
     public static function initialize()
     {
-        trace("Discord Client initialized");
+        #if debug trace("Discord Client initialized"); #end
         active = true;
         var DiscordDaemon = sys.thread.Thread.create(() ->
         {
@@ -99,15 +98,14 @@ class DiscordClient
         lik = icon;
         sik = smallImageKey;
 
-        trace('Discord RPC Updated. Arguments: $details, $state, $icon, $smallImageKey');
         LogFile.log('Discord RPC Updated. Arguments: $details, $state, $icon, $smallImageKey\n');
 
         if(!ready)
             return;
         
         DiscordRpc.presence({
-            details: d,
-            state: s,
+            details: s,
+            state: d,
             largeImageKey: lik,
             largeImageText: Main.GameVersion,
             smallImageKey : sik,

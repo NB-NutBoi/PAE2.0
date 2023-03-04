@@ -1,0 +1,28 @@
+Upgraded to newest flixel version
+
+Miscellaneous changes:
+ - Added the ability to cache assets if loading from asset file (engine functions do this by default)
+ - Re-instated Misc Asset Cache, added basic types plus other helpful types such as graphic or save metadata
+ - Changed hScript Timers to have multiple callbacks (to be expanded in the future.)
+ - Updated LongTime to have more save-related functions.
+ - Added SaveableHaxeScriptBackend as a standard class, for easier implementation.
+ - Added TimeScale variable to CoreState
+ - Put most trace calls behind #debug compile conditional
+ - Tidied up Log File (sepparated sections of the init code.)
+ - Improved DialogueState code for game standards.
+ - Added a way to override the script a Level loads with
+ - Added camera field to Level
+ - Updated Vector2D and Array2D for new naming scheme
+ - Changed SaveMetadata to be conveniently cacheable.
+ - Changed Language File Architecture (now it stores the generated JSON itself.) It should be slightly faster when loading language files.
+
+Utils class update:
+ - Added resizeBitmap function
+ - Improved performance on deg2Rad and rad2deg
+ - Added executeAfterSeconds function
+ - Added Timestamp Measuring functions
+ - Removed OneOf type (it was useless anyway)
+ 
+Began work on item rework:
+ - Not done yet, TBD
+ - Items register only once, which allows for item scripts to exist again, instead, Item instances are treated as an ItemStack.

@@ -24,6 +24,8 @@ class TextComponent extends Component {
     public var offsetX:Float = 0;
     public var offsetY:Float = 0;
 
+    public var isCentered:Bool = false;
+
     override function create(instance:ComponentInstance) {
         super.create(instance);
 
@@ -74,6 +76,8 @@ class TextComponent extends Component {
         frontend.setGlowing = setGlowing;
         frontend.setColorTransform = setColorTransform;
         frontend.setColor = setColor;
+        frontend.setAlignment = setAlignment;
+        frontend.setIsCentered = setIsCentered;
 
         frontend.setCamera = setCamera;
         frontend.getCamera = getCamera;
@@ -107,7 +111,7 @@ class TextComponent extends Component {
     override function populateFrontend() {}
     override function RegisterExternalFunction(name:String, func:Dynamic) {}
     override function decompile() {}
-    override function _import(what:String, as:String) {}
+    override function _import(what:Import, as:Import) {}
     override function grantImportPerms(to:HaxeScript) {}
     override function preprocessString(script:String, ?og:Bool = true):String { return "";}
     override function setCompilerFlag(name:String, value:Bool) {}
@@ -121,6 +125,13 @@ class TextComponent extends Component {
         _text.y = owner.transform.internalPosition.y + offsetY;
 
         _text.angle = owner.transform.angle;
+
+        if(_text.alignment == CENTER) { //Special treatment: it'll be treated as if the pivot were the center of the text.
+            _text.x -= _text.width * 0.5;
+            _text.y -= _text.height * 0.5;
+        }
+
+        if(isCentered) _text.screenCenter(XY); //lazy
 
         _text.update(elapsed);
     }
@@ -230,6 +241,14 @@ class TextComponent extends Component {
     public function setColor(color:FlxColor) {
         if(_text.color != color)
         _text.color = color;
+    }
+
+    public function setAlignment(to:String) {
+        _text.alignment = to;
+    }
+
+    public function setIsCentered(to:Bool) {
+        isCentered = to;
     }
 
     //------------------------------------------------------------------------------------------------------------------------------------------------------------------

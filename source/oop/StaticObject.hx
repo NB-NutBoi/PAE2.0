@@ -71,6 +71,7 @@ class StaticObject extends GenericObject {
         so.transform.angle = json.transform.A;
 
         so.name = json.name;
+        so.camera = level.camera;
 
         so.drawOrder = json.drawOrder == 0 ? OBJECT_FIRST : CHILDREN_FIRST;
         so.setSprite(json.bitmapIndex);

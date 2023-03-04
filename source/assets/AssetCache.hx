@@ -2,6 +2,7 @@ package assets;
 
 //Primitive asset type storage, shouldn't rely on flixel's less-than-ideal system.
 
+import saving.SaveManager.SaveMetadata;
 import flixel.graphics.FlxGraphic;
 import openfl.Assets as BackupAssets;
 import openfl.Assets;
@@ -37,6 +38,11 @@ class AssetCache {
 		return cacheImage(key);
 	}
 
+	public static function imageCacheExists(key:String):Bool
+	{
+		return ImageCache.exists(key);
+	}
+
 	public static function cacheImage(key:String):BitmapData
 	{
 		if(ImageCache[key] != null){
@@ -57,7 +63,7 @@ class AssetCache {
 		if (!FileSystem.exists(key))
 		{
 			LogFile.warning("No image file exists at the path "+ key+".");
-			trace("NO FILE EXIST, PREVENTED CRASH");
+			#if debug trace("NO FILE EXIST, PREVENTED CRASH"); #end
 			if(Main.crash_prevention_bitmap.image == null) Main.crash_prevention_bitmap = BackupAssets.getBitmapData("embed/Image_not_found.png");
 			return Main.crash_prevention_bitmap.clone();
 		}
@@ -104,6 +110,11 @@ class AssetCache {
 		return cacheData(key);
 	}
 
+	public static function dataCacheExists(key:String):Bool
+	{
+		return DataCache.exists(key);
+	}
+
 	public static function cacheData(key:String):String
 	{
 		if(key.startsWith("embed") && Assets.exists(key)){
@@ -114,7 +125,7 @@ class AssetCache {
 
 		if (!FileSystem.exists(key))
 		{
-			trace("NO FILE EXIST, PREVENTED CRASH");
+			#if debug trace("NO FILE EXIST, PREVENTED CRASH"); #end
 			return Std.string(Main.crash_prevention_string);
 		}
 
@@ -162,6 +173,11 @@ class AssetCache {
 
 		LogFile.warning("no sound cached with " + key + " exists!, caching.", false, true);
 		return cacheSound(key);
+	}
+
+	public static function soundCacheExists(key:String):Bool
+	{
+		return SoundCache.exists(key);
 	}
 
 	@:access(openfl.media.Sound)
@@ -212,45 +228,59 @@ class AssetCache {
 	//----------------------------HELPERS-----------------------------
 	///////////////////////////////////////////////////////////////////
 
-	public static function cachePlainAsset(pathNoExt:String) {
+	public static function cacheImageAssetSimple(pathNoExt:String) {
 		cacheData(pathNoExt+".asset");
 		cacheImage(pathNoExt+".png");
 	}
 
+	public static function cacheAnimatedAssetSimple(pathNoExt:String) {
+		cacheData(pathNoExt+".asset");
+		cacheImage(pathNoExt+".png");
+		cacheData(pathNoExt+".xml");
+	}
 
-	//NOT TOUCHED SINCE 2021, NEEDS A REVISION TO SEE IF WE NEED IT.
 	///////////////////////////////////////////////////////////////////
 	//--------------------------OTHER DATA---------------------------
 	///////////////////////////////////////////////////////////////////
-	// could be used to store the save data and other things
+	// use to store caches of misc data like saves and temp graphics (save image graphics.)
 	private static var MiscCache:Map<String, Any> = new Map();
 
-	public static function getMiscCache(key:String, ?optData:Dynamic):Any
+	public static function getMiscCache(key:String, ?optData:String = null):Any
 	{
 		var m = MiscCache.get(key);
 		if (m != null)
 		{
-			switch (optData)
+			switch (optData.toLowerCase())
 			{
-				case String:
-					return Std.string(m);
-				case FlxGraphic:
-					var bmd:BitmapData = m;
-					return FlxGraphic.fromBitmapData(bmd.clone());
+				case null: return null;
+				case "string": return Std.string(m);
+				case "int": return cast(m,Int);
+				case "float": return cast(m,Float);
+				case "bool": return cast(m,Bool);
+				case "savemetadata":
+					var mt:SaveMetadata = null;
+					return mt= cast m;
+				case "flxgraphic":
+					return cast(m,FlxGraphic);
 				default:
-					trace("Misc data does not support the type " + Std.string(optData));
+					LogFile.error("Misc data does not support the type " + optData, true);
+					return null;
 			}
 		}
 
-		trace("no misc cached with " + key + " exists! brace for potential crash!");
-		// not good, ALL ASSETS SHOULD BE CACHED BEFORE LOADED WITH THIS
-		return cacheMisc(key);
+		LogFile.warning("no misc cached with " + key + " exists! brace for potential crash!",true);
+		return null;
 	}
 
-	public static function cacheMisc(key:String, ?optData:Any):Any
+	public static function miscCacheExists(key:String):Bool
 	{
-		var finalData:Any = optData;
-		MiscCache.set(key, optData);
+		return MiscCache.exists(key);
+	}
+
+	public static function cacheMisc(key:String, data:Any):Any
+	{
+		var finalData:Any = data;
+		MiscCache.set(key, data);
 		return finalData;
 	}
 

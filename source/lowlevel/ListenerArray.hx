@@ -140,11 +140,19 @@ class ListenerArray<T>
 	}
 
     //makes sure to kill all the events.
-    public function kill() {
-        FlxDestroyUtil.destroy(onArrayAdd);
-		FlxDestroyUtil.destroy(onArrayModify);
-		FlxDestroyUtil.destroy(onArrayRemove);
+    public function kill():ListenerArray<T> {
+		onArrayAdd.removeAll();
+		onArrayAdd = null;
 
+		onArrayModify.removeAll();
+		onArrayModify = null;
+
+		onArrayRemove.removeAll();
+		onArrayRemove = null;
+
+		array.resize(0);
         array = null;
+
+		return null;
     }
 }

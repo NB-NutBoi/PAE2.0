@@ -1,5 +1,7 @@
 package common;
 
+import flixel.input.keyboard.FlxKeyboard;
+import flixel.FlxG;
 import lime.app.Application;
 import lime.app.Event;
 import lime.ui.KeyCode;
@@ -12,6 +14,8 @@ class Keyboard {
 		Application.current.window.onTextInput.add(_onTextInput, false, 1000); //try to have higher priority than whatever cancels it normally
 		Application.current.window.onKeyDown.add(_onKeyDown);
 		Application.current.window.onKeyUp.add(_onKeyUp);
+
+		stdKeys = FlxG.keys;
     }
 
 
@@ -38,7 +42,7 @@ class Keyboard {
 	public static var onUiKeyDownUnfiltered(default, null) = new Event<KeyCode->Void>();
 	public static var onUiKeyUpUnfiltered(default, null) = new Event<KeyCode->Void>();
 
-
+	public static var stdKeys:FlxKeyboard = null;
 	static var keys:Map<KeyCode, Bool> = new Map(); //shouldn't ever get out of hand??? unless having every key accounted for isn't what you're after.
 	//never seen memory usage increase when pressing keys.
 

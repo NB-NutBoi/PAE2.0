@@ -1,5 +1,7 @@
 package saving;
 
+import flixel.graphics.FlxGraphic;
+import JsonDefinitions;
 import gameside.dialogue.DialogueState.DialogueCache;
 import gameside.inventory.ItemContainer.ItemContainerCache;
 import CoreState.GlobalSaveables;
@@ -23,7 +25,9 @@ import lime.app.Event;
 using StringTools;
 
 typedef SaveMetadata = {
-    public var image:String;
+    public var graphic:Null<FlxGraphic>;
+    public var image:Null<BitmapData>;
+    public var imageStr:String;
     public var date:String;
 }
 
@@ -32,7 +36,9 @@ typedef Save = {
     public var mapSaveables:DynamicAccess<LevelSaveables>; //i know i'm gonna end up crying because of this one :sob:
 
     public var globals:GlobalSaveables;
-    public var pluginSavedata:DynamicAccess<PluginSavedata>;
+
+    public var pluginSavedata:DynamicAccess<ScriptState>;
+    public var itemStates:DynamicAccess<ScriptState>; //To save item class states
 
     public var dynamics:DynamicAccess<Dynamic>; //there it is, the "make your own save format yourself" field. good fucking luck managing any data in this.
 }
@@ -48,7 +54,9 @@ class SaveManager {
             dialogues: new DynamicAccess(),
             containers: new DynamicAccess()
         },
+
         pluginSavedata: new DynamicAccess(),
+        itemStates: new DynamicAccess(),
 
         dynamics: new DynamicAccess()
     };
@@ -60,10 +68,12 @@ class SaveManager {
         CoreState.Save(to);
         var fileContent:String;
 
-        if(image == null) image = FlxGamePlus.lastFrame;
+        if(image == null) { image = FlxGamePlus.lastFrame; #if debug trace("Saved with null image"); #end }
 
         var metadata:SaveMetadata = {
-            image: Utils.getB64StringFromBitmap(image),
+            image: null,
+            graphic: null,
+            imageStr: Utils.getB64StringFromBitmap(image),
             date: Utils.getDate()
         }
 
@@ -74,10 +84,10 @@ class SaveManager {
 
     public static final onFailLoad:Event<Int->Void> = new Event<Int->Void>();
 
-    public static function Load(from:String) {
+    public static function Load(from:String):Bool {
         if(!FileSystem.exists(from) || FileSystem.isDirectory(from) || !from.endsWith(".save")){
             LogFile.error({ message: "The save file "+from+" Does not exist or is not a valid save file!", caller: "SaveManager", id: 44});
-            return;
+            return false;
         }
 
         //How loading is handled is dependant on source build + game files.
@@ -94,7 +104,10 @@ class SaveManager {
         {
             LogFile.error("Error thrown when loading save from file! |[ " + e.message + " ]|\n",true);
             onFailLoad.dispatch(1);
+            return false;
         }
+
+        return true;
     }
 
     //--------------------------------------------------------------------------------------
@@ -112,6 +125,10 @@ class SaveManager {
     
             var metadata = Base64Util.Decode(fileContent);
             var metadata:SaveMetadata = cast Json.parse(metadata);
+
+            metadata.image = Utils.getBitmapFromB64String(metadata.imageStr);
+            metadata.imageStr = "";
+
             return metadata;
         }
         catch(e)
@@ -121,6 +138,5 @@ class SaveManager {
         }
 
         return null;
-        
     }
 }

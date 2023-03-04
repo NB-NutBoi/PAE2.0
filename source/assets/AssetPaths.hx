@@ -112,7 +112,7 @@ class AssetPaths
 				}
 			}
 		}
-		trace("file not found! brace for crash! [parameters:("
+		LogFile.error("getPath did not find the specified file! brace for crash! [parameters:("
 			+ " file: "
 			+ file
 			+ ", xtraLibraries: "

@@ -122,6 +122,8 @@ class GenericObject extends FlxBasic {
     override public function draw() {
         super.draw();
         
+        if(!active) return;
+
         switch (drawOrder){
             case OBJECT_FIRST:
                 drawObject();

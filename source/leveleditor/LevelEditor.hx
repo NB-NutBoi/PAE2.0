@@ -921,7 +921,7 @@ class LevelEditor extends CoreState {
             return obj;
         }
 
-        trace("OBJECT TYPE PARSER NOT IMPLEMENTED! : "+object.name);
+        LogFile.error("OBJECT TYPE PARSER NOT IMPLEMENTED! : "+object.name, true);
         return null;
     }
 
@@ -937,7 +937,7 @@ class LevelEditor extends CoreState {
             case SELECT, CANCEL, ERROR: return;
             case SAVE:
                 LogFile.log("Saving current map...",true);
-                trace(FileBrowser.filePath);
+                #if debug trace(FileBrowser.filePath); #end
                 var finalPath = FileBrowser.filePath;
                 if(!finalPath.endsWith(".map")) finalPath += ".map";
 
@@ -1075,7 +1075,7 @@ class LevelEditor extends CoreState {
         switch (FileBrowser.latestResult){
             case SAVE, CANCEL, ERROR: return;
             case SELECT:
-                trace(FileBrowser.filePath);
+                #if debug trace(FileBrowser.filePath); #end
 
                 if(!FileBrowser.filePath.endsWith(".map")) return;
                 LogFile.log("LOADING NEW MAP...",true);

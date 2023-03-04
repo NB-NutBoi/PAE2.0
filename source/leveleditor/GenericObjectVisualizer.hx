@@ -99,7 +99,7 @@ class GenericObjectVisualizer extends FlxBasic {
                 
                 drawObject();
             default:
-                trace("HOWWWW???????");
+                #if debug trace("HOWWWW???????"); #end
         }
     }
 

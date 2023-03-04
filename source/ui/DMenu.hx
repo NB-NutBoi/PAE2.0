@@ -43,7 +43,7 @@ class DMenu extends Container {
     public static function register(folder:String) {
         if(!Main.DEBUG) return;
 
-        trace("setting up DMenus");
+        LogFile.log("Setting up DMenus", true);
 
         var registerList:Array<MenuRegister> = [];
         var overrideList:Array<MenuOverride> = [];
@@ -52,7 +52,7 @@ class DMenu extends Container {
         //get the lists.
 
         var files:Array<String> = AssetPaths.getPathList(folder,null,["json"]);
-        trace("DMenu files found:" + files);
+        LogFile.log("DMenu files found:" + files, true);
 		for (file in files) {
 			var content = File.getContent(file);
                                         //emergency stop, just in case.
@@ -146,7 +146,7 @@ class DMenu extends Container {
         }
 
         //compile.
-        trace("DMenus registered: " + Utils.arrayFromIterator(registered.keys()));
+        LogFile.log("DMenus registered: " + Utils.arrayFromIterator(registered.keys()), true);
 
         for (key in registered.keys()) {
             registered.get(key).compile();

@@ -56,13 +56,10 @@
 
 	<!-- _______________________________ Libraries ______________________________ -->
 
-	<haxelib name="flixel" />
-	<haxelib name="hxtelemetry" if="telemetry"/>
-	<haxedef name="HXCPP_STACK_TRACE"  if="telemetry"/>
-	<haxedef name="HXCPP_TELEMETRY"  if="telemetry"/> <!--Dont think telemetry ever worked ;-; -->
+	<haxelib name="flixel"/>
 
-	<haxelib name="hscript" />
-	<haxelib name="dconsole" />
+	<haxelib name="hscript"/>
+	<haxelib name="dconsole"/>
 	<haxelib name="discord_rpc" if="windows"/>
 
 	<haxelib name="hxcpp-debug-server" if="debug"/>
@@ -84,7 +81,7 @@
 	<haxedef name="FLX_NO_MOUSE" if="mobile" />
 	<haxedef name="FLX_NO_KEYBOARD" if="mobile" />
 	<haxedef name="FLX_NO_TOUCH" if="desktop" />
-	<!--<haxedef name="FLX_NO_GAMEPAD" />-->
+	<haxedef name="FLX_NO_GAMEPAD" if="desktop"/>
 
 	<haxedef name="FLX_NO_SOUND_TRAY" />
 	<!--<haxedef name="FLX_NO_SOUND_SYSTEM" />-->

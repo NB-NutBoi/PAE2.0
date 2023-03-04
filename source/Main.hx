@@ -1,5 +1,6 @@
 package;
 
+import utility.Utils;
 import Discord;
 import FlxGamePlus;
 import assets.AssetPaths;
@@ -75,7 +76,7 @@ class Main extends Sprite
     public static var textFormat:Array<FlxTextFormatMarkerPair> = [];
 
 	static function makeFormat(format:String, color:FlxColor) {
-		trace(format + ", "+ color.toHexString());
+		#if debug trace("Made text format: "+ format + ", "+ color.toHexString()); #end
 		var nFormat = new FlxTextFormat(color);
 		var marker = new FlxTextFormatMarkerPair(nFormat,format);
 		switch (format){ //allow overriding defaults
@@ -103,6 +104,7 @@ class Main extends Sprite
 
 	public static function main():Void
 	{
+		Utils.BeginTimestampMeasure("CoreEngine");
 		//first called when launching the game.
 		Component.registerStandardComponents();
 
@@ -134,7 +136,6 @@ class Main extends Sprite
 		game = new FlxGamePlus(
 			SetupConfig.getConfig("GameWidth", "int", 1920),
 			SetupConfig.getConfig("GameHeight", "int", 1080),MainState,
-			SetupConfig.getConfig("Zoom", "float", -1),
 			SetupConfig.getConfig("Framerate", "int", 61),
 			SetupConfig.getConfig("Framerate", "int", 61),
 			SetupConfig.getConfig("SkipSplash", "bool", true),
@@ -158,6 +159,7 @@ class Main extends Sprite
 
 		FlxG.autoPause = false;
 		FlxG.mouse.useSystemCursor = true;
+		FlxG.fixedTimestep = false; //WHY IS THIS TRUE BY DEFAULT???
 
 		#if windows
 		if(SetupConfig.getConfig("discordRPC_enabled", "bool", false) == true)
@@ -217,7 +219,7 @@ class Main extends Sprite
 		if(ConfigsAvailable.exists("Markups")) {
 			var textFormats = new ConfigFile(ConfigsAvailable.get("Markups"));
 			
-			trace(textFormats.configs);
+			#if debug trace(textFormats.configs); #end
 
 			for (s in textFormats.configs.keys()) {
 				makeFormat(s,FlxColor.fromString(textFormats.getConfig(s,"string","#372257")));
@@ -247,18 +249,21 @@ class Main extends Sprite
 		LogFile.Init();
 
 		LogFile.log("Launch args = "+args, true, true);
-		LogFile.log("CONFIG FILES FOUND: "+Reflect.callMethod(this,function ():String {
+		LogFile.log("\n[-------------------v CONFIG FILES v------------------]\n\nConfig folder: "+configFolder+"/\n");
+		LogFile.log("CONFIG FILES FOUND:\n"+Reflect.callMethod(this,function ():String {
 			var cfgs = "{\n";
 			for (s in ConfigsAvailable.keys()) {
-				cfgs += s + " => "+ConfigsAvailable.get(s)+",\n";
+				cfgs += "	"+ s + " => "+ConfigsAvailable.get(s)+",\n";
 			}
 			cfgs+="}";
 			return cfgs;
 		},[]), false, true);
 
+		LogFile.log("\n[-------------------v FONTS v------------------]\n\n");
+
 		if(!nofps && !DEBUG) nofps = true; 
 
-		if(DEBUG) trace("DEBUG ENABLED");
+		#if debug if(DEBUG) trace("DEBUG ENABLED"); #end
 		
 		//EXTERNAL FONTS
 		for (s in AssetPaths.getPathList(SetupConfig.getConfig("FontDirectory","STRING","assets/fonts"),null,["ttf","otf"])) {
@@ -267,12 +272,16 @@ class Main extends Sprite
 			LogFile.log("Registered font "+s);
 		}
 
+		LogFile.log("\n[-------------------v COMPONENTS v------------------]\n\n");
+
 		Component.registerComponents(SetupConfig.getConfig("ComponentFolder","STRING","assets/components"));
 		
 		//--------------------------------------------------------------------------------------
 
 		Application.current.window.setIcon(_getWindowIcon(SetupConfig.getConfig("WindowIcon", "string", "embed/defaults/icon32.png")));
 		Application.current.window.title = SetupConfig.getConfig("WindowName", "string", "PAE 2.0");
+
+		LogFile.log("\nCore engine setup took "+Utils.EndTimestampMeasure("CoreEngine")+"\n[------------------v CORE SCRIPT v-------------------]\n\n");
 
 	}
 
@@ -332,7 +341,7 @@ class Main extends Sprite
 		FlxG.state.destroy();
 		CoreState.DestroyCore();
 
-		trace("Closed game successfully.");
+		#if debug trace("Closed game successfully."); #end
 		Application.current.window.close();
 		openfl.system.System.exit(0);
 	}

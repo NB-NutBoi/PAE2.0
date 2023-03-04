@@ -75,7 +75,7 @@ class Array2D<T>
      * @return The object set, it won't set the object within the array if the coordinates given exceed the array bounds.
      */
     public inline function set(x:Int, y:Int, to:T):T {
-        if(exists(x,y)) return array[x][y] = to else return to;
+        if(inBounds(x,y)) return array[x][y] = to else return to;
     }
 
     /**
@@ -84,7 +84,7 @@ class Array2D<T>
      * @param y Y coordinate to be checked.
      * @return True if the coordinates exist within the array bounds, False if they exceed the bounds or are below 0.
      */
-    public inline function exists(x:Int, y:Int):Bool {
+    public inline function inBounds(x:Int, y:Int):Bool {
         return (width > x && height > y) && (x>=0 && y>=0);
     }
 
@@ -195,7 +195,7 @@ class Vector2D<T>
      * @return The object set, it won't set the object within the vector if the coordinates given exceed the vector bounds.
      */
     public inline function set(x:Int, y:Int, to:T):T {
-        if(exists(x,y)) return vector[x][y] = to else return to;
+        if(inBounds(x,y)) return vector[x][y] = to else return to;
     }
 
     /**
@@ -204,7 +204,7 @@ class Vector2D<T>
      * @param y Y coordinate to be checked.
      * @return True if the coordinates exist within the vector bounds, False if they exceed the bounds or are below 0.
      */
-    public inline function exists(x:Int, y:Int):Bool {
+    public inline function inBounds(x:Int, y:Int):Bool {
         return (width > x && height > y) && (x>=0 && y>=0);
     }
 
